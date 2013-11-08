@@ -13,6 +13,7 @@ world:
 include $(RULESMK)
 $(eval $(call preCalled))
 $(eval $(call includeSubDir,src/liblog))
+$(eval $(call includeSubDir,src/libcutils))
 #$(eval $(call includeSubDir,src/utils))
 #include src/utils/Makefile
 

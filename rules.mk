@@ -48,6 +48,7 @@ endef
 
 define prog_template
 bin/$(1): $(filter %.o,$($(1)_src:%.cpp=$(OBJ)/%.o) $($(1)_src:%.c=$(OBJ)/%.o))
+	$(Q) mkdir -p $$(@D)
 	$(Q) echo -e "\tLD $(1)"
 $(call compile.prog,$(1))
 $(foreach src,$($(1)_src),$(eval $(call prog_object_template,$(src))))
@@ -57,7 +58,8 @@ endef
 #lib/$(1).so:$(OBJ)/$($(1)_src:%.c=%.o) $(OBJ)/$($(1)_src:%.cpp=%.o)
 #$(foreach src,$($(1)_src),$(info $(call slib_object_template,$(src))))
 define slib_template
-lib/$(1).so: $(filter %.o,$($(1)_src:%.cpp=$(OBJ)/%.o) $($(1)_src:%.c=$(OBJ)/%.o))
+lib/$(1).so: $($(1)_dep) $(filter %.o,$($(1)_src:%.cpp=$(OBJ)/%.o) $($(1)_src:%.c=$(OBJ)/%.o))
+	$(Q) mkdir -p $$(@D)
 	$(Q) echo -e "\tShared lib/$(1).so"
 $(call compile.slib,$(1))
 

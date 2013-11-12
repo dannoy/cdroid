@@ -22,7 +22,7 @@ LOCAL_SRC_FILES := \
 	generate_java_rpc.cpp
 
 LOCAL_CFLAGS := -g
-LOCAL_MODULE := caidl
+LOCAL_MODULE := aidl
 
 include $(BUILD_HOST_EXECUTABLE)
 

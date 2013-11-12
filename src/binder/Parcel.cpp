@@ -627,10 +627,26 @@ status_t Parcel::writeFloat(float val)
     return writeAligned(val);
 }
 
+#if defined(__mips__) && defined(__mips_hard_float)
+
+status_t Parcel::writeDouble(double val)
+{
+    union {
+        double d;
+        unsigned long long ll;
+    } u;
+    u.d = val;
+    return writeAligned(u.ll);
+}
+
+#else
+
 status_t Parcel::writeDouble(double val)
 {
     return writeAligned(val);
 }
+
+#endif
 
 status_t Parcel::writeIntPtr(intptr_t val)
 {
@@ -962,16 +978,43 @@ float Parcel::readFloat() const
     return readAligned<float>();
 }
 
+#if defined(__mips__) && defined(__mips_hard_float)
+
+status_t Parcel::readDouble(double *pArg) const
+{
+    union {
+      double d;
+      unsigned long long ll;
+    } u;
+    status_t status;
+    status = readAligned(&u.ll);
+    *pArg = u.d;
+    return status;
+}
+
+double Parcel::readDouble() const
+{
+    union {
+      double d;
+      unsigned long long ll;
+    } u;
+    u.ll = readAligned<unsigned long long>();
+    return u.d;
+}
+
+#else
+
 status_t Parcel::readDouble(double *pArg) const
 {
     return readAligned(pArg);
 }
 
-
 double Parcel::readDouble() const
 {
     return readAligned<double>();
 }
+
+#endif
 
 status_t Parcel::readIntPtr(intptr_t *pArg) const
 {
@@ -1055,10 +1098,11 @@ int32_t Parcel::readExceptionCode() const
 {
   int32_t exception_code = readAligned<int32_t>();
   if (exception_code == EX_HAS_REPLY_HEADER) {
+    int32_t header_start = dataPosition();
     int32_t header_size = readAligned<int32_t>();
     // Skip over fat responses headers.  Not used (or propagated) in
     // native code
-    setDataPosition(dataPosition() + header_size);
+    setDataPosition(header_start + header_size);
     // And fat response headers are currently only used when there are no
     // exceptions, so return no error:
     return 0;

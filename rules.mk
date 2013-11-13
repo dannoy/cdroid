@@ -70,7 +70,7 @@ $(call compile.prog,$(1))
 
 $(foreach src,$($(1)_src),$(eval $(call prog_object_template,$(src))))
 
-ifneq ($(MAKECMDGOALS),clean)
+ifeq ($(filter clean distclean tags,$(MAKECMDGOALS)),)
 -include $(filter %.d,$($(1)_src:%.cpp=$(OBJ)/%.d) $($(1)_src:%.c=$(OBJ)/%.d))
 endif
 
@@ -88,7 +88,7 @@ $(call compile.slib,$(1))
 
 $(foreach src,$($(1)_src),$(eval $(call slib_object_template,$(src))))
 
-ifneq ($(MAKECMDGOALS),clean)
+ifeq ($(filter clean distclean tags,$(MAKECMDGOALS)),)
 -include $(filter %.d,$($(1)_src:%.cpp=$(OBJ)/%.d) $($(1)_src:%.c=$(OBJ)/%.d))
 endif
 
@@ -104,7 +104,13 @@ prepare:$(OBJ)
 $(OBJ):
 	$(Q) mkdir -p $(OBJ)
 clean:
+	$(Q) rm -rf $(TOPDIR)/{bin,lib,obj}
+distclean:
 	$(Q) rm -rf $(TOPDIR)/{bin,lib,obj} cscope* tags
+tags:
+	$(Q) ctags -R .
+	$(Q) cscope -Rbq
+.PHONY:clean distclean tags prepare
 endef
 
 define includeSubDir

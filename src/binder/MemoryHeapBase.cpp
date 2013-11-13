@@ -32,7 +32,7 @@
 #include <binder/MemoryHeapBase.h>
 
 #ifdef HAVE_ANDROID_OS
-#include <linux/android_pmem.h>
+//#include <linux/android_pmem.h>
 #endif
 
 
@@ -109,11 +109,13 @@ status_t MemoryHeapBase::mapfd(int fd, size_t size, uint32_t offset)
     if (size == 0) {
         // try to figure out the size automatically
 #ifdef HAVE_ANDROID_OS
+        ALOGE("PMEM function not implemented!!!!!!!!!!!!! --lijin@routon");
+        return -1;
         // first try the PMEM ioctl
-        pmem_region reg;
-        int err = ioctl(fd, PMEM_GET_TOTAL_SIZE, &reg);
-        if (err == 0)
-            size = reg.len;
+        //pmem_region reg;
+        //int err = ioctl(fd, PMEM_GET_TOTAL_SIZE, &reg);
+        //if (err == 0)
+            //size = reg.len;
 #endif
         if (size == 0) { // try fstat
             struct stat sb;

@@ -24,6 +24,7 @@
 #include <linux/rtc.h>
 #include <utils/Atomic.h>
 #include <linux/android_alarm.h>
+#include <sys/ioctl.h>
 #endif
 
 #include <sys/time.h>

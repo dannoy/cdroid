@@ -34,7 +34,7 @@
 # include <pthread.h>
 # include <sched.h>
 # include <sys/resource.h>
-#ifdef HAVE_ANDROID_OS
+#ifdef HAVE_ANDROID_OS_LJ
 # include <bionic_pthread.h>
 #endif
 #elif defined(HAVE_WIN32_THREADS)
@@ -48,6 +48,11 @@
 #include <sys/prctl.h>
 #endif
 
+#ifdef HAVE_GETTID
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+#endif
 /*
  * ===========================================================================
  *      Thread wrappers
@@ -320,10 +325,16 @@ void androidSetCreateThreadFunc(android_create_thread_fn func)
     gCreateThreadFn = func;
 }
 
+#ifdef __GLIBC__
+// glibc doesn't expose gettid(2).
+pid_t gettid() { return syscall(__NR_gettid); }
+#endif
+
 pid_t androidGetTid()
 {
 #ifdef HAVE_GETTID
     return gettid();
+
 #else
     return getpid();
 #endif
@@ -771,7 +782,8 @@ int Thread::_threadLoop(void* user)
 
 #ifdef HAVE_ANDROID_OS
     // this is very useful for debugging with gdb
-    self->mTid = gettid();
+    self->mTid =  androidGetTid();
+    //self->mTid = gettid();
 #endif
 
     bool first = true;
@@ -888,7 +900,8 @@ pid_t Thread::getTid() const
     pid_t tid;
     if (mRunning) {
         pthread_t pthread = android_thread_id_t_to_pthread(mThread);
-        tid = __pthread_gettid(pthread);
+        //tid = __pthread_gettid(pthread);
+        tid = this->mTid;// lijin@routon
     } else {
         ALOGW("Thread (this=%p): getTid() is undefined before run()", this);
         tid = -1;

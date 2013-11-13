@@ -1,7 +1,7 @@
 
 
 DEBUG = n
-CFLAGS := $(local_cflags)
+CFLAGS := -m32 -I$(current_dir) $(local_cflags) -include config/linux-$(ARCH).h
 LDFLAGS := $(local_ldflags)
 #OBJ = $(TOPDIR)/obj
 OBJ = obj
@@ -15,11 +15,11 @@ endif
 all:
 
 define compile.prog
-	$(Q) $(CC) $(LDFLAGS) -o $$@ $$^ -Wl,-Map,$(OBJ)/$(1).map
+	$(Q) $(CC) -m32 $(LDFLAGS) -o $$@ $$^ -Wl,-Map,$(OBJ)/$(1).map
 endef
 
 define compile.slib
-	$(Q) $(CC) -shared -Wl,-soname,$$(@F) $(LDFLAGS) -o $$@  $$^
+	$(Q) $(CC) -m32 -shared -Wl,-soname,$$(@F) $(LDFLAGS) -o $$@  $$^
 endef
 
 define compile.prog.o

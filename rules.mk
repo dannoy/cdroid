@@ -1,6 +1,7 @@
 
 
 DEBUG = n
+CDEBUG = y
 CFLAGS := -m32 -I$(current_dir) $(local_cflags) -include config/linux-$(ARCH).h
 LDFLAGS := $(local_ldflags)
 #OBJ = $(TOPDIR)/obj
@@ -12,41 +13,55 @@ else
     Q = @
 endif
 
+ifeq ($(CDEBUG),y)
+    CFLAGS += -g
+endif
+
 all:
 
-& = $(filter-out %.h %.d %.a,$^)
+& = $(filter-out %.h %.hpp %.d %.a,$^)
+
+%.lex.cpp: %.l
+	@echo  -e "\tLEX" $@
+	$(Q) flex -o $@ $<
+
+%.tab.cpp: %.y
+	@echo -e "\tYACC" $@
+	$(Q) bison -d $< -o $@
+
+.PRECIOUS:%.lex.c %.tab.c
 
 define compile.prog
-	$(Q) $(CC) -m32 $(LDFLAGS) -o $$@ $$^ -Wl,-Map,$(OBJ)/$(1).map
+	$(Q) $(2) -m32 $(LDFLAGS) -o $$@ $$^ -Wl,-Map,$(OBJ)/$(1).map
 endef
 
 define compile.slib
-	$(Q) $(CC) -m32 -shared -Wl,-soname,$$(@F) $(LDFLAGS) -o $$@  $$^
+	$(Q) $(2) -m32 -shared -Wl,-soname,$$(@F) $(LDFLAGS) -o $$@  $$^
 endef
 
 define compile.prog.o
-	$(Q) $(CC) $(CFLAGS) -c -o $$@ $(1)
+	$(Q) $(2) $(CFLAGS) -c -o $$@ $(1)
 endef
 
 define compile.slib.o
-	$(Q) $(CC) -fPIC $(CFLAGS) -c -o $$@ $(1)
+	$(Q) $(2) -fPIC $(CFLAGS) -c -o $$@ $(1)
 endef
 
 define compile.d
-	$(Q) $(CC) -MM $(CFLAGS) $$< | sed -n "H;$$$$ {g;s@.*:\(.*\)@$$< := \$$$$\(wildcard\1\)\n$${@:%.d=%.o} $$@: $$$$\($$<\)@;p}" > $$@
+	$(Q) $(2) -MM $(CFLAGS) $$< | sed -n "H;$$$$ {g;s@.*:\(.*\)@$$< := \$$$$\(wildcard\1\)\n$${@:%.d=%.o} $$@: $$$$\($$<\)@;p}" > $$@
 endef
 
 #$(OBJ)/$(1:%.c=%.o):$(1) $(1:%.c=%.h)
 define prog_object_template
 $(filter %.o,$(OBJ)/$(1:%.cpp=%.o) $(OBJ)/$(1:%.c=%.o)):$(1) $(1:%.c=%.h)
-	$(Q) mkdir -p $(@D)
+	$(Q) mkdir -p $$(@D)
 	$(Q) echo -e "\tCC $$<"
-$(call compile.prog.o, $$&)
+$(call compile.prog.o, $$&,$(if $(filter %.cpp,$(1)),$(CXX),$(CC)))
 
 $(filter %.d,$(OBJ)/$(1:%.cpp=%.d) $(OBJ)/$(1:%.c=%.d)):$(1)
 	$(Q) echo -e "\tDEP $$<"
 	@mkdir -p $$(@D)
-$(call compile.d,$(1))
+$(call compile.d,$(1),$(if $(filter %.cpp,$(1)),$(CXX),$(CC)))
 endef
 
 #$(OBJ)/$(1:%.cpp=%.o):$(1)
@@ -54,19 +69,19 @@ define slib_object_template
 $(filter %.o,$(OBJ)/$(1:%.cpp=%.o) $(OBJ)/$(1:%.c=%.o)):$(1) $(filter %.d,$(OBJ)/$(1:%.cpp=%.d) $(OBJ)/$(1:%.c=%.d))
 	$(Q) mkdir -p $$(@D)
 	$(Q) echo -e "\tSCC $$<"
-$(call compile.slib.o, $$&)
+$(call compile.slib.o, $$&,$(if $(filter %.cpp,$(1)),$(CXX),$(CC)))
 
 $(filter %.d,$(OBJ)/$(1:%.cpp=%.d) $(OBJ)/$(1:%.c=%.d)):$(1)
 	$(Q) echo -e "\tSDEP $$<"
 	@mkdir -p $$(@D)
-$(call compile.d,$(1))
+$(call compile.d,$(1),$(if $(filter %.cpp,$(1)),$(CXX),$(CC)))
 endef
 
 define prog_template
 bin/$(1): $($(1)_dep) $(filter %.o,$($(1)_src:%.cpp=$(OBJ)/%.o) $($(1)_src:%.c=$(OBJ)/%.o))
 	$(Q) mkdir -p $$(@D)
 	$(Q) echo -e "\tLD $(1)"
-$(call compile.prog,$(1))
+$(call compile.prog,$(1),$(if $(filter %.cpp,$($(1)_src)),$(CXX),$(CC)))
 
 $(foreach src,$($(1)_src),$(eval $(call prog_object_template,$(src))))
 
@@ -84,7 +99,7 @@ define slib_template
 lib/$(1).so: $($(1)_dep) $(filter %.o,$($(1)_src:%.cpp=$(OBJ)/%.o) $($(1)_src:%.c=$(OBJ)/%.o))
 	$(Q) mkdir -p $$(@D)
 	$(Q) echo -e "\tShared lib/$(1).so"
-$(call compile.slib,$(1))
+$(call compile.slib,$(1),$(if $(filter %.cpp,$($(1)_src)),$(CXX),$(CC)))
 
 $(foreach src,$($(1)_src),$(eval $(call slib_object_template,$(src))))
 
@@ -96,6 +111,7 @@ shared_libs_target : lib/$(1).so
 endef
 
 $(foreach prog,$(progs),$(eval $(call prog_template,$(prog))))
+#$(foreach prog,$(progs),$(info $(call prog_template,$(prog))))
 $(foreach slib,$(shared_libs),$(eval $(call slib_template,$(slib))))
 #$(foreach slib,$(shared_libs),$(info $(call slib_template,$(slib))))
 
@@ -104,6 +120,8 @@ prepare:$(OBJ)
 $(OBJ):
 	$(Q) mkdir -p $(OBJ)
 clean:
+	$(Q) find src -name "*.tab*" -exec rm -rf '{}' \;
+	$(Q) find src -name "*.lex*" -exec rm -rf '{}' \;
 	$(Q) rm -rf $(TOPDIR)/{bin,lib,obj}
 distclean:
 	$(Q) rm -rf $(TOPDIR)/{bin,lib,obj} cscope* tags

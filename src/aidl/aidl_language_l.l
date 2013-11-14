@@ -1,11 +1,11 @@
 %{
 #include "aidl_language.h"
-#include "aidl_language_y.h"
+#include "aidl_language_y.tab.hpp"
 #include "search_path.h"
 #include <string.h>
 #include <stdlib.h>
 
-extern YYSTYPE yylval;
+//extern YYSTYPE yylval;
 
 // comment and whitespace handling
 // these functions save a copy of the buffer

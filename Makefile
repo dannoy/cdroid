@@ -21,3 +21,5 @@ $(eval $(call includeSubDir,src/libcorkscrew))
 $(eval $(call includeSubDir,src/utils))
 $(eval $(call includeSubDir,src/binder))
 
+$(eval $(call includeSubDir,src/aidl))
+

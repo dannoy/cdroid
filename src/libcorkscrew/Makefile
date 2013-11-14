@@ -1,4 +1,3 @@
-LDEBUG = y
 generic_src_files := \
 	backtrace.c \
 	backtrace-helper.c \
@@ -29,16 +28,12 @@ LOCAL_SRC_FILES += \
 LOCAL_CFLAGS += -DCORKSCREW_HAVE_ARCH
 endif
 
-shared_libs = libcorkscrew
+progs :=
+shared_libs := libcorkscrew
 libcorkscrew_src = $(addprefix $(current_dir)/,$(LOCAL_SRC_FILES))
 libcorkscrew_dep = lib/liblog.so lib/libcutils.so
 local_cflags = -I$(TOPDIR)/include -DANDROID_SMP -D$(ARCHD) -D_GNU_SOURCE $(LOCAL_CFLAGS) -std=gnu99
 local_ldflags =
-
-ifeq ($(LDEBUG), y)
-    local_cflags +=  -g
-endif
-
 
 
 include $(RULESMK)

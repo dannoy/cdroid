@@ -133,6 +133,10 @@ endef
 
 define includeSubDir
 $(eval current_dir := $(1)
+	progs :=
+	shared_libs :=
+	local_cflags :=
+	local_ldflags :=
 	include $(1)/Makefile)
 endef
 

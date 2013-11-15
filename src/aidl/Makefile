@@ -9,11 +9,11 @@ LOCAL_SRC_FILES := \
 	generate_java_binder.cpp \
 	generate_java_rpc.cpp
 
-progs := caidl
+progs := aidl
 shared_libs :=
-caidl_src = $(addprefix $(current_dir)/,$(LOCAL_SRC_FILES)) $(current_dir)/aidl_language_y.tab.cpp $(current_dir)/aidl_language_l.lex.cpp
+aidl_src = $(addprefix $(current_dir)/,$(LOCAL_SRC_FILES)) $(current_dir)/aidl_language_y.tab.cpp $(current_dir)/aidl_language_l.lex.cpp
 $(current_dir)/aidl_language_l.lex.cpp:$(current_dir)/aidl_language_y.tab.cpp
-caidl_dep =
+aidl_dep =
 local_cflags = -I$(TOPDIR)/include -I$(current_dir)
 local_ldflags =
 

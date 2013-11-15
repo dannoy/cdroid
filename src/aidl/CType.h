@@ -1,5 +1,5 @@
-#ifndef AIDL_TYPE_H
-#define AIDL_TYPE_H
+#ifndef AIDL_CTYPE_H
+#define AIDL_CTYPE_H
 
 #include "AST.h"
 #include <string>
@@ -7,14 +7,13 @@
 
 using namespace std;
 
-class JType
+class CType
 {
 public:
     // kinds
     enum {
         BUILT_IN,
         USERDATA,
-        INTERFACE,
         GENERATED
     };
     

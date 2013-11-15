@@ -13,6 +13,7 @@ usage()
             "       aidl --preprocess OUTPUT INPUT...\n"
             "\n"
             "OPTIONS:\n"
+            "   -L<LANGUAGE>    generate source in Lanauge,only support java,cpp.\n"
             "   -I<DIR>    search path for import statements.\n"
             "   -d<FILE>   generate dependency file.\n"
             "   -a         generate dependency file next to the output file with the name based on the input file.\n"
@@ -64,6 +65,18 @@ parse_options(int argc, const char* const* argv, Options *options)
                         options->importPaths.push_back(s+2);
                     } else {
                         fprintf(stderr, "-I option (%d) requires a path.\n", i);
+                        return usage();
+                    }
+                }
+                else if (s[1] == 'L') {
+                    string lang = s + 2;
+                    if(s == "CPP") {
+                        options->lang = TARGET_CPP;
+                    }
+                    else if(s == "JAVA") {
+                        options->lang = TARGET_JAVA;
+                    } else {
+                        fprintf(stderr, "-L option (%s) only supports JAVA,CPP.\n", s+2);
                         return usage();
                     }
                 }

@@ -12,6 +12,11 @@ enum {
     PREPROCESS_AIDL
 };
 
+enum {
+    TARGET_JAVA,
+    TARGET_CPP
+};
+
 // This struct is the parsed version of the command line options
 struct Options
 {
@@ -24,6 +29,7 @@ struct Options
     string outputBaseFolder;
     string depFileName;
     bool autoDepFile;
+    int lang;
 
     vector<string> filesToPreprocess;
 };

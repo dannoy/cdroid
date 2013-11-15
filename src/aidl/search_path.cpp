@@ -7,14 +7,6 @@
 #include <io.h>
 #endif
 
-static vector<string> g_importPaths;
-
-void
-set_import_paths(const vector<string>& importPaths)
-{
-    g_importPaths = importPaths;
-}
-
 char*
 find_import_file(const char* given)
 {

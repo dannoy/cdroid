@@ -1,6 +1,6 @@
-#include "Type.h"
+#include "CType.h"
 
-Namespace NAMES;
+Namespace CNAMES;
 
 Type* VOID_TYPE;
 Type* BOOLEAN_TYPE;
@@ -11,33 +11,36 @@ Type* LONG_TYPE;
 Type* FLOAT_TYPE;
 Type* DOUBLE_TYPE;
 Type* STRING_TYPE;
-Type* OBJECT_TYPE;
-Type* CHAR_SEQUENCE_TYPE;
-Type* TEXT_UTILS_TYPE;
-Type* REMOTE_EXCEPTION_TYPE;
-Type* RUNTIME_EXCEPTION_TYPE;
-Type* IBINDER_TYPE;
+//Type* OBJECT_TYPE;
+//Type* CHAR_SEQUENCE_TYPE;
+//Type* TEXT_UTILS_TYPE;
+//Type* REMOTE_EXCEPTION_TYPE;
+//Type* RUNTIME_EXCEPTION_TYPE;
+//Type* IBINDER_TYPE;
 Type* IINTERFACE_TYPE;
-Type* BINDER_NATIVE_TYPE;
-Type* BINDER_PROXY_TYPE;
+Type* IINTERFACE_TYPE;
+Type* BNINTERFACE_TYPE;
+Type* BPINTERFACE_TYPE;
+//Type* BINDER_NATIVE_TYPE;
+//Type* BINDER_PROXY_TYPE;
 Type* PARCEL_TYPE;
 Type* PARCELABLE_INTERFACE_TYPE;
-Type* CONTEXT_TYPE;
+//Type* CONTEXT_TYPE;
 Type* MAP_TYPE;
 Type* LIST_TYPE;
 Type* CLASSLOADER_TYPE;
-Type* RPC_DATA_TYPE;
-Type* RPC_ERROR_TYPE;
-Type* EVENT_FAKE_TYPE;
+//Type* RPC_DATA_TYPE;
+//Type* RPC_ERROR_TYPE;
+//Type* EVENT_FAKE_TYPE;
 
 Expression* NULL_VALUE;
 Expression* THIS_VALUE;
-Expression* SUPER_VALUE;
+//Expression* SUPER_VALUE;
 Expression* TRUE_VALUE;
 Expression* FALSE_VALUE;
 
 void
-jregister_base_types()
+register_base_types()
 {
     VOID_TYPE = new BasicType("void",
             "XXX", "XXX", "XXX", "XXX", "XXX",

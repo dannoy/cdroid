@@ -1,0 +1,6 @@
+1.use vector instead of CreatexxxArray alike array operations
+2.BpInterface<xxx> and BnInterface<xxx> should be mapped to Stub/Proxy, not in CType.h
+3.package to namespace
+4.value passed by refs, not by pointer | There is no pointer in Java
+5.RemoteException ???
+6.asBinder,asInterface translation

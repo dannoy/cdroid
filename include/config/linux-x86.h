@@ -358,4 +358,10 @@
  */
 #define HAVE_GNU_QSORT_R 0
 
+/*
+ * Define long is 32 or 64 bits
+ */
+#define LONG_BITS_32 1
+/*#define LONG_BITS_64 1*/
+
 #endif /* _ANDROID_CONFIG_H */

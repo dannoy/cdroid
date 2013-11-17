@@ -1,14 +1,10 @@
-#include "AST.h"
-#include "Type.h"
+#include "CType.h"
+#include "CAST.h"
 
 void
 WriteModifiers(FILE* to, int mod, int mask)
 {
     int m = mod & mask;
-
-    if (m & OVERRIDE) {
-        fprintf(to, "@Override ");
-    }
 
     if ((m & SCOPE_MASK) == PUBLIC) {
         fprintf(to, "public ");
@@ -23,18 +19,14 @@ WriteModifiers(FILE* to, int mod, int mask)
     if (m & STATIC) {
         fprintf(to, "static ");
     }
-    
-    if (m & FINAL) {
-        fprintf(to, "final ");
-    }
 
-    if (m & ABSTRACT) {
-        fprintf(to, "abstract ");
+    if (m & VIRTUAL) {
+        fprintf(to, "virtual ");
     }
 }
 
 void
-WriteArgumentList(FILE* to, const vector<Expression*>& arguments)
+WriteArgumentList(FILE* to, const vector<CExpression*>& arguments)
 {
     size_t N = arguments.size();
     for (size_t i=0; i<N; i++) {
@@ -45,45 +37,45 @@ WriteArgumentList(FILE* to, const vector<Expression*>& arguments)
     }
 }
 
-ClassElement::ClassElement()
+CClassElement::CClassElement()
 {
 }
 
-ClassElement::~ClassElement()
+CClassElement::~CClassElement()
 {
 }
 
-Field::Field()
-    :ClassElement(),
+CField::CField()
+    :CClassElement(),
      modifiers(0),
      variable(NULL)
 {
 }
 
-Field::Field(int m, Variable* v)
-    :ClassElement(),
+CField::CField(int m, CVariable* v)
+    :CClassElement(),
      modifiers(m),
      variable(v)
 {
 }
 
-Field::~Field()
+CField::~CField()
 {
 }
 
 void
-Field::GatherTypes(set<Type*>* types) const
+CField::GatherTypes(set<CType*>* types) const
 {
     types->insert(this->variable->type);
 }
 
 void
-Field::Write(FILE* to)
+CField::Write(FILE* to)
 {
     if (this->comment.length() != 0) {
         fprintf(to, "%s\n", this->comment.c_str());
     }
-    WriteModifiers(to, this->modifiers, SCOPE_MASK | STATIC | FINAL | OVERRIDE);
+    WriteModifiers(to, this->modifiers, SCOPE_MASK | STATIC );
     fprintf(to, "%s %s", this->variable->type->QualifiedName().c_str(),
             this->variable->name.c_str());
     if (this->value.length() != 0) {
@@ -92,73 +84,73 @@ Field::Write(FILE* to)
     fprintf(to, ";\n");
 }
 
-Expression::~Expression()
+CExpression::~CExpression()
 {
 }
 
-LiteralExpression::LiteralExpression(const string& v)
+CLiteralExpression::CLiteralExpression(const string& v)
     :value(v)
 {
 }
 
-LiteralExpression::~LiteralExpression()
+CLiteralExpression::~CLiteralExpression()
 {
 }
 
 void
-LiteralExpression::Write(FILE* to)
+CLiteralExpression::Write(FILE* to)
 {
     fprintf(to, "%s", this->value.c_str());
 }
 
-StringLiteralExpression::StringLiteralExpression(const string& v)
+CStringLiteralExpression::CStringLiteralExpression(const string& v)
     :value(v)
 {
 }
 
-StringLiteralExpression::~StringLiteralExpression()
+CStringLiteralExpression::~CStringLiteralExpression()
 {
 }
 
 void
-StringLiteralExpression::Write(FILE* to)
+CStringLiteralExpression::Write(FILE* to)
 {
     fprintf(to, "\"%s\"", this->value.c_str());
 }
 
-Variable::Variable()
+CVariable::CVariable()
     :type(NULL),
      name(),
      dimension(0)
 {
 }
 
-Variable::Variable(Type* t, const string& n)
+CVariable::CVariable(CType* t, const string& n)
     :type(t),
      name(n),
      dimension(0)
 {
 }
 
-Variable::Variable(Type* t, const string& n, int d)
+CVariable::CVariable(CType* t, const string& n, int d)
     :type(t),
      name(n),
      dimension(d)
 {
 }
 
-Variable::~Variable()
+CVariable::~CVariable()
 {
 }
 
 void
-Variable::GatherTypes(set<Type*>* types) const
+CVariable::GatherTypes(set<CType*>* types) const
 {
     types->insert(this->type);
 }
 
 void
-Variable::WriteDeclaration(FILE* to)
+CVariable::WriteDeclaration(FILE* to)
 {
     string dim;
     for (int i=0; i<this->dimension; i++) {
@@ -169,31 +161,31 @@ Variable::WriteDeclaration(FILE* to)
 }
 
 void
-Variable::Write(FILE* to)
+CVariable::Write(FILE* to)
 {
     fprintf(to, "%s", name.c_str());
 }
 
-FieldVariable::FieldVariable(Expression* o, const string& n)
+CFieldVariable::CFieldVariable(CExpression* o, const string& n)
     :object(o),
      clazz(NULL),
      name(n)
 {
 }
 
-FieldVariable::FieldVariable(Type* c, const string& n)
+CFieldVariable::CFieldVariable(CType* c, const string& n)
     :object(NULL),
      clazz(c),
      name(n)
 {
 }
 
-FieldVariable::~FieldVariable()
+CFieldVariable::~CFieldVariable()
 {
 }
 
 void
-FieldVariable::Write(FILE* to)
+CFieldVariable::Write(FILE* to)
 {
     if (this->object != NULL) {
         this->object->Write(to);
@@ -205,20 +197,20 @@ FieldVariable::Write(FILE* to)
 }
 
 
-Statement::~Statement()
+CStatement::~CStatement()
 {
 }
 
-StatementBlock::StatementBlock()
+CStatementBlock::CStatementBlock()
 {
 }
 
-StatementBlock::~StatementBlock()
+CStatementBlock::~CStatementBlock()
 {
 }
 
 void
-StatementBlock::Write(FILE* to)
+CStatementBlock::Write(FILE* to)
 {
     fprintf(to, "{\n");
     int N = this->statements.size();
@@ -229,53 +221,53 @@ StatementBlock::Write(FILE* to)
 }
 
 void
-StatementBlock::Add(Statement* statement)
+CStatementBlock::Add(CStatement* statement)
 {
     this->statements.push_back(statement);
 }
 
 void
-StatementBlock::Add(Expression* expression)
+CStatementBlock::Add(CExpression* expression)
 {
-    this->statements.push_back(new ExpressionStatement(expression));
+    this->statements.push_back(new CExpressionStatement(expression));
 }
 
-ExpressionStatement::ExpressionStatement(Expression* e)
+CExpressionStatement::CExpressionStatement(CExpression* e)
     :expression(e)
 {
 }
 
-ExpressionStatement::~ExpressionStatement()
+CExpressionStatement::~CExpressionStatement()
 {
 }
 
 void
-ExpressionStatement::Write(FILE* to)
+CExpressionStatement::Write(FILE* to)
 {
     this->expression->Write(to);
     fprintf(to, ";\n");
 }
 
-Assignment::Assignment(Variable* l, Expression* r)
+CAssignment::CAssignment(CVariable* l, CExpression* r)
     :lvalue(l),
      rvalue(r),
      cast(NULL)
 {
 }
 
-Assignment::Assignment(Variable* l, Expression* r, Type* c)
+CAssignment::CAssignment(CVariable* l, CExpression* r, CType* c)
     :lvalue(l),
      rvalue(r),
      cast(c)
 {
 }
 
-Assignment::~Assignment()
+CAssignment::~CAssignment()
 {
 }
 
 void
-Assignment::Write(FILE* to)
+CAssignment::Write(FILE* to)
 {
     this->lvalue->Write(to);
     fprintf(to, " = ");
@@ -285,14 +277,14 @@ Assignment::Write(FILE* to)
     this->rvalue->Write(to);
 }
 
-MethodCall::MethodCall(const string& n)
+CMethodCall::CMethodCall(const string& n)
     :obj(NULL),
      clazz(NULL),
      name(n)
 {
 }
 
-MethodCall::MethodCall(const string& n, int argc = 0, ...)
+CMethodCall::CMethodCall(const string& n, int argc = 0, ...)
     :obj(NULL),
      clazz(NULL),
      name(n)
@@ -303,21 +295,21 @@ MethodCall::MethodCall(const string& n, int argc = 0, ...)
   va_end(args);
 }
 
-MethodCall::MethodCall(Expression* o, const string& n)
+CMethodCall::CMethodCall(CExpression* o, const string& n)
     :obj(o),
      clazz(NULL),
      name(n)
 {
 }
 
-MethodCall::MethodCall(Type* t, const string& n)
+CMethodCall::CMethodCall(CType* t, const string& n)
     :obj(NULL),
      clazz(t),
      name(n)
 {
 }
 
-MethodCall::MethodCall(Expression* o, const string& n, int argc = 0, ...)
+CMethodCall::CMethodCall(CExpression* o, const string& n, int argc = 0, ...)
     :obj(o),
      clazz(NULL),
      name(n)
@@ -328,7 +320,7 @@ MethodCall::MethodCall(Expression* o, const string& n, int argc = 0, ...)
   va_end(args);
 }
 
-MethodCall::MethodCall(Type* t, const string& n, int argc = 0, ...)
+CMethodCall::CMethodCall(CType* t, const string& n, int argc = 0, ...)
     :obj(NULL),
      clazz(t),
      name(n)
@@ -339,21 +331,21 @@ MethodCall::MethodCall(Type* t, const string& n, int argc = 0, ...)
   va_end(args);
 }
 
-MethodCall::~MethodCall()
+CMethodCall::~CMethodCall()
 {
 }
 
 void
-MethodCall::init(int n, va_list args)
+CMethodCall::init(int n, va_list args)
 {
     for (int i=0; i<n; i++) {
-        Expression* expression = (Expression*)va_arg(args, void*);
+        CExpression* expression = (CExpression*)va_arg(args, void*);
         this->arguments.push_back(expression);
     }
 }
 
 void
-MethodCall::Write(FILE* to)
+CMethodCall::Write(FILE* to)
 {
     if (this->obj != NULL) {
         this->obj->Write(to);
@@ -367,19 +359,19 @@ MethodCall::Write(FILE* to)
     fprintf(to, ")");
 }
 
-Comparison::Comparison(Expression* l, const string& o, Expression* r)
+CComparison::CComparison(CExpression* l, const string& o, CExpression* r)
     :lvalue(l),
      op(o),
      rvalue(r)
 {
 }
 
-Comparison::~Comparison()
+CComparison::~CComparison()
 {
 }
 
 void
-Comparison::Write(FILE* to)
+CComparison::Write(FILE* to)
 {
     fprintf(to, "(");
     this->lvalue->Write(to);
@@ -388,12 +380,12 @@ Comparison::Write(FILE* to)
     fprintf(to, ")");
 }
 
-NewExpression::NewExpression(Type* t)
+CNewExpression::CNewExpression(CType* t)
     :type(t)
 {
 }
 
-NewExpression::NewExpression(Type* t, int argc = 0, ...)
+CNewExpression::CNewExpression(CType* t, int argc = 0, ...)
     :type(t)
 {
   va_list args;
@@ -402,65 +394,65 @@ NewExpression::NewExpression(Type* t, int argc = 0, ...)
   va_end(args);
 }
 
-NewExpression::~NewExpression()
+CNewExpression::~CNewExpression()
 {
 }
 
 void
-NewExpression::init(int n, va_list args)
+CNewExpression::init(int n, va_list args)
 {
     for (int i=0; i<n; i++) {
-        Expression* expression = (Expression*)va_arg(args, void*);
+        CExpression* expression = (CExpression*)va_arg(args, void*);
         this->arguments.push_back(expression);
     }
 }
 
 void
-NewExpression::Write(FILE* to)
+CNewExpression::Write(FILE* to)
 {
     fprintf(to, "new %s(", this->type->InstantiableName().c_str());
     WriteArgumentList(to, this->arguments);
     fprintf(to, ")");
 }
 
-NewArrayExpression::NewArrayExpression(Type* t, Expression* s)
+CNewArrayExpression::CNewArrayExpression(CType* t, CExpression* s)
     :type(t),
      size(s)
 {
 }
 
-NewArrayExpression::~NewArrayExpression()
+CNewArrayExpression::~CNewArrayExpression()
 {
 }
 
 void
-NewArrayExpression::Write(FILE* to)
+CNewArrayExpression::Write(FILE* to)
 {
     fprintf(to, "new %s[", this->type->QualifiedName().c_str());
     size->Write(to);
     fprintf(to, "]");
 }
 
-Ternary::Ternary()
+CTernary::CTernary()
     :condition(NULL),
      ifpart(NULL),
      elsepart(NULL)
 {
 }
 
-Ternary::Ternary(Expression* a, Expression* b, Expression* c)
+CTernary::CTernary(CExpression* a, CExpression* b, CExpression* c)
     :condition(a),
      ifpart(b),
      elsepart(c)
 {
 }
 
-Ternary::~Ternary()
+CTernary::~CTernary()
 {
 }
 
 void
-Ternary::Write(FILE* to)
+CTernary::Write(FILE* to)
 {
     fprintf(to, "((");
     this->condition->Write(to);
@@ -471,50 +463,50 @@ Ternary::Write(FILE* to)
     fprintf(to, "))");
 }
 
-Cast::Cast()
+CCast::CCast()
     :type(NULL),
      expression(NULL)
 {
 }
 
-Cast::Cast(Type* t, Expression* e)
+CCast::CCast(CType* t, CExpression* e)
     :type(t),
      expression(e)
 {
 }
 
-Cast::~Cast()
+CCast::~CCast()
 {
 }
 
 void
-Cast::Write(FILE* to)
+CCast::Write(FILE* to)
 {
     fprintf(to, "((%s)", this->type->QualifiedName().c_str());
     expression->Write(to);
     fprintf(to, ")");
 }
 
-VariableDeclaration::VariableDeclaration(Variable* l, Expression* r, Type* c)
+CVariableDeclaration::CVariableDeclaration(CVariable* l, CExpression* r, CType* c)
     :lvalue(l),
      cast(c),
      rvalue(r)
 {
 }
 
-VariableDeclaration::VariableDeclaration(Variable* l)
+CVariableDeclaration::CVariableDeclaration(CVariable* l)
     :lvalue(l),
      cast(NULL),
      rvalue(NULL)
 {
 }
 
-VariableDeclaration::~VariableDeclaration()
+CVariableDeclaration::~CVariableDeclaration()
 {
 }
 
 void
-VariableDeclaration::Write(FILE* to)
+CVariableDeclaration::Write(FILE* to)
 {
     this->lvalue->WriteDeclaration(to);
     if (this->rvalue != NULL) {
@@ -527,19 +519,19 @@ VariableDeclaration::Write(FILE* to)
     fprintf(to, ";\n");
 }
 
-IfStatement::IfStatement()
+CIfStatement::CIfStatement()
     :expression(NULL),
-     statements(new StatementBlock),
+     statements(new CStatementBlock),
      elseif(NULL)
 {
 }
 
-IfStatement::~IfStatement()
+CIfStatement::~CIfStatement()
 {
 }
 
 void
-IfStatement::Write(FILE* to)
+CIfStatement::Write(FILE* to)
 {
     if (this->expression != NULL) {
         fprintf(to, "if (");
@@ -553,51 +545,51 @@ IfStatement::Write(FILE* to)
     }
 }
 
-ReturnStatement::ReturnStatement(Expression* e)
+CReturnStatement::CReturnStatement(CExpression* e)
     :expression(e)
 {
 }
 
-ReturnStatement::~ReturnStatement()
+CReturnStatement::~CReturnStatement()
 {
 }
 
 void
-ReturnStatement::Write(FILE* to)
+CReturnStatement::Write(FILE* to)
 {
     fprintf(to, "return ");
     this->expression->Write(to);
     fprintf(to, ";\n");
 }
 
-TryStatement::TryStatement()
-    :statements(new StatementBlock)
+CTryStatement::CTryStatement()
+    :statements(new CStatementBlock)
 {
 }
 
-TryStatement::~TryStatement()
+CTryStatement::~CTryStatement()
 {
 }
 
 void
-TryStatement::Write(FILE* to)
+CTryStatement::Write(FILE* to)
 {
     fprintf(to, "try ");
     this->statements->Write(to);
 }
 
-CatchStatement::CatchStatement(Variable* e)
-    :statements(new StatementBlock),
+CCatchStatement::CCatchStatement(CVariable* e)
+    :statements(new CStatementBlock),
      exception(e)
 {
 }
 
-CatchStatement::~CatchStatement()
+CCatchStatement::~CCatchStatement()
 {
 }
 
 void
-CatchStatement::Write(FILE* to)
+CCatchStatement::Write(FILE* to)
 {
     fprintf(to, "catch ");
     if (this->exception != NULL) {
@@ -608,39 +600,23 @@ CatchStatement::Write(FILE* to)
     this->statements->Write(to);
 }
 
-FinallyStatement::FinallyStatement()
-    :statements(new StatementBlock)
+CCase::CCase()
+    :statements(new CStatementBlock)
 {
 }
 
-FinallyStatement::~FinallyStatement()
-{
-}
-
-void
-FinallyStatement::Write(FILE* to)
-{
-    fprintf(to, "finally ");
-    this->statements->Write(to);
-}
-
-Case::Case()
-    :statements(new StatementBlock)
-{
-}
-
-Case::Case(const string& c)
-    :statements(new StatementBlock)
+CCase::CCase(const string& c)
+    :statements(new CStatementBlock)
 {
     cases.push_back(c);
 }
 
-Case::~Case()
+CCase::~CCase()
 {
 }
 
 void
-Case::Write(FILE* to)
+CCase::Write(FILE* to)
 {
     int N = this->cases.size();
     if (N > 0) {
@@ -658,17 +634,17 @@ Case::Write(FILE* to)
     statements->Write(to);
 }
 
-SwitchStatement::SwitchStatement(Expression* e)
+CSwitchStatement::CSwitchStatement(CExpression* e)
     :expression(e)
 {
 }
 
-SwitchStatement::~SwitchStatement()
+CSwitchStatement::~CSwitchStatement()
 {
 }
 
 void
-SwitchStatement::Write(FILE* to)
+CSwitchStatement::Write(FILE* to)
 {
     fprintf(to, "switch (");
     this->expression->Write(to);
@@ -680,35 +656,36 @@ SwitchStatement::Write(FILE* to)
     fprintf(to, "}\n");
 }
 
-Break::Break()
+CBreak::CBreak()
 {
 }
 
-Break::~Break()
+CBreak::~CBreak()
 {
 }
 
 void
-Break::Write(FILE* to)
+CBreak::Write(FILE* to)
 {
     fprintf(to, "break;\n");
 }
 
-Method::Method()
-    :ClassElement(),
+CMethod::CMethod()
+    :CClassElement(),
      modifiers(0),
      returnType(NULL), // (NULL means constructor)
      returnTypeDimension(0),
-     statements(NULL)
+     statements(NULL),
+     _virtual(false)
 {
 }
 
-Method::~Method()
+CMethod::~CMethod()
 {
 }
 
 void
-Method::GatherTypes(set<Type*>* types) const
+CMethod::GatherTypes(set<CType*>* types) const
 {
     size_t N, i;
 
@@ -728,7 +705,7 @@ Method::GatherTypes(set<Type*>* types) const
 }
 
 void
-Method::Write(FILE* to)
+CMethod::Write(FILE* to)
 {
     size_t N, i;
 
@@ -736,7 +713,7 @@ Method::Write(FILE* to)
         fprintf(to, "%s\n", this->comment.c_str());
     }
 
-    WriteModifiers(to, this->modifiers, SCOPE_MASK | STATIC | ABSTRACT | FINAL | OVERRIDE);
+    WriteModifiers(to, this->modifiers, SCOPE_MASK | STATIC | VIRTUAL);
 
     if (this->returnType != NULL) {
         string dim;
@@ -777,31 +754,25 @@ Method::Write(FILE* to)
     }
 }
 
-Class::Class()
+CClass::CClass()
     :modifiers(0),
-     what(CLASS),
-     type(NULL),
-     extends(NULL)
+     type(NULL)
 {
 }
 
-Class::~Class()
+CClass::~CClass()
 {
 }
 
 void
-Class::GatherTypes(set<Type*>* types) const
+CClass::GatherTypes(set<CType*>* types) const
 {
     int N, i;
 
     types->insert(this->type);
-    if (this->extends != NULL) {
-        types->insert(this->extends);
-    }
-
-    N = this->interfaces.size();
+    N = this->inherit.size();
     for (i=0; i<N; i++) {
-        types->insert(this->interfaces[i]);
+        types->insert(this->inherit[i]);
     }
 
     N = this->elements.size();
@@ -811,7 +782,7 @@ Class::GatherTypes(set<Type*>* types) const
 }
 
 void
-Class::Write(FILE* to)
+CClass::Write(FILE* to)
 {
     size_t N, i;
 
@@ -821,11 +792,7 @@ Class::Write(FILE* to)
 
     WriteModifiers(to, this->modifiers, ALL_MODIFIERS);
 
-    if (this->what == Class::CLASS) {
-        fprintf(to, "class ");
-    } else {
-        fprintf(to, "interface ");
-    }
+    fprintf(to, "class ");
 
     string name = this->type->Name();
     size_t pos = name.rfind('.');
@@ -835,19 +802,15 @@ Class::Write(FILE* to)
 
     fprintf(to, "%s", name.c_str());
 
-    if (this->extends != NULL) {
-        fprintf(to, " extends %s", this->extends->QualifiedName().c_str());
-    }
 
-    N = this->interfaces.size();
+    N = this->inherit.size();
+
     if (N != 0) {
-        if (this->what == Class::CLASS) {
-            fprintf(to, " implements");
-        } else {
-            fprintf(to, " extends");
+        for (i=0; i < N -1; i++) {
+            fprintf(to, " public %s,", this->inherit[i]->QualifiedName().c_str());
         }
-        for (i=0; i<N; i++) {
-            fprintf(to, " %s", this->interfaces[i]->QualifiedName().c_str());
+        for (; i < N; i++) {
+            fprintf(to, " public %s", this->inherit[i]->QualifiedName().c_str());
         }
     }
 
@@ -863,11 +826,11 @@ Class::Write(FILE* to)
 
 }
 
-Document::Document()
+CDocument::CDocument()
 {
 }
 
-Document::~Document()
+CDocument::~CDocument()
 {
 }
 
@@ -888,7 +851,7 @@ escape_backslashes(const string& str)
 }
 
 void
-Document::Write(FILE* to)
+CDocument::Write(FILE* to)
 {
     size_t N, i;
 
@@ -899,14 +862,17 @@ Document::Write(FILE* to)
                 " * This file is auto-generated.  DO NOT MODIFY.\n"
                 " * Original file: %s\n"
                 " */\n", escape_backslashes(this->originalSrc).c_str());
-    if (this->package.length() != 0) {
-        fprintf(to, "package %s;\n", this->package.c_str());
+    if (this->_namespace.length() != 0) {
+        fprintf(to, "namespace %s{\n", this->_namespace.c_str());
     }
 
     N = this->classes.size();
     for (i=0; i<N; i++) {
-        Class* c = this->classes[i];
+        CClass* c = this->classes[i];
         c->Write(to);
+    }
+    if (this->_namespace.length() != 0) {
+        fprintf(to, "};\n");
     }
 }
 

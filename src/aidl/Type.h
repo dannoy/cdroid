@@ -7,7 +7,7 @@
 
 using namespace std;
 
-class JType
+class Type
 {
 public:
     // kinds
@@ -537,6 +537,6 @@ extern Expression* SUPER_VALUE;
 extern Expression* TRUE_VALUE;
 extern Expression* FALSE_VALUE;
 
-void register_base_types();
+void jregister_base_types();
 
 #endif // AIDL_TYPE_H

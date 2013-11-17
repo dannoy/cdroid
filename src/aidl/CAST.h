@@ -1,5 +1,5 @@
-#ifndef AIDL_AST_H
-#define AIDL_AST_H
+#ifndef AIDL_CAST_H
+#define AIDL_CAST_H
 
 #include <string>
 #include <vector>
@@ -7,22 +7,19 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+
 using namespace std;
 
-class Type;
+class CType;
 
 enum {
-    PACKAGE_PRIVATE = 0x00000000,
     PUBLIC          = 0x00000001,
     PRIVATE         = 0x00000002,
     PROTECTED       = 0x00000003,
     SCOPE_MASK      = 0x00000003,
 
     STATIC          = 0x00000010,
-    FINAL           = 0x00000020,
-    ABSTRACT        = 0x00000040,
-
-    OVERRIDE        = 0x00000100,
+    VIRTUAL         = 0x00000020,
 
     ALL_MODIFIERS   = 0xffffffff
 };
@@ -30,343 +27,327 @@ enum {
 // Write the modifiers that are set in both mod and mask
 void WriteModifiers(FILE* to, int mod, int mask);
 
-struct ClassElement
+struct CClassElement
 {
-    ClassElement();
-    virtual ~ClassElement();
+    CClassElement();
+    virtual ~CClassElement();
 
-    virtual void GatherTypes(set<Type*>* types) const = 0;
+    virtual void GatherTypes(set<CType*>* types) const = 0;
     virtual void Write(FILE* to) = 0;
 };
 
-struct Expression
+struct CExpression
 {
-    virtual ~Expression();
+    virtual ~CExpression();
     virtual void Write(FILE* to) = 0;
 };
 
-struct LiteralExpression : public Expression
+struct CLiteralExpression : public CExpression
 {
     string value;
 
-    LiteralExpression(const string& value);
-    virtual ~LiteralExpression();
+    CLiteralExpression(const string& value);
+    virtual ~CLiteralExpression();
     virtual void Write(FILE* to);
 };
 
 // TODO: also escape the contents.  not needed for now
-struct StringLiteralExpression : public Expression
+struct CStringLiteralExpression : public CExpression
 {
     string value;
 
-    StringLiteralExpression(const string& value);
-    virtual ~StringLiteralExpression();
+    CStringLiteralExpression(const string& value);
+    virtual ~CStringLiteralExpression();
     virtual void Write(FILE* to);
 };
 
-struct Variable : public Expression
+struct CVariable : public CExpression
 {
-    Type* type;
+    CType* type;
     string name;
     int dimension;
 
-    Variable();
-    Variable(Type* type, const string& name);
-    Variable(Type* type, const string& name, int dimension);
-    virtual ~Variable();
+    CVariable();
+    CVariable(CType* type, const string& name);
+    CVariable(CType* type, const string& name, int dimension);
+    virtual ~CVariable();
 
-    virtual void GatherTypes(set<Type*>* types) const;
+    virtual void GatherTypes(set<CType*>* types) const;
     void WriteDeclaration(FILE* to);
     void Write(FILE* to);
 };
 
-struct FieldVariable : public Expression
+struct CFieldVariable : public CExpression
 {
-    Expression* object;
-    Type* clazz;
+    CExpression* object;
+    CType* clazz;
     string name;
 
-    FieldVariable(Expression* object, const string& name);
-    FieldVariable(Type* clazz, const string& name);
-    virtual ~FieldVariable();
+    CFieldVariable(CExpression* object, const string& name);
+    CFieldVariable(CType* clazz, const string& name);
+    virtual ~CFieldVariable();
 
     void Write(FILE* to);
 };
 
-struct Field : public ClassElement
+struct CField : public CClassElement
 {
     string comment;
     int modifiers;
-    Variable *variable;
+    CVariable *variable;
     string value;
 
-    Field();
-    Field(int modifiers, Variable* variable);
-    virtual ~Field();
+    CField();
+    CField(int modifiers, CVariable* variable);
+    virtual ~CField();
 
-    virtual void GatherTypes(set<Type*>* types) const;
+    virtual void GatherTypes(set<CType*>* types) const;
     virtual void Write(FILE* to);
 };
 
-struct Statement
+struct CStatement
 {
-    virtual ~Statement();
+    virtual ~CStatement();
     virtual void Write(FILE* to) = 0;
 };
 
-struct StatementBlock : public Statement
+struct CStatementBlock : public CStatement
 {
-    vector<Statement*> statements;
+    vector<CStatement*> statements;
 
-    StatementBlock();
-    virtual ~StatementBlock();
+    CStatementBlock();
+    virtual ~CStatementBlock();
     virtual void Write(FILE* to);
 
-    void Add(Statement* statement);
-    void Add(Expression* expression);
+    void Add(CStatement* cstatement);
+    void Add(CExpression* cexpression);
 };
 
-struct ExpressionStatement : public Statement
+struct CExpressionStatement : public CStatement
 {
-    Expression* expression;
+    CExpression* expression;
 
-    ExpressionStatement(Expression* expression);
-    virtual ~ExpressionStatement();
-    virtual void Write(FILE* to);
-};
-
-struct Assignment : public Expression
-{
-    Variable* lvalue;
-    Expression* rvalue;
-    Type* cast;
-
-    Assignment(Variable* lvalue, Expression* rvalue);
-    Assignment(Variable* lvalue, Expression* rvalue, Type* cast);
-    virtual ~Assignment();
+    CExpressionStatement(CExpression* cexpression);
+    virtual ~CExpressionStatement();
     virtual void Write(FILE* to);
 };
 
-struct MethodCall : public Expression
+struct CAssignment : public CExpression
 {
-    Expression* obj;
-    Type* clazz;
+    CVariable* lvalue;
+    CExpression* rvalue;
+    CType* cast;
+
+    CAssignment(CVariable* lvalue, CExpression* rvalue);
+    CAssignment(CVariable* lvalue, CExpression* rvalue, CType* cast);
+    virtual ~CAssignment();
+    virtual void Write(FILE* to);
+};
+
+struct CMethodCall : public CExpression
+{
+    CExpression* obj;
+    CType* clazz;
     string name;
-    vector<Expression*> arguments;
+    vector<CExpression*> arguments;
     vector<string> exceptions;
 
-    MethodCall(const string& name);
-    MethodCall(const string& name, int argc, ...);
-    MethodCall(Expression* obj, const string& name);
-    MethodCall(Type* clazz, const string& name);
-    MethodCall(Expression* obj, const string& name, int argc, ...);
-    MethodCall(Type* clazz, const string& name, int argc, ...);
-    virtual ~MethodCall();
+    CMethodCall(const string& name);
+    CMethodCall(const string& name, int argc, ...);
+    CMethodCall(CExpression* obj, const string& name);
+    CMethodCall(CType* clazz, const string& name);
+    CMethodCall(CExpression* obj, const string& name, int argc, ...);
+    CMethodCall(CType* clazz, const string& name, int argc, ...);
+    virtual ~CMethodCall();
     virtual void Write(FILE* to);
 
 private:
     void init(int n, va_list args);
 };
 
-struct Comparison : public Expression
+struct CComparison : public CExpression
 {
-    Expression* lvalue;
+    CExpression* lvalue;
     string op;
-    Expression* rvalue;
+    CExpression* rvalue;
 
-    Comparison(Expression* lvalue, const string& op, Expression* rvalue);
-    virtual ~Comparison();
+    CComparison(CExpression* lvalue, const string& op, CExpression* rvalue);
+    virtual ~CComparison();
     virtual void Write(FILE* to);
 };
 
-struct NewExpression : public Expression
+struct CNewExpression : public CExpression
 {
-    Type* type;
-    vector<Expression*> arguments;
+    CType* type;
+    vector<CExpression*> arguments;
 
-    NewExpression(Type* type);
-    NewExpression(Type* type, int argc, ...);
-    virtual ~NewExpression();
+    CNewExpression(CType* type);
+    CNewExpression(CType* type, int argc, ...);
+    virtual ~CNewExpression();
     virtual void Write(FILE* to);
 
 private:
     void init(int n, va_list args);
 };
 
-struct NewArrayExpression : public Expression
+struct CNewArrayExpression : public CExpression
 {
-    Type* type;
-    Expression* size;
+    CType* type;
+    CExpression* size;
 
-    NewArrayExpression(Type* type, Expression* size);
-    virtual ~NewArrayExpression();
+    CNewArrayExpression(CType* type, CExpression* size);
+    virtual ~CNewArrayExpression();
     virtual void Write(FILE* to);
 };
 
-struct Ternary : public Expression
+struct CTernary : public CExpression
 {
-    Expression* condition;
-    Expression* ifpart;
-    Expression* elsepart;
+    CExpression* condition;
+    CExpression* ifpart;
+    CExpression* elsepart;
 
-    Ternary();
-    Ternary(Expression* condition, Expression* ifpart, Expression* elsepart);
-    virtual ~Ternary();
+    CTernary();
+    CTernary(CExpression* condition, CExpression* ifpart, CExpression* elsepart);
+    virtual ~CTernary();
     virtual void Write(FILE* to);
 };
 
-struct Cast : public Expression
+struct CCast : public CExpression
 {
-    Type* type;
-    Expression* expression;
+    CType* type;
+    CExpression* expression;
 
-    Cast();
-    Cast(Type* type, Expression* expression);
-    virtual ~Cast();
+    CCast();
+    CCast(CType* type, CExpression* cexpression);
+    virtual ~CCast();
     virtual void Write(FILE* to);
 };
 
-struct VariableDeclaration : public Statement
+struct CVariableDeclaration : public CStatement
 {
-    Variable* lvalue;
-    Type* cast;
-    Expression* rvalue;
+    CVariable* lvalue;
+    CType* cast;
+    CExpression* rvalue;
 
-    VariableDeclaration(Variable* lvalue);
-    VariableDeclaration(Variable* lvalue, Expression* rvalue, Type* cast = NULL);
-    virtual ~VariableDeclaration();
+    CVariableDeclaration(CVariable* lvalue);
+    CVariableDeclaration(CVariable* lvalue, CExpression* rvalue, CType* cast = NULL);
+    virtual ~CVariableDeclaration();
     virtual void Write(FILE* to);
 };
 
-struct IfStatement : public Statement
+struct CIfStatement : public CStatement
 {
-    Expression* expression;
-    StatementBlock* statements;
-    IfStatement* elseif;
+    CExpression* expression;
+    CStatementBlock* statements;
+    CIfStatement* elseif;
 
-    IfStatement();
-    virtual ~IfStatement();
+    CIfStatement();
+    virtual ~CIfStatement();
     virtual void Write(FILE* to);
 };
 
-struct ReturnStatement : public Statement
+struct CReturnStatement : public CStatement
 {
-    Expression* expression;
+    CExpression* expression;
 
-    ReturnStatement(Expression* expression);
-    virtual ~ReturnStatement();
+    CReturnStatement(CExpression* expression);
+    virtual ~CReturnStatement();
     virtual void Write(FILE* to);
 };
 
-struct TryStatement : public Statement
+struct CTryStatement : public CStatement
 {
-    StatementBlock* statements;
+    CStatementBlock* statements;
 
-    TryStatement();
-    virtual ~TryStatement();
+    CTryStatement();
+    virtual ~CTryStatement();
     virtual void Write(FILE* to);
 };
 
-struct CatchStatement : public Statement
+struct CCatchStatement : public CStatement
 {
-    StatementBlock* statements;
-    Variable* exception;
+    CStatementBlock* statements;
+    CVariable* exception;
 
-    CatchStatement(Variable* exception);
-    virtual ~CatchStatement();
+    CCatchStatement(CVariable* e);
+    virtual ~CCatchStatement();
     virtual void Write(FILE* to);
 };
 
-struct FinallyStatement : public Statement
-{
-    StatementBlock* statements;
-
-    FinallyStatement();
-    virtual ~FinallyStatement();
-    virtual void Write(FILE* to);
-};
-
-struct Case
+struct CCase
 {
     vector<string> cases;
-    StatementBlock* statements;
+    CStatementBlock* statements;
 
-    Case();
-    Case(const string& c);
-    virtual ~Case();
+    CCase();
+    CCase(const string& c);
+    virtual ~CCase();
     virtual void Write(FILE* to);
 };
 
-struct SwitchStatement : public Statement
+struct CSwitchStatement : public CStatement
 {
-    Expression* expression;
-    vector<Case*> cases;
+    CExpression* expression;
+    vector<CCase*> cases;
 
-    SwitchStatement(Expression* expression);
-    virtual ~SwitchStatement();
+    CSwitchStatement(CExpression* cexpression);
+    virtual ~CSwitchStatement();
     virtual void Write(FILE* to);
 };
 
-struct Break : public Statement
+struct CBreak : public CStatement
 {
-    Break();
-    virtual ~Break();
+    CBreak();
+    virtual ~CBreak();
     virtual void Write(FILE* to);
 };
 
-struct Method : public ClassElement
+struct CMethod : public CClassElement
 {
     string comment;
     int modifiers;
-    Type* returnType;
+    CType* returnType;
     size_t returnTypeDimension;
     string name;
-    vector<Variable*> parameters;
-    vector<Type*> exceptions;
-    StatementBlock* statements;
-    bool virtualized; //lijin
+    vector<CVariable*> parameters;
+    vector<CType*> exceptions;
+    CStatementBlock* statements;
+    bool _virtual; //lijin
 
-    Method();
-    virtual ~Method();
+    CMethod();
+    virtual ~CMethod();
 
-    virtual void GatherTypes(set<Type*>* types) const;
+    virtual void GatherTypes(set<CType*>* types) const;
     virtual void Write(FILE* to);
 };
 
-struct Class : public ClassElement
+struct CClass : public CClassElement
 {
-    enum {
-        CLASS,
-        INTERFACE
-    };
-
     string comment;
     int modifiers;
-    int what;               // CLASS or INTERFACE
-    Type* type;
-    Type* extends;
-    vector<Type*> interfaces;
-    vector<ClassElement*> elements;
+    CType* type;
+    vector<CType*> inherit;
+    vector<CClassElement*> elements;
 
-    Class();
-    virtual ~Class();
+    CClass();
+    virtual ~CClass();
 
-    virtual void GatherTypes(set<Type*>* types) const;
+    virtual void GatherTypes(set<CType*>* types) const;
     virtual void Write(FILE* to);
 };
 
-struct Document
+struct CDocument
 {
     string comment;
-    string package;
+    string _namespace;
     string originalSrc;
-    set<Type*> imports;
-    vector<Class*> classes;
+    set<string> includes;
+    vector<CClass*> classes;
 
-    Document();
-    virtual ~Document();
+    CDocument();
+    virtual ~CDocument();
 
     virtual void Write(FILE* to);
 };
 
-#endif // AIDL_AST_H
+#endif // AIDL_CAST_H

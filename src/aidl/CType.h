@@ -1,7 +1,7 @@
 #ifndef AIDL_CTYPE_H
 #define AIDL_CTYPE_H
 
-#include "AST.h"
+#include "CAST.h"
 #include <string>
 #include <vector>
 
@@ -14,22 +14,23 @@ public:
     enum {
         BUILT_IN,
         USERDATA,
+        INTERFACE,
         GENERATED
     };
-    
+
     // WriteToParcel flags
     enum {
         PARCELABLE_WRITE_RETURN_VALUE = 0x0001
     };
 
-                    Type(const string& name, int kind, bool canWriteToParcel,
+                    CType(const string& name, int kind, bool canWriteToParcel,
                             bool canWriteToRpcData, bool canBeOut);
-                    Type(const string& package, const string& name,
+                    CType(const string& package, const string& name,
                             int kind, bool canWriteToParcel, bool canWriteToRpcData, bool canBeOut,
                             const string& declFile = "", int declLine = -1);
-    virtual         ~Type();
+    virtual         ~CType();
 
-    inline string   Package() const             { return m_package; }
+    inline string   Namespace() const             { return m_namespace; }
     inline string   Name() const                { return m_name; }
     inline string   QualifiedName() const       { return m_qualifiedName; }
     inline int      Kind() const                { return m_kind; }
@@ -38,42 +39,31 @@ public:
     inline bool     CanWriteToParcel() const    { return m_canWriteToParcel; }
     inline bool     CanWriteToRpcData() const   { return m_canWriteToRpcData; }
     inline bool     CanBeOutParameter() const   { return m_canBeOut; }
-    
-    virtual string  ImportType() const;
-    virtual string  CreatorName() const;
-    virtual string  RpcCreatorName() const;
+
+    virtual string  IncludeName() const;
     virtual string  InstantiableName() const;
 
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
+    virtual void    ReadFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
 
-    virtual bool    CanBeArray() const;
-
-    virtual void    WriteArrayToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-
-    virtual void    WriteToRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, int flags);
-    virtual void    CreateFromRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, Variable** cl);
+    virtual void    WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+                                    CVariable* data, int flags);
+    virtual void    CreateFromRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+                                    CVariable* data, CVariable** cl);
 
 protected:
     void SetQualifiedName(const string& qualified);
-    Expression* BuildWriteToParcelFlags(int flags);
+    CExpression* BuildWriteToParcelFlags(int flags);
 
 private:
-    Type();
-    Type(const Type&);
+    CType();
+    CType(const CType&);
 
-    string m_package;
+    string m_namespace;
     string m_name;
     string m_qualifiedName;
     string m_declFile;
@@ -84,458 +74,261 @@ private:
     bool m_canBeOut;
 };
 
-class BasicType : public Type
+class CBasicType : public CType
 {
 public:
-                    BasicType(const string& name,
+                    CBasicType(const string& name,
                               const string& marshallParcel,
                               const string& unmarshallParcel,
-                              const string& writeArrayParcel,
-                              const string& createArrayParcel,
-                              const string& readArrayParcel,
                               const string& marshallRpc,
-                              const string& unmarshallRpc,
-                              const string& writeArrayRpc,
-                              const string& createArrayRpc,
-                              const string& readArrayRpc);
+                              const string& unmarshallRpc);
 
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
 
-    virtual bool    CanBeArray() const;
-
-    virtual void    WriteArrayToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-
-    virtual void    WriteToRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, int flags);
-    virtual void    CreateFromRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, Variable** cl);
+    virtual void    WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+                                    CVariable* data, int flags);
+    virtual void    CreateFromRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+                                    CVariable* data, CVariable** cl);
 
 private:
     string m_marshallParcel;
     string m_unmarshallParcel;
-    string m_writeArrayParcel;
-    string m_createArrayParcel;
-    string m_readArrayParcel;
     string m_marshallRpc;
     string m_unmarshallRpc;
-    string m_writeArrayRpc;
-    string m_createArrayRpc;
-    string m_readArrayRpc;
 };
 
-class BooleanType : public Type
+class CBooleanType : public CType
 {
 public:
-                    BooleanType();
+                    CBooleanType();
 
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
 
-    virtual bool    CanBeArray() const;
-
-    virtual void    WriteArrayToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-
-    virtual void    WriteToRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, int flags);
-    virtual void    CreateFromRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, Variable** cl);
+    virtual void    WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+                                    CVariable* data, int flags);
+    virtual void    CreateFromRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+                                    CVariable* data, CVariable** cl);
 };
 
-class CharType : public Type
+class CCharType : public CType
 {
 public:
-                    CharType();
+                    CCharType();
 
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
 
-    virtual bool    CanBeArray() const;
-
-    virtual void    WriteArrayToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-
-    virtual void    WriteToRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, int flags);
-    virtual void    CreateFromRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, Variable** cl);
+    virtual void    WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+                                    CVariable* data, int flags);
+    virtual void    CreateFromRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+                                    CVariable* data, CVariable** cl);
 };
 
 
-class StringType : public Type
+// choose String8
+class CStringType : public CType
 {
 public:
-                    StringType();
+                    CStringType();
 
-    virtual string  CreatorName() const;
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
 
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-
-    virtual bool    CanBeArray() const;
-
-    virtual void    WriteArrayToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-
-    virtual void    WriteToRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, int flags);
-    virtual void    CreateFromRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, Variable** cl);
+    virtual void    WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+                                    CVariable* data, int flags);
+    virtual void    CreateFromRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+                                    CVariable* data, CVariable** cl);
 };
 
-class CharSequenceType : public Type
+class CRemoteExceptionType : public CType
 {
 public:
-                    CharSequenceType();
+                    CRemoteExceptionType();
 
-    virtual string  CreatorName() const;
-
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
 };
 
-class RemoteExceptionType : public Type
+class CIBinderType : public CType
 {
 public:
-                    RemoteExceptionType();
+                    CIBinderType();
 
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
 };
 
-class RuntimeExceptionType : public Type
+class CIInterfaceType : public CType
 {
 public:
-                    RuntimeExceptionType();
+                    CIInterfaceType();
 
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
 };
 
-class IBinderType : public Type
+class CParcelableInterfaceType : public CType
 {
 public:
-                    IBinderType();
+                    CParcelableInterfaceType();
 
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-
-    virtual void    WriteArrayToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
 };
 
-class IInterfaceType : public Type
+
+class CUserDataType : public CType
 {
 public:
-                    IInterfaceType();
-
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-};
-
-class BinderType : public Type
-{
-public:
-                    BinderType();
-
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-};
-
-class BinderProxyType : public Type
-{
-public:
-                    BinderProxyType();
-
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-};
-
-class ParcelType : public Type
-{
-public:
-                    ParcelType();
-
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-};
-
-class ParcelableInterfaceType : public Type
-{
-public:
-                    ParcelableInterfaceType();
-
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-};
-
-class MapType : public Type
-{
-public:
-                    MapType();
-
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-};
-
-class ListType : public Type
-{
-public:
-                    ListType();
-
-    virtual string  InstantiableName() const;
-
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-
-    virtual void    WriteToRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, int flags);
-    virtual void    CreateFromRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, Variable** cl);
-};
-
-class UserDataType : public Type
-{
-public:
-                    UserDataType(const string& package, const string& name,
+                    CUserDataType(const string& _namespace, const string& name,
                             bool builtIn, bool canWriteToParcel, bool canWriteToRpcData,
                             const string& declFile = "", int declLine = -1);
 
-    virtual string  CreatorName() const;
-    virtual string  RpcCreatorName() const;
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
+    virtual void    ReadFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
 
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-
-    virtual bool    CanBeArray() const;
-
-    virtual void    WriteArrayToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadArrayFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-
-    virtual void    WriteToRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, int flags);
-    virtual void    CreateFromRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, Variable** cl);
+    virtual void    WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+                                    CVariable* data, int flags);
+    virtual void    CreateFromRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+                                    CVariable* data, CVariable** cl);
 };
 
-class InterfaceType : public Type
+// For interface in preprocessed files
+// For public interface specific class,eg ITprocess
+class CInterfaceType : public CType
 {
 public:
-                    InterfaceType(const string& package, const string& name,
+                    CInterfaceType(const string& _namespace, const string& name,
                             bool builtIn, bool oneway,
                             const string& declFile, int declLine);
 
     bool            OneWay() const;
-    
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-                                    
+
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
+
 private:
     bool m_oneway;
 };
 
 
-class GenericType : public Type
+class CTemplateType : public CType
 {
 public:
-                    GenericType(const string& package, const string& name,
-                                 const vector<Type*>& args);
+                    CTemplateType(const string& _namespace, const string& name,
+                                 const vector<CType*>& args);
 
-    const vector<Type*>& GenericArgumentTypes() const;
+    const vector<CType*>& GenericArgumentTypes() const;
     string          GenericArguments() const;
 
     virtual string  ImportType() const;
 
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
+    virtual void    ReadFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
 
 private:
     string m_genericArguments;
     string m_importName;
-    vector<Type*> m_args;
+    vector<CType*> m_args;
 };
 
-class RpcDataType : public UserDataType
+class CNamespace
 {
 public:
-                    RpcDataType();
-
-    virtual void    WriteToRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, int flags);
-    virtual void    CreateFromRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, Variable** cl);
-};
-
-class ClassLoaderType : public Type
-{
-public:
-                    ClassLoaderType();
-};
-
-class GenericListType : public GenericType
-{
-public:
-                    GenericListType(const string& package, const string& name,
-                                 const vector<Type*>& args);
-
-    virtual string  CreatorName() const;
-    virtual string  InstantiableName() const;
-
-    virtual void    WriteToParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, int flags);
-    virtual void    CreateFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-    virtual void    ReadFromParcel(StatementBlock* addTo, Variable* v,
-                                    Variable* parcel, Variable** cl);
-
-    virtual void    WriteToRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, int flags);
-    virtual void    CreateFromRpcData(StatementBlock* addTo, Expression* k, Variable* v,
-                                    Variable* data, Variable** cl);
-    
-private:
-    string m_creator;
-};
-
-class Namespace
-{
-public:
-            Namespace();
-            ~Namespace();
-    void    Add(Type* type);
+            CNamespace();
+            ~CNamespace();
+    void    Add(CType* type);
 
     // args is the number of template types (what is this called?)
-    void    AddGenericType(const string& package, const string& name, int args);
+    void    AddTemplateType(const string& _namespace, const string& name, int args);
 
     // lookup a specific class name
-    Type*   Find(const string& name) const;
-    Type*   Find(const char* package, const char* name) const;
-    
+    CType*   Find(const string& name) const;
+    CType*   Find(const char* _namespace, const char* name) const;
+
     // try to search by either a full name or a partial name
-    Type*   Search(const string& name);
+    CType*   Search(const string& name);
 
     void    Dump() const;
 
 private:
-    struct Generic {
-        string package;
+    struct _CTemplate {
+        string _namespace;
         string name;
         string qualified;
         int args;
     };
 
-    const Generic* search_generic(const string& name) const;
+    const _CTemplate* search_template(const string& name) const;
 
-    vector<Type*> m_types;
-    vector<Generic> m_generics;
+    vector<CType*> m_types;
+    vector<_CTemplate> m_templates;
 };
 
-extern Namespace NAMES;
+extern CNamespace CNAMES;
 
-extern Type* VOID_TYPE;
-extern Type* BOOLEAN_TYPE;
-extern Type* BYTE_TYPE;
-extern Type* CHAR_TYPE;
-extern Type* INT_TYPE;
-extern Type* LONG_TYPE;
-extern Type* FLOAT_TYPE;
-extern Type* DOUBLE_TYPE;
-extern Type* OBJECT_TYPE;
-extern Type* STRING_TYPE;
-extern Type* CHAR_SEQUENCE_TYPE;
-extern Type* TEXT_UTILS_TYPE;
-extern Type* REMOTE_EXCEPTION_TYPE;
-extern Type* RUNTIME_EXCEPTION_TYPE;
-extern Type* IBINDER_TYPE;
-extern Type* IINTERFACE_TYPE;
-extern Type* BINDER_NATIVE_TYPE;
-extern Type* BINDER_PROXY_TYPE;
-extern Type* PARCEL_TYPE;
-extern Type* PARCELABLE_INTERFACE_TYPE;
+extern CType* CVOID_TYPE;
+extern CType* CBOOLEAN_TYPE;
+extern CType* CBYTE_TYPE;
+extern CType* CCHAR_TYPE;
+extern CType* CINT_TYPE;
+extern CType* CLONG_TYPE;
+extern CType* CFLOAT_TYPE;
+extern CType* CDOUBLE_TYPE;
+/*extern CType* OBJECT_TYPE;*/
+extern CType* CSTRING_TYPE;
+/*extern CType* CHAR_SEQUENCE_TYPE;*/
+/*extern CType* TEXT_UTILS_TYPE;*/
+/*extern CType* REMOTE_EXCEPTION_TYPE;*/
+/*extern CType* RUNTIME_EXCEPTION_TYPE;*/
+extern CType* CIBINDER_TYPE;
+extern CType* CIINTERFACE_TYPE;
+/*extern CType* BINDER_NATIVE_TYPE;*/
+/*extern CType* BINDER_PROXY_TYPE;*/
+/*extern CType* CPARCEL_TYPE;*/
+/*extern CType* CPARCELABLE_INTERFACE_TYPE;*/
 
-extern Type* CONTEXT_TYPE;
+/*extern CType* CONTEXT_TYPE;*/
 
-extern Type* RPC_DATA_TYPE;
-extern Type* RPC_ERROR_TYPE;
-extern Type* RPC_CONTEXT_TYPE;
-extern Type* EVENT_FAKE_TYPE;
+/*extern CType* RPC_DATA_TYPE;*/
+/*extern CType* RPC_ERROR_TYPE;*/
+/*extern CType* RPC_CONTEXT_TYPE;*/
+/*extern CType* EVENT_FAKE_TYPE;*/
 
-extern Expression* NULL_VALUE;
-extern Expression* THIS_VALUE;
-extern Expression* SUPER_VALUE;
-extern Expression* TRUE_VALUE;
-extern Expression* FALSE_VALUE;
+extern CExpression* CNULL_VALUE;
+extern CExpression* CTHIS_VALUE;
+/*extern CExpression* SUPER_VALUE;*/
+extern CExpression* CTRUE_VALUE;
+extern CExpression* CFALSE_VALUE;
 
-void register_base_types();
+void cregister_base_types();
 
-#endif // AIDL_TYPE_H
+#endif // AIDL_CTYPE_H

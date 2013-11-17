@@ -2,12 +2,15 @@ LOCAL_SRC_FILES := \
 	aidl.cpp \
 	aidl_language.cpp \
 	options.cpp \
-	search_path.cpp \
 	AST.cpp \
+    CAST.cpp \
 	Type.cpp \
+    CType.cpp \
 	generate_java.cpp \
 	generate_java_binder.cpp \
-	generate_java_rpc.cpp
+	generate_java_rpc.cpp \
+    caidl.cpp \
+    jaidl.cpp
 
 progs := aidl
 shared_libs :=

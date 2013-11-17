@@ -15,11 +15,11 @@ world:
 
 include $(RULESMK)
 $(eval $(call preCalled))
-$(eval $(call includeSubDir,src/liblog))
-$(eval $(call includeSubDir,src/libcutils))
-$(eval $(call includeSubDir,src/libcorkscrew))
-$(eval $(call includeSubDir,src/utils))
-$(eval $(call includeSubDir,src/binder))
+#$(eval $(call includeSubDir,src/liblog))
+#$(eval $(call includeSubDir,src/libcutils))
+#$(eval $(call includeSubDir,src/libcorkscrew))
+#$(eval $(call includeSubDir,src/utils))
+#$(eval $(call includeSubDir,src/binder))
 
 $(eval $(call includeSubDir,src/aidl))
 

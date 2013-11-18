@@ -302,6 +302,23 @@ struct CBreak : public CStatement
     virtual void Write(FILE* to);
 };
 
+struct CFunction : public CStatement
+{
+    string comment;
+    CType* returnType;
+    size_t returnTypeDimension;
+    string name;
+    vector<CVariable*> parameters;
+    vector<CType*> exceptions;
+    CStatementBlock* statements;
+
+    CFunction();
+    virtual ~CFunction();
+
+    virtual void GatherTypes(set<CType*>* types) const;
+    virtual void Write(FILE* to);
+};
+
 struct CMethod : public CClassElement
 {
     string comment;
@@ -321,6 +338,19 @@ struct CMethod : public CClassElement
     virtual void Write(FILE* to);
 };
 
+
+struct CEnum
+{
+    vector<CAssignment *> elements;
+    CType *type;
+
+    CEnum();
+    virtual ~CEnum();
+
+    virtual void GatherTypes(set<CType*>* types) const;
+    virtual void Write(FILE* to);
+}
+
 struct CClass : public CClassElement
 {
     string comment;
@@ -335,6 +365,14 @@ struct CClass : public CClassElement
     virtual void GatherTypes(set<CType*>* types) const;
     virtual void Write(FILE* to);
 };
+
+struct CNamespace
+{
+    vector<CClass *> classes;
+    vector<CFunction *> functions;
+    vector<CEnum *> enums;
+    string comment;
+}
 
 struct CDocument
 {

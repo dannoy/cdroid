@@ -235,17 +235,26 @@ private:
     bool m_oneway;
 };
 
+class CEnumType : public CType
+{
+public:
+                    CEnumType();
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
+
+}
+
 
 class CTemplateType : public CType
 {
 public:
                     CTemplateType(const string& _namespace, const string& name,
-                                 const vector<CType*>& args);
+                                  const vector<CType*>& args);
 
-    const vector<CType*>& GenericArgumentTypes() const;
-    string          GenericArguments() const;
-
-    virtual string  ImportType() const;
+    const vector<CType*>& TemplateArgumentTypes() const;
+    string          TemplateArguments() const;
 
     virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
                                     CVariable* parcel, int flags);
@@ -255,16 +264,15 @@ public:
                                     CVariable* parcel, CVariable** cl);
 
 private:
-    string m_genericArguments;
-    string m_importName;
+    string m_templateArguments;
     vector<CType*> m_args;
 };
 
-class CNamespace
+class CNameContainer
 {
 public:
-            CNamespace();
-            ~CNamespace();
+            CNameContainer();
+            ~CNameContainer();
     void    Add(CType* type);
 
     // args is the number of template types (what is this called?)
@@ -293,7 +301,7 @@ private:
     vector<_CTemplate> m_templates;
 };
 
-extern CNamespace CNAMES;
+extern CNameContainer CNAMES;
 
 extern CType* CVOID_TYPE;
 extern CType* CBOOLEAN_TYPE;
@@ -303,6 +311,7 @@ extern CType* CINT_TYPE;
 extern CType* CLONG_TYPE;
 extern CType* CFLOAT_TYPE;
 extern CType* CDOUBLE_TYPE;
+extern CType* CENUM_TYPE;
 /*extern CType* OBJECT_TYPE;*/
 extern CType* CSTRING_TYPE;
 /*extern CType* CHAR_SEQUENCE_TYPE;*/

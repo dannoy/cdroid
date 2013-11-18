@@ -1,6 +1,6 @@
 #include "CType.h"
 
-CNamespace CCNAMES;
+CNameContainer CCNAMES;
 
 CType* CVOID_TYPE;
 CType* CBOOLEAN_TYPE;
@@ -11,6 +11,7 @@ CType* CLONG_TYPE;
 CType* CFLOAT_TYPE;
 CType* CDOUBLE_TYPE;
 CType* CSTRING_TYPE;
+CType* CENUM_TYPE;
 //Type* OBJECT_TYPE;
 //Type* CHAR_SEQUENCE_TYPE;
 //Type* TEXT_UTILS_TYPE;
@@ -55,6 +56,9 @@ cregister_base_types()
 
     CCHAR_TYPE = new CCharType();
     CCNAMES.Add(CCHAR_TYPE);
+
+    CENUM_TYPE = new CEnumType();
+    CCNAMES.Add(CENUM_TYPE);
 
     CINT_TYPE = new CBasicType("int",
             "writeInt32", "readInt32",
@@ -104,14 +108,6 @@ cregister_base_types()
     CFALSE_VALUE = new CLiteralExpression("false");
 
     CCNAMES.AddTemplateType("", "vector", 1);
-}
-
-static CType*
-make_template_type(const string& _namespace, const string& name,
-                    const vector<CType*>& args)
-{
-    return NULL;
-    //return new GenericType(package, name, args);
 }
 
 // ================================================================
@@ -343,6 +339,41 @@ CCharType::CreateFromRpcData(CStatementBlock* addTo, CExpression* k, CVariable* 
     addTo->Add(new CAssignment(v, new CMethodCall(data, "getChar", 1, k)));
 }
 
+===================================================
+CEnumType::CEnumType()
+    :CType("enum", BUILT_IN, true, true, false)
+{
+}
+
+void
+CEnumType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+{
+    addTo->Add(new CMethodCall(parcel, "writeInt32", 1, 
+                new CTernary(v, new CLiteralExpression("1"),
+                    new CLiteralExpression("0"))));
+}
+
+void
+CEnumType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+{
+    addTo->Add(new CAssignment(v, new CComparison(new CLiteralExpression("0"),
+                    "!=", new CMethodCall(parcel, "readInt32"))));
+}
+
+void
+CEnumType::WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
+        CVariable* data, int flags)
+{
+    addTo->Add(new CMethodCall(data, "putInteger", 2, k, v));
+}
+
+void
+CEnumType::CreateFromRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v, CVariable* data,
+        CVariable** cl)
+{
+    addTo->Add(new CAssignment(v, new CMethodCall(data, "getInteger", 1, k)));
+}
+
 // ================================================================
 
 CStringType::CStringType()
@@ -571,7 +602,7 @@ CParcelableInterfaceType::CreateFromParcel(CStatementBlock* addTo, CVariable* v,
 
 CTemplateType::CTemplateType(const string& _namespace, const string& name,
                          const vector<CType*>& args)
-    :CType(_namespace, name, BUILT_IN, true, true, true)
+    :CType(_namespace, name, USERDATA, true, true, true)
 {
     m_args = args;
 
@@ -586,26 +617,20 @@ CTemplateType::CTemplateType(const string& _namespace, const string& name,
         }
     }
     gen += '>';
-    m_genericArguments = gen;
+    m_templateArguments = gen;
     SetQualifiedName(_namespace + "::" + name + gen);
 }
 
 const vector<CType*>&
-CTemplateType::GenericArgumentTypes() const
+CTemplateType::TemplateArgumentTypes() const
 {
     return m_args;
 }
 
 string
-CTemplateType::GenericArguments() const
+CTemplateType::TemplateArguments() const
 {
-    return m_genericArguments;
-}
-
-string
-CTemplateType::ImportType() const
-{
-    return m_importName;
+    return m_templateArguments;
 }
 
 void
@@ -629,11 +654,11 @@ CTemplateType::ReadFromParcel(CStatementBlock* addTo, CVariable* v,
 
 // ================================================================
 
-CNamespace::CNamespace()
+CNameContainer::CNameContainer()
 {
 }
 
-CNamespace::~CNamespace()
+CNameContainer::~CNameContainer()
 {
     int N = m_types.size();
     for (int i=0; i<N; i++) {
@@ -642,7 +667,7 @@ CNamespace::~CNamespace()
 }
 
 void
-CNamespace::Add(CType* type)
+CNameContainer::Add(CType* type)
 {
     CType* t = Find(type->QualifiedName());
     if (t == NULL) {
@@ -651,7 +676,7 @@ CNamespace::Add(CType* type)
 }
 
 void
-CNamespace::AddTemplateType(const string& _namespace, const string& name, int args)
+CNameContainer::AddTemplateType(const string& _namespace, const string& name, int args)
 {
     _CTemplate g;
         g._namespace = _namespace;
@@ -662,7 +687,7 @@ CNamespace::AddTemplateType(const string& _namespace, const string& name, int ar
 }
 
 CType*
-CNamespace::Find(const string& name) const
+CNameContainer::Find(const string& name) const
 {
     int N = m_types.size();
     for (int i=0; i<N; i++) {
@@ -674,7 +699,7 @@ CNamespace::Find(const string& name) const
 }
 
 CType*
-CNamespace::Find(const char* _namespace, const char* name) const
+CNameContainer::Find(const char* _namespace, const char* name) const
 {
     string s;
     if (_namespace != NULL) {
@@ -699,8 +724,16 @@ normalize_generic(const string& s)
     return r;
 }
 
+static CType*
+make_template_type(const string& _namespace, const string& name,
+                    const vector<CType*>& args)
+{
+    return new CTemplateType(_namespace, name, args);
+}
+
+
 CType*
-CNamespace::Search(const string& name)
+CNameContainer::Search(const string& name)
 {
     // an exact match wins
     CType* result = Find(name);
@@ -769,8 +802,8 @@ CNamespace::Search(const string& name)
     return this->Find(result->QualifiedName());
 }
 
-const CNamespace::_CTemplate*
-CNamespace::search_template(const string& name) const
+const CNameContainer::_CTemplate*
+CNameContainer::search_template(const string& name) const
 {
     int N = m_templates.size();
 
@@ -794,12 +827,12 @@ CNamespace::search_template(const string& name) const
 }
 
 void
-CNamespace::Dump() const
+CNameContainer::Dump() const
 {
     int n = m_types.size();
     for (int i=0; i<n; i++) {
         CType* t = m_types[i];
-        printf("type: package=%s name=%s qualifiedName=%s\n",
+        printf("type: namespace=%s name=%s qualifiedName=%s\n",
                 t->Namespace().c_str(), t->Name().c_str(),
                 t->QualifiedName().c_str());
     }

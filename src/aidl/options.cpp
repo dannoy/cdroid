@@ -14,7 +14,7 @@ usage()
             "\n"
             "OPTIONS:\n"
             "   -L<LANGUAGE>    generate source in Lanauge,only support java,cpp.\n"
-            "   -I<DIR>    search path for import statements.\n"
+            "   -I<DIR>    search path for import(java) or include(c++) statements.\n"
             "   -d<FILE>   generate dependency file.\n"
             "   -a         generate dependency file next to the output file with the name based on the input file.\n"
             "   -p<FILE>   file created by --preprocess to import.\n"

@@ -6,209 +6,6 @@
 #include <string.h>
 
 // =================================================
-class BnInterfaceClass : public Class
-{
-public:
-    BnInterfaceClass(CType* type, CType* interfaceType);
-    virtual ~BnInterfaceClass();
-
-    Variable* transact_code;
-    Variable* transact_data;
-    Variable* transact_reply;
-    Variable* transact_flags;
-    SwitchStatement* transact_switch;
-private:
-    void make_as_interface(Type* interfaceType);
-};
-
-StubClass::StubClass(Type* type, Type* interfaceType)
-    :Class()
-{
-    this->comment = "/** Local-side IPC implementation stub class. */";
-    this->modifiers = PUBLIC | ABSTRACT | STATIC;
-    this->what = Class::CLASS;
-    this->type = type;
-    this->extends = BINDER_NATIVE_TYPE;
-    this->interfaces.push_back(interfaceType);
-
-    // descriptor
-    Field* descriptor = new Field(STATIC | FINAL | PRIVATE,
-                            new Variable(STRING_TYPE, "DESCRIPTOR"));
-    descriptor->value = "\"" + interfaceType->QualifiedName() + "\"";
-    this->elements.push_back(descriptor);
-
-    // ctor
-    Method* ctor = new Method;
-        ctor->modifiers = PUBLIC;
-        ctor->comment = "/** Construct the stub at attach it to the "
-                        "interface. */";
-        ctor->name = "Stub";
-        ctor->statements = new StatementBlock;
-    MethodCall* attach = new MethodCall(THIS_VALUE, "attachInterface",
-                            2, THIS_VALUE, new LiteralExpression("DESCRIPTOR"));
-    ctor->statements->Add(attach);
-    this->elements.push_back(ctor);
-
-    // asInterface
-    make_as_interface(interfaceType);
-
-    // asBinder
-    Method* asBinder = new Method;
-        asBinder->modifiers = PUBLIC | OVERRIDE;
-        asBinder->returnType = IBINDER_TYPE;
-        asBinder->name = "asBinder";
-        asBinder->statements = new StatementBlock;
-    asBinder->statements->Add(new ReturnStatement(THIS_VALUE));
-    this->elements.push_back(asBinder);
-
-    // onTransact
-    this->transact_code = new Variable(INT_TYPE, "code");
-    this->transact_data = new Variable(PARCEL_TYPE, "data");
-    this->transact_reply = new Variable(PARCEL_TYPE, "reply");
-    this->transact_flags = new Variable(INT_TYPE, "flags");
-    Method* onTransact = new Method;
-        onTransact->modifiers = PUBLIC | OVERRIDE;
-        onTransact->returnType = BOOLEAN_TYPE;
-        onTransact->name = "onTransact";
-        onTransact->parameters.push_back(this->transact_code);
-        onTransact->parameters.push_back(this->transact_data);
-        onTransact->parameters.push_back(this->transact_reply);
-        onTransact->parameters.push_back(this->transact_flags);
-        onTransact->statements = new StatementBlock;
-        onTransact->exceptions.push_back(REMOTE_EXCEPTION_TYPE);
-    this->elements.push_back(onTransact);
-    this->transact_switch = new SwitchStatement(this->transact_code);
-
-    onTransact->statements->Add(this->transact_switch);
-    MethodCall* superCall = new MethodCall(SUPER_VALUE, "onTransact", 4,
-                                    this->transact_code, this->transact_data,
-                                    this->transact_reply, this->transact_flags);
-    onTransact->statements->Add(new ReturnStatement(superCall));
-}
-
-StubClass::~StubClass()
-{
-}
-
-void
-StubClass::make_as_interface(Type *interfaceType)
-{
-    Variable* obj = new Variable(IBINDER_TYPE, "obj");
-
-    Method* m = new Method;
-        m->comment = "/**\n * Cast an IBinder object into an ";
-        m->comment += interfaceType->QualifiedName();
-        m->comment += " interface,\n";
-        m->comment += " * generating a proxy if needed.\n */";
-        m->modifiers = PUBLIC | STATIC;
-        m->returnType = interfaceType;
-        m->name = "asInterface";
-        m->parameters.push_back(obj);
-        m->statements = new StatementBlock;
-
-    IfStatement* ifstatement = new IfStatement();
-        ifstatement->expression = new Comparison(obj, "==", NULL_VALUE);
-        ifstatement->statements = new StatementBlock;
-        ifstatement->statements->Add(new ReturnStatement(NULL_VALUE));
-    m->statements->Add(ifstatement);
-
-    // IInterface iin = obj.queryLocalInterface(DESCRIPTOR)
-    MethodCall* queryLocalInterface = new MethodCall(obj, "queryLocalInterface");
-    queryLocalInterface->arguments.push_back(new LiteralExpression("DESCRIPTOR"));
-    IInterfaceType* iinType = new IInterfaceType();
-    Variable *iin = new Variable(iinType, "iin");
-    VariableDeclaration* iinVd = new VariableDeclaration(iin, queryLocalInterface, NULL);
-    m->statements->Add(iinVd);
-
-    // Ensure the instance type of the local object is as expected.
-    // One scenario where this is needed is if another package (with a
-    // different class loader) runs in the same process as the service.
-
-    // if (iin != null && iin instanceof <interfaceType>) return (<interfaceType>) iin;
-    Comparison* iinNotNull = new Comparison(iin, "!=", NULL_VALUE);
-    Comparison* instOfCheck = new Comparison(iin, " instanceof ",
-            new LiteralExpression(interfaceType->QualifiedName()));
-    IfStatement* instOfStatement = new IfStatement();
-        instOfStatement->expression = new Comparison(iinNotNull, "&&", instOfCheck);
-        instOfStatement->statements = new StatementBlock;
-        instOfStatement->statements->Add(new ReturnStatement(new Cast(interfaceType, iin)));
-    m->statements->Add(instOfStatement);
-
-    string proxyType = interfaceType->QualifiedName();
-    proxyType += ".Stub.Proxy";
-    NewExpression* ne = new NewExpression(NAMES.Find(proxyType));
-    ne->arguments.push_back(obj);
-    m->statements->Add(new ReturnStatement(ne));
-
-    this->elements.push_back(m);
-}
-
-
-
-// =================================================
-class BpInterfaceClass : public Class
-{
-public:
-    BpInterfaceClass(CType* type, InterfaceType* interfaceType);
-    virtual ~BpInterfaceClass();
-
-    Variable* mRemote;
-    bool mOneWay;
-};
-
-ProxyClass::ProxyClass(Type* type, InterfaceType* interfaceType)
-    :Class()
-{
-    this->modifiers = PRIVATE | STATIC;
-    this->what = Class::CLASS;
-    this->type = type;
-    this->interfaces.push_back(interfaceType);
-
-    mOneWay = interfaceType->OneWay();
-
-    // IBinder mRemote
-    mRemote = new Variable(IBINDER_TYPE, "mRemote");
-    this->elements.push_back(new Field(PRIVATE, mRemote));
-
-    // Proxy()
-    Variable* remote = new Variable(IBINDER_TYPE, "remote");
-    Method* ctor = new Method;
-        ctor->name = "Proxy";
-        ctor->statements = new StatementBlock;
-        ctor->parameters.push_back(remote);
-    ctor->statements->Add(new Assignment(mRemote, remote));
-    this->elements.push_back(ctor);
-
-    // IBinder asBinder()
-    Method* asBinder = new Method;
-        asBinder->modifiers = PUBLIC | OVERRIDE;
-        asBinder->returnType = IBINDER_TYPE;
-        asBinder->name = "asBinder";
-        asBinder->statements = new StatementBlock;
-    asBinder->statements->Add(new ReturnStatement(mRemote));
-    this->elements.push_back(asBinder);
-}
-
-ProxyClass::~ProxyClass()
-{
-}
-
-// =================================================
-static void
-generate_new_array(Type* t, StatementBlock* addTo, Variable* v,
-                            Variable* parcel)
-{
-    Variable* len = new Variable(INT_TYPE, v->name + "_length");
-    addTo->Add(new VariableDeclaration(len, new MethodCall(parcel, "readInt")));
-    IfStatement* lencheck = new IfStatement();
-    lencheck->expression = new Comparison(len, "<", new LiteralExpression("0"));
-    lencheck->statements->Add(new Assignment(v, NULL_VALUE));
-    lencheck->elseif = new IfStatement();
-    lencheck->elseif->statements->Add(new Assignment(v,
-                new NewArrayExpression(t, len)));
-    addTo->Add(lencheck);
-}
-
 static void
 generate_write_to_parcel(Type* t, StatementBlock* addTo, Variable* v,
                             Variable* parcel, int flags)
@@ -248,26 +45,25 @@ generate_read_from_parcel(Type* t, StatementBlock* addTo, Variable* v,
 
 static void
 cgenerate_method(const method_type* method, Class* interface,
-                    CEnum *eu, Class
-                    StubClass* stubClass, ProxyClass* proxyClass, int index)
+                    CEnum *eu, CClass *bn, CSwitchStatement *bnsw,
+                    CClass* bp, int index)
 {
     arg_type* arg;
     int i;
     bool hasOutParams = false;
 
-    const bool oneway = proxyClass->mOneWay || method->oneway;
+    const bool oneway = method->oneway;
 
     // == the TRANSACT_ constant =============================================
     string transactCodeName = "TRANSACTION_";
     transactCodeName += method->name.data;
 
     char transactCodeValue[60];
-    sprintf(transactCodeValue, "(android.os.IBinder.FIRST_CALL_TRANSACTION + %d)", index);
+    sprintf(transactCodeValue, "(IBinder.FIRST_CALL_TRANSACTION + %d)", index);
 
-    Field* transactCode = new Field(STATIC | FINAL,
-                            new Variable(INT_TYPE, transactCodeName));
-    transactCode->value = transactCodeValue;
-    stubClass->elements.push_back(transactCode);
+    CEnumElement e
+    eu.element.push_back(new CEnumElement(transactionCodeName,
+                            string(transactionCodeValue)));
 
     // == the declaration in the interface ===================================
     Method* decl = new Method;
@@ -280,107 +76,112 @@ cgenerate_method(const method_type* method, Class* interface,
     arg = method->args;
     while (arg != NULL) {
         decl->parameters.push_back(new Variable(
-                            NAMES.Search(arg->type.type.data), arg->name.data,
+                            CNAMES.Search(arg->type.type.data), arg->name.data,
                             arg->type.dimension));
         arg = arg->next;
     }
 
-    decl->exceptions.push_back(REMOTE_EXCEPTION_TYPE);
-
     interface->elements.push_back(decl);
 
-    // == the stub method ====================================================
+    // == the BN method ====================================================
+    {
+        CVariable *transact_code = new Variable(INT_TYPE, "code");
+        CVariable *transact_data = new Variable(PARCEL_TYPE, "data");
+        CVariable *transact_reply = new Variable(PARCEL_TYPE, "reply");
+        CVariable *transact_flags = new Variable(INT_TYPE, "flags");
+        CVariable *dummy = new Variable(INT_TYPE, interface->type->Name());
 
-    Case* c = new Case(transactCodeName);
+        Case* c = new Case(transactCodeName);
 
-    MethodCall* realCall = new MethodCall(THIS_VALUE, method->name.data);
+        MethodCall* realCall = new MethodCall(THIS_VALUE, method->name.data);
 
-    // interface token validation is the very first thing we do
-    c->statements->Add(new MethodCall(stubClass->transact_data,
-            "enforceInterface", 1, new LiteralExpression("DESCRIPTOR")));
+        // interface token validation is the very first thing we do
+        c->statements->Add(new CMethodCall("CHECK_INTERFACE",
+                        3, dummy, transact_data, transact_reply));
 
-    // args
-    Variable* cl = NULL;
-    VariableFactory stubArgs("_arg");
-    arg = method->args;
-    while (arg != NULL) {
-        Type* t = NAMES.Search(arg->type.type.data);
-        Variable* v = stubArgs.Get(t);
-        v->dimension = arg->type.dimension;
+        // args
+        Variable* cl = NULL;
+        VariableFactory stubArgs("_arg");
+        arg = method->args;
+        while (arg != NULL) {
+            Type* t = NAMES.Search(arg->type.type.data);
+            Variable* v = stubArgs.Get(t);
+            v->dimension = arg->type.dimension;
 
-        c->statements->Add(new VariableDeclaration(v));
+            c->statements->Add(new VariableDeclaration(v));
 
-        if (convert_direction(arg->direction.data) & IN_PARAMETER) {
-            generate_create_from_parcel(t, c->statements, v,
-                    stubClass->transact_data, &cl);
+            if (convert_direction(arg->direction.data) & IN_PARAMETER) {
+                generate_create_from_parcel(t, c->statements, v,
+                        stubClass->transact_data, &cl);
+            } else {
+                if (arg->type.dimension == 0) {
+                    c->statements->Add(new Assignment(v, new NewExpression(v->type)));
+                }
+                else if (arg->type.dimension == 1) {
+                    generate_new_array(v->type, c->statements, v,
+                            stubClass->transact_data);
+                }
+                else {
+                    fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__,
+                            __LINE__);
+                }
+            }
+
+            realCall->arguments.push_back(v);
+
+            arg = arg->next;
+        }
+
+        // the real call
+        Variable* _result = NULL;
+        if (0 == strcmp(method->type.type.data, "void")) {
+            c->statements->Add(realCall);
+
+            if (!oneway) {
+                // report that there were no exceptions
+                MethodCall* ex = new MethodCall(stubClass->transact_reply,
+                        "writeNoException", 0);
+                c->statements->Add(ex);
+            }
         } else {
-            if (arg->type.dimension == 0) {
-                c->statements->Add(new Assignment(v, new NewExpression(v->type)));
+            _result = new Variable(decl->returnType, "_result",
+                                    decl->returnTypeDimension);
+            c->statements->Add(new VariableDeclaration(_result, realCall));
+
+            if (!oneway) {
+                // report that there were no exceptions
+                MethodCall* ex = new MethodCall(stubClass->transact_reply,
+                        "writeNoException", 0);
+                c->statements->Add(ex);
             }
-            else if (arg->type.dimension == 1) {
-                generate_new_array(v->type, c->statements, v,
-                        stubClass->transact_data);
-            }
-            else {
-                fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__,
-                        __LINE__);
-            }
+
+            // marshall the return value
+            generate_write_to_parcel(decl->returnType, c->statements, _result,
+                                        stubClass->transact_reply,
+                                        Type::PARCELABLE_WRITE_RETURN_VALUE);
         }
 
-        realCall->arguments.push_back(v);
+        // out parameters
+        i = 0;
+        arg = method->args;
+        while (arg != NULL) {
+            Type* t = NAMES.Search(arg->type.type.data);
+            Variable* v = stubArgs.Get(i++);
 
-        arg = arg->next;
-    }
-
-    // the real call
-    Variable* _result = NULL;
-    if (0 == strcmp(method->type.type.data, "void")) {
-        c->statements->Add(realCall);
-
-        if (!oneway) {
-            // report that there were no exceptions
-            MethodCall* ex = new MethodCall(stubClass->transact_reply,
-                    "writeNoException", 0);
-            c->statements->Add(ex);
-        }
-    } else {
-        _result = new Variable(decl->returnType, "_result",
-                                decl->returnTypeDimension);
-        c->statements->Add(new VariableDeclaration(_result, realCall));
-
-        if (!oneway) {
-            // report that there were no exceptions
-            MethodCall* ex = new MethodCall(stubClass->transact_reply,
-                    "writeNoException", 0);
-            c->statements->Add(ex);
-        }
-
-        // marshall the return value
-        generate_write_to_parcel(decl->returnType, c->statements, _result,
+            if (convert_direction(arg->direction.data) & OUT_PARAMETER) {
+                generate_write_to_parcel(t, c->statements, v,
                                     stubClass->transact_reply,
                                     Type::PARCELABLE_WRITE_RETURN_VALUE);
-    }
+                hasOutParams = true;
+            }
 
-    // out parameters
-    i = 0;
-    arg = method->args;
-    while (arg != NULL) {
-        Type* t = NAMES.Search(arg->type.type.data);
-        Variable* v = stubArgs.Get(i++);
-
-        if (convert_direction(arg->direction.data) & OUT_PARAMETER) {
-            generate_write_to_parcel(t, c->statements, v,
-                                stubClass->transact_reply,
-                                Type::PARCELABLE_WRITE_RETURN_VALUE);
-            hasOutParams = true;
+            arg = arg->next;
         }
 
-        arg = arg->next;
+        // return true
+        c->statements->Add(new ReturnStatement(TRUE_VALUE));
+        stubClass->transact_switch->cases.push_back(c);
     }
-
-    // return true
-    c->statements->Add(new ReturnStatement(TRUE_VALUE));
-    stubClass->transact_switch->cases.push_back(c);
 
     // == the proxy method ===================================================
     Method* proxy = new Method;
@@ -535,16 +336,16 @@ generate_binder_interface_class(const interface_type* iface)
             onTransact->modifiers = PUBLIC;
             onTransact->returnType = CBOOLEAN_TYPE;
             onTransact->name = "onTransact";
-            onTransact->parameters.push_back(this->transact_code);
-            onTransact->parameters.push_back(this->transact_data);
-            onTransact->parameters.push_back(this->transact_reply);
-            onTransact->parameters.push_back(this->transact_flags);
+            onTransact->parameters.push_back(transact_code);
+            onTransact->parameters.push_back(transact_data);
+            onTransact->parameters.push_back(transact_reply);
+            onTransact->parameters.push_back(transact_flags);
             onTransact->statements = new StatementBlock;
         BnXXX->elements.push_back(onTransact);
         bn_transact_switch = new CSwitchStatement(transact_code);
 
         onTransact->statements->Add(bn_transact_switch);
-        CMethodCall* superCall = new MethodCall("BBinder::onTransact", 4,
+        CMethodCall* superCall = new CMethodCall("BBinder::onTransact", 4,
                                         transact_code, transact_data,
                                         transact_reply, transact_flags);
         onTransact->statements->Add(new ReturnStatement(superCall));
@@ -552,12 +353,14 @@ generate_binder_interface_class(const interface_type* iface)
     // BpXXX init
     {
         Method* ctor = new Method;
-        Variable* remote = new Variable(IBINDER_TYPE, "remote");
+        Variable* impl = new Variable(CSP_TEMPLATE_BINDER_TYPE, "impl", CVariable::VAR_REF);
             ctor->name = BpXXX.type->Name();
             ctor->statements = new StatementBlock;
-            ctor->parameters.push_back(remote);
-        ctor->statements->Add(new Assignment(mRemote, remote));
-        this->elements.push_back(ctor);
+            ctor->parameters.push_back(impl);
+        CMethodCall* superCtor = new MethodCall(BpXXX->inherit[0]->QualifiedName().c_str(), 1,
+                                        impl);
+            ctor->statements->Add(superCtor);
+        BpXXX->elements.push_back(ctor);
     }
 
     // all the declared methods of the interface

@@ -65,10 +65,10 @@ cgather_types(const char* filename, document_item_type* items)
 
                 vector<CType> args;
                 args.push_back(type);
-                CNAMES.AddTemplate(c->package ? package2namespace(c->package) : "",
-                                        "BnInterface", args);
-                CNAMES.AddTemplate(c->package ? package2namespace(c->package) : "",
-                                        "BpInterface", args);
+                CNAMES.Add(new CTemplateType(c->package ? package2namespace(c->package) : "",
+                                        "BnInterface", args));
+                CNAMES.Add(new CTemplateType(c->package ? package2namespace(c->package) : "",
+                                        "BpInterface", args));
 
                 string name = string("Bn") + c->name.data;
                 Type* BnXXX = new Type(c->package ? package2namespace(c->package) : "",

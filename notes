@@ -4,3 +4,4 @@
 4.value passed by refs, not by pointer | There is no pointer in Java
 5.RemoteException ???
 6.asBinder,asInterface translation
+7.oneway interface, not oneway method support

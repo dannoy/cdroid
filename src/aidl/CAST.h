@@ -63,13 +63,19 @@ struct CStringLiteralExpression : public CExpression
 
 struct CVariable : public CExpression
 {
+    enum {
+        VAR_POINTER,
+        VAR_REF,
+        VAR_VALUE
+    };
     CType* type;
     string name;
     int dimension;
+    int val_type;
 
     CVariable();
-    CVariable(CType* type, const string& name);
-    CVariable(CType* type, const string& name, int dimension);
+    CVariable(CType* type, const string& name, int type = VAR_VALUE);
+    CVariable(CType* type, const string& name, int dimension, int type = VAR_VALUE);
     virtual ~CVariable();
 
     virtual void GatherTypes(set<CType*>* types) const;
@@ -338,10 +344,20 @@ struct CMethod : public CClassElement
     virtual void Write(FILE* to);
 };
 
+struct CEnumElement
+{
+    string name;
+    string value;
+    CEnumElement(string name, string value);
+    virtual ~CEnumElement();
+    virtual void GatherTypes(set<CType*>* types) const;
+    virtual void Write(FILE* to);
+}
+
 
 struct CEnum
 {
-    vector<CAssignment *> elements;
+    vector<CEnumElement *> elements;
     CType *type;
 
     CEnum();

@@ -121,21 +121,24 @@ CStringLiteralExpression::Write(FILE* to)
 CVariable::CVariable()
     :type(NULL),
      name(),
-     dimension(0)
+     dimension(0),
+     val_type(VAR_VALUE)
 {
 }
 
-CVariable::CVariable(CType* t, const string& n)
+CVariable::CVariable(CType* t, const string& n, int _type)
     :type(t),
      name(n),
-     dimension(0)
+     dimension(0),
+     val_type(_type)
 {
 }
 
-CVariable::CVariable(CType* t, const string& n, int d)
+CVariable::CVariable(CType* t, const string& n, int d, int _type)
     :type(t),
      name(n),
-     dimension(d)
+     dimension(d),
+     val_type(_type)
 {
 }
 

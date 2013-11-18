@@ -275,9 +275,6 @@ public:
             ~CNameContainer();
     void    Add(CType* type);
 
-    // args is the number of template types (what is this called?)
-    void    AddTemplateType(const string& _namespace, const string& name, int args);
-
     // lookup a specific class name
     CType*   Find(const string& name) const;
     CType*   Find(const char* _namespace, const char* name) const;
@@ -288,17 +285,8 @@ public:
     void    Dump() const;
 
 private:
-    struct _CTemplate {
-        string _namespace;
-        string name;
-        string qualified;
-        int args;
-    };
-
-    const _CTemplate* search_template(const string& name) const;
 
     vector<CType*> m_types;
-    vector<_CTemplate> m_templates;
 };
 
 extern CNameContainer CNAMES;

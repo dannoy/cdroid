@@ -33,11 +33,14 @@ CType* CPARCELABLE_INTERFACE_TYPE;
 //Type* RPC_ERROR_TYPE;
 //Type* EVENT_FAKE_TYPE;
 
+CType* CSP_TEMPLATE_IBINDER_TYPE;
+
 CExpression* CCNULL_VALUE;
 CExpression* CTHIS_VALUE;
 //Expression* SUPER_VALUE;
 CExpression* CTRUE_VALUE;
 CExpression* CFALSE_VALUE;
+
 
 void
 cregister_base_types()
@@ -100,6 +103,11 @@ cregister_base_types()
 
     CPARCELABLE_INTERFACE_TYPE = new CParcelableInterfaceType();
     CNAMES.Add(CPARCELABLE_INTERFACE_TYPE);
+
+    vector<CType *> ibinder_vector;
+    ibinder_vector.push_back(CIBINDER_TYPE);
+    CSP_TEMPLATE_IBINDER_TYPE = new CTemplateType("android","sp",ibinder_vector);
+    CNAMES.Add(CSP_TEMPLATE_IBINDER_TYPE);
 
 
     CCNULL_VALUE = new CLiteralExpression("null");
@@ -675,17 +683,6 @@ CNameContainer::Add(CType* type)
     }
 }
 
-void
-CNameContainer::AddTemplateType(const string& _namespace, const string& name, int args)
-{
-    _CTemplate g;
-        g._namespace = _namespace;
-        g.name = name;
-        g.qualified = _namespace + "::" + name;
-        g.args = args;
-    m_templates.push_back(g);
-}
-
 CType*
 CNameContainer::Find(const string& name) const
 {
@@ -710,28 +707,6 @@ CNameContainer::Find(const char* _namespace, const char* name) const
     return Find(s);
 }
 
-static string
-normalize_generic(const string& s)
-{
-    string r;
-    int N = s.size();
-    for (int i=0; i<N; i++) {
-        char c = s[i];
-        if (!isspace(c)) {
-            r += c;
-        }
-    }
-    return r;
-}
-
-static CType*
-make_template_type(const string& _namespace, const string& name,
-                    const vector<CType*>& args)
-{
-    return new CTemplateType(_namespace, name, args);
-}
-
-
 CType*
 CNameContainer::Search(const string& name)
 {
@@ -753,53 +728,7 @@ CNameContainer::Search(const string& name)
         }
     }
 
-    // we got to here and it's not a generic, give up
-    if (name.find('<') == name.npos) {
-        return NULL;
-    }
-
-    // remove any whitespace
-    string normalized = normalize_generic(name);
-
-    // find the part before the '<', find a generic for it
-    ssize_t baseIndex = normalized.find('<');
-    string base(normalized.c_str(), baseIndex);
-    const _CTemplate* g = search_template(base);
-    if (g == NULL) {
-        return NULL;
-    }
-
-    // For each of the args, do a recursive search on it.  We don't allow
-    // generics within generics like Java does, because we're really limiting
-    // them to just built-in container classes, at least for now.  Our syntax
-    // ensures this right now as well.
-    vector<CType*> args;
-    size_t start = baseIndex + 1;
-    size_t end = start;
-    while (normalized[start] != '\0') {
-        end = normalized.find(',', start);
-        if (end == normalized.npos) {
-            end = normalized.find('>', start);
-        }
-        string s(normalized.c_str()+start, end-start);
-        CType* t = this->Search(s);
-        if (t == NULL) {
-            // maybe we should print a warning here?
-            return NULL;
-        }
-        args.push_back(t);
-        start = end+1;
-    }
-
-    // construct a GenericType, add it to our name set so they always get
-    // the same object, and return it.
-    result = make_template_type(g->_namespace, g->name, args);
-    if (result == NULL) {
-        return NULL;
-    }
-
-    this->Add(result);
-    return this->Find(result->QualifiedName());
+    return NULL;
 }
 
 const CNameContainer::_CTemplate*

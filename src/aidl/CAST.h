@@ -13,15 +13,15 @@ using namespace std;
 class CType;
 
 enum {
-    PUBLIC          = 0x00000001,
-    PRIVATE         = 0x00000002,
-    PROTECTED       = 0x00000003,
-    SCOPE_MASK      = 0x00000003,
+    CPUBLIC          = 0x00000001,
+    CPRIVATE         = 0x00000002,
+    CPROTECTED       = 0x00000003,
+    CSCOPE_MASK      = 0x00000003,
 
-    STATIC          = 0x00000010,
-    VIRTUAL         = 0x00000020,
+    CSTATIC          = 0x00000010,
+    CVIRTUAL         = 0x00000020,
 
-    ALL_MODIFIERS   = 0xffffffff
+    CALL_MODIFIERS   = 0xffffffff
 };
 
 // Write the modifiers that are set in both mod and mask
@@ -74,8 +74,8 @@ struct CVariable : public CExpression
     int val_type;
 
     CVariable();
-    CVariable(CType* type, const string& name, int type = VAR_VALUE);
-    CVariable(CType* type, const string& name, int dimension, int type = VAR_VALUE);
+    CVariable(CType* type, const string& name, int _type = VAR_VALUE);
+    CVariable(CType* type, const string& name, int dimension, int _type = VAR_VALUE);
     virtual ~CVariable();
 
     virtual void GatherTypes(set<CType*>* types) const;
@@ -352,7 +352,7 @@ struct CEnumElement
     virtual ~CEnumElement();
     virtual void GatherTypes(set<CType*>* types) const;
     virtual void Write(FILE* to);
-}
+};
 
 
 struct CEnum
@@ -365,7 +365,7 @@ struct CEnum
 
     virtual void GatherTypes(set<CType*>* types) const;
     virtual void Write(FILE* to);
-}
+};
 
 struct CClass : public CClassElement
 {
@@ -388,7 +388,7 @@ struct CNamespace
     vector<CFunction *> functions;
     vector<CEnum *> enums;
     string comment;
-}
+};
 
 struct CDocument
 {
@@ -397,6 +397,7 @@ struct CDocument
     string originalSrc;
     set<string> includes;
     vector<CClass*> classes;
+    vector<CNamespace*> nss;
 
     CDocument();
     virtual ~CDocument();

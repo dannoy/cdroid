@@ -7,38 +7,29 @@
 
 // =================================================
 static void
-generate_write_to_parcel(Type* t, StatementBlock* addTo, Variable* v,
+cgenerate_write_to_parcel(Type* t, StatementBlock* addTo, Variable* v,
                             Variable* parcel, int flags)
 {
     if (v->dimension == 0) {
         t->WriteToParcel(addTo, v, parcel, flags);
     }
-    if (v->dimension == 1) {
-        t->WriteArrayToParcel(addTo, v, parcel, flags);
-    }
 }
 
 static void
-generate_create_from_parcel(Type* t, StatementBlock* addTo, Variable* v,
+cgenerate_create_from_parcel(Type* t, StatementBlock* addTo, Variable* v,
                             Variable* parcel, Variable** cl)
 {
     if (v->dimension == 0) {
         t->CreateFromParcel(addTo, v, parcel, cl);
     }
-    if (v->dimension == 1) {
-        t->CreateArrayFromParcel(addTo, v, parcel, cl);
-    }
 }
 
 static void
-generate_read_from_parcel(Type* t, StatementBlock* addTo, Variable* v,
+cgenerate_read_from_parcel(Type* t, StatementBlock* addTo, Variable* v,
                             Variable* parcel, Variable** cl)
 {
     if (v->dimension == 0) {
         t->ReadFromParcel(addTo, v, parcel, cl);
-    }
-    if (v->dimension == 1) {
-        t->ReadArrayFromParcel(addTo, v, parcel, cl);
     }
 }
 
@@ -66,9 +57,9 @@ cgenerate_method(const method_type* method, Class* interface,
                             string(transactionCodeValue)));
 
     // == the declaration in the interface ===================================
-    Method* decl = new Method;
+    CMethod* decl = new CMethod;
         decl->comment = gather_comments(method->comments_token->extra);
-        decl->modifiers = PUBLIC;
+        decl->modifiers = CPUBLIC;
         decl->returnType = NAMES.Search(method->type.type.data);
         decl->returnTypeDimension = method->type.dimension;
         decl->name = method->name.data;
@@ -85,41 +76,37 @@ cgenerate_method(const method_type* method, Class* interface,
 
     // == the BN method ====================================================
     {
-        CVariable *transact_code = new Variable(INT_TYPE, "code");
-        CVariable *transact_data = new Variable(PARCEL_TYPE, "data");
-        CVariable *transact_reply = new Variable(PARCEL_TYPE, "reply");
-        CVariable *transact_flags = new Variable(INT_TYPE, "flags");
-        CVariable *dummy = new Variable(INT_TYPE, interface->type->Name());
+        CVariable *transact_code = new CVariable(INT_TYPE, "code");
+        CVariable *transact_data = new CVariable(PARCEL_TYPE, "data");
+        CVariable *transact_reply = new CVariable(PARCEL_TYPE, "reply");
+        CVariable *transact_flags = new CVariable(INT_TYPE, "flags");
+        CVariable *dummy = new CVariable(INT_TYPE, interface->type->Name());
 
-        Case* c = new Case(transactCodeName);
+        CCase* c = new CCase(transactCodeName);
 
-        MethodCall* realCall = new MethodCall(THIS_VALUE, method->name.data);
+        CMethodCall* realCall = new CMethodCall(THIS_VALUE, method->name.data);
 
         // interface token validation is the very first thing we do
         c->statements->Add(new CMethodCall("CHECK_INTERFACE",
                         3, dummy, transact_data, transact_reply));
 
         // args
-        Variable* cl = NULL;
-        VariableFactory stubArgs("_arg");
+        CVariable* cl = NULL;
+        CVariableFactory stubArgs("_arg");
         arg = method->args;
         while (arg != NULL) {
-            Type* t = NAMES.Search(arg->type.type.data);
-            Variable* v = stubArgs.Get(t);
+            CType* t = CNAMES.Search(arg->type.type.data);
+            CVariable* v = stubArgs.Get(t);
             v->dimension = arg->type.dimension;
 
             c->statements->Add(new VariableDeclaration(v));
 
             if (convert_direction(arg->direction.data) & IN_PARAMETER) {
-                generate_create_from_parcel(t, c->statements, v,
-                        stubClass->transact_data, &cl);
+                cgenerate_create_from_parcel(t, c->statements, v,
+                        transact_data, &cl);
             } else {
                 if (arg->type.dimension == 0) {
                     c->statements->Add(new Assignment(v, new NewExpression(v->type)));
-                }
-                else if (arg->type.dimension == 1) {
-                    generate_new_array(v->type, c->statements, v,
-                            stubClass->transact_data);
                 }
                 else {
                     fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__,
@@ -133,44 +120,44 @@ cgenerate_method(const method_type* method, Class* interface,
         }
 
         // the real call
-        Variable* _result = NULL;
+        CVariable* _result = NULL;
         if (0 == strcmp(method->type.type.data, "void")) {
             c->statements->Add(realCall);
 
             if (!oneway) {
                 // report that there were no exceptions
-                MethodCall* ex = new MethodCall(stubClass->transact_reply,
+                CMethodCall* ex = new CMethodCall(stubClass->transact_reply,
                         "writeNoException", 0);
                 c->statements->Add(ex);
             }
         } else {
-            _result = new Variable(decl->returnType, "_result",
+            _result = new CVariable(decl->returnType, "_result",
                                     decl->returnTypeDimension);
-            c->statements->Add(new VariableDeclaration(_result, realCall));
+            c->statements->Add(new CVariableDeclaration(_result, realCall));
 
             if (!oneway) {
                 // report that there were no exceptions
-                MethodCall* ex = new MethodCall(stubClass->transact_reply,
+                CMethodCall* ex = new CMethodCall(transact_reply,
                         "writeNoException", 0);
                 c->statements->Add(ex);
             }
 
             // marshall the return value
-            generate_write_to_parcel(decl->returnType, c->statements, _result,
-                                        stubClass->transact_reply,
-                                        Type::PARCELABLE_WRITE_RETURN_VALUE);
+            cgenerate_write_to_parcel(decl->returnType, c->statements, _result,
+                                        transact_reply,
+                                        CType::PARCELABLE_WRITE_RETURN_VALUE);
         }
 
         // out parameters
         i = 0;
         arg = method->args;
         while (arg != NULL) {
-            Type* t = NAMES.Search(arg->type.type.data);
-            Variable* v = stubArgs.Get(i++);
+            CType* t = CNAMES.Search(arg->type.type.data);
+            CVariable* v = stubArgs.Get(i++);
 
             if (convert_direction(arg->direction.data) & OUT_PARAMETER) {
                 generate_write_to_parcel(t, c->statements, v,
-                                    stubClass->transact_reply,
+                                    transact_reply,
                                     Type::PARCELABLE_WRITE_RETURN_VALUE);
                 hasOutParams = true;
             }
@@ -179,118 +166,97 @@ cgenerate_method(const method_type* method, Class* interface,
         }
 
         // return true
-        c->statements->Add(new ReturnStatement(TRUE_VALUE));
-        stubClass->transact_switch->cases.push_back(c);
+        c->statements->Add(new CReturnStatement(TRUE_VALUE));
+        bnsw->cases.push_back(c);
     }
 
-    // == the proxy method ===================================================
-    Method* proxy = new Method;
+    // == the bp method ===================================================
+    CMethod* proxy = new CMethod;
         proxy->comment = gather_comments(method->comments_token->extra);
-        proxy->modifiers = PUBLIC | OVERRIDE;
-        proxy->returnType = NAMES.Search(method->type.type.data);
+        proxy->modifiers = CPUBLIC;
+        proxy->returnType = CNAMES.Search(method->type.type.data);
         proxy->returnTypeDimension = method->type.dimension;
         proxy->name = method->name.data;
-        proxy->statements = new StatementBlock;
+        proxy->statements = new CStatementBlock;
         arg = method->args;
         while (arg != NULL) {
-            proxy->parameters.push_back(new Variable(
-                            NAMES.Search(arg->type.type.data), arg->name.data,
+            proxy->parameters.push_back(new CVariable(
+                            CNAMES.Search(arg->type.type.data), arg->name.data,
                             arg->type.dimension));
             arg = arg->next;
         }
-        proxy->exceptions.push_back(REMOTE_EXCEPTION_TYPE);
-    proxyClass->elements.push_back(proxy);
+    bp->elements.push_back(proxy);
 
     // the parcels
-    Variable* _data = new Variable(PARCEL_TYPE, "_data");
-    proxy->statements->Add(new VariableDeclaration(_data,
-                                new MethodCall(PARCEL_TYPE, "obtain")));
+    CVariable* _data = new CVariable(CPARCEL_TYPE, "_data");
+    bp->statements->Add(new CVariableDeclaration(_data));
     Variable* _reply = NULL;
     if (!oneway) {
-        _reply = new Variable(PARCEL_TYPE, "_reply");
-        proxy->statements->Add(new VariableDeclaration(_reply,
-                                    new MethodCall(PARCEL_TYPE, "obtain")));
+        _reply = new CVariable(CPARCEL_TYPE, "_reply");
+        bp->statements->Add(new CVariableDeclaration(_reply));
     }
 
     // the return value
-    _result = NULL;
+    CVariable* _result = NULL;
     if (0 != strcmp(method->type.type.data, "void")) {
-        _result = new Variable(proxy->returnType, "_result",
+        _result = new CVariable(proxy->returnType, "_result",
                 method->type.dimension);
         proxy->statements->Add(new VariableDeclaration(_result));
     }
 
-    // try and finally
-    TryStatement* tryStatement = new TryStatement();
-    proxy->statements->Add(tryStatement);
-    FinallyStatement* finallyStatement = new FinallyStatement();
-    proxy->statements->Add(finallyStatement);
-
     // the interface identifier token: the DESCRIPTOR constant, marshalled as a string
-    tryStatement->statements->Add(new MethodCall(_data, "writeInterfaceToken",
-            1, new LiteralExpression("DESCRIPTOR")));
+    proxy->statements->Add(new MethodCall(_data, "writeInterfaceToken",
+            1, new CMethodCall(THIS_VALUE,"getInterfaceDescriptor")));
 
     // the parameters
     arg = method->args;
     while (arg != NULL) {
-        Type* t = NAMES.Search(arg->type.type.data);
-        Variable* v = new Variable(t, arg->name.data, arg->type.dimension);
+        CType* t = CNAMES.Search(arg->type.type.data);
+        CVariable* v = new CVariable(t, arg->name.data, arg->type.dimension);
         int dir = convert_direction(arg->direction.data);
-        if (dir == OUT_PARAMETER && arg->type.dimension != 0) {
-            IfStatement* checklen = new IfStatement();
-            checklen->expression = new Comparison(v, "==", NULL_VALUE);
-            checklen->statements->Add(new MethodCall(_data, "writeInt", 1,
-                        new LiteralExpression("-1")));
-            checklen->elseif = new IfStatement();
-            checklen->elseif->statements->Add(new MethodCall(_data, "writeInt",
-                        1, new FieldVariable(v, "length")));
-            tryStatement->statements->Add(checklen);
-        }
-        else if (dir & IN_PARAMETER) {
-            generate_write_to_parcel(t, tryStatement->statements, v, _data, 0);
+        if (dir & IN_PARAMETER) {
+            generate_write_to_parcel(t, tproxy>statements, v, _data, 0);
         }
         arg = arg->next;
     }
 
     // the transact call
-    MethodCall* call = new MethodCall(proxyClass->mRemote, "transact", 4,
-                            new LiteralExpression("Stub." + transactCodeName),
+    CMethodCall* call = new CMethodCall(new CMethodCall(THIS_VALUE, "remote"), "transact", 4,
+                            new LiteralExpression(transactCodeName),
                             _data, _reply ? _reply : NULL_VALUE,
                             new LiteralExpression(
-                                oneway ? "android.os.IBinder.FLAG_ONEWAY" : "0"));
-    tryStatement->statements->Add(call);
+                                oneway ? "IBinder::FLAG_ONEWAY" : "0"));
+    proxy->statements->Add(call);
 
     // throw back exceptions.
     if (_reply) {
-        MethodCall* ex = new MethodCall(_reply, "readException", 0);
-        tryStatement->statements->Add(ex);
+        CMethodCall* ex = new CMethodCall(_reply, "readExceptionCode", 0);
+        proxy->statements->Add(ex);
     }
 
     // returning and cleanup
     if (_reply != NULL) {
         if (_result != NULL) {
             generate_create_from_parcel(proxy->returnType,
-                    tryStatement->statements, _result, _reply, &cl);
+                    proxy->statements, _result, _reply, &cl);
         }
 
         // the out/inout parameters
         arg = method->args;
         while (arg != NULL) {
-            Type* t = NAMES.Search(arg->type.type.data);
-            Variable* v = new Variable(t, arg->name.data, arg->type.dimension);
+            CType* t = CNAMES.Search(arg->type.type.data);
+            CVariable* v = new CVariable(t, arg->name.data, arg->type.dimension);
             if (convert_direction(arg->direction.data) & OUT_PARAMETER) {
-                generate_read_from_parcel(t, tryStatement->statements,
+                cgenerate_read_from_parcel(t, tryStatement->statements,
                                             v, _reply, &cl);
             }
             arg = arg->next;
         }
 
-        finallyStatement->statements->Add(new MethodCall(_reply, "recycle"));
     }
-    finallyStatement->statements->Add(new MethodCall(_data, "recycle"));
 
     if (_result != NULL) {
-        proxy->statements->Add(new ReturnStatement(_result));
+        proxy->statements->Add(new CReturnStatement(_result));
     }
 }
 
@@ -333,7 +299,7 @@ generate_binder_interface_class(const interface_type* iface)
         CVariable *transact_reply = new Variable(PARCEL_TYPE, "reply");
         CVariable *transact_flags = new Variable(INT_TYPE, "flags");
         CMethod* onTransact = new Method;
-            onTransact->modifiers = PUBLIC;
+            onTransact->modifiers = CPUBLIC;
             onTransact->returnType = CBOOLEAN_TYPE;
             onTransact->name = "onTransact";
             onTransact->parameters.push_back(transact_code);

@@ -6,25 +6,25 @@
 #include <string.h>
 
 // =================================================
-VariableFactory::VariableFactory(const string& base)
+CVariableFactory::CVariableFactory(const string& base)
     :m_base(base),
      m_index(0)
 {
 }
 
-Variable*
-VariableFactory::Get(Type* type)
+CVariable*
+CVariableFactory::Get(Type* type)
 {
     char name[100];
     sprintf(name, "%s%d", m_base.c_str(), m_index);
     m_index++;
-    Variable* v = new Variable(type, name);
+    CVariable* v = new CVariable(type, name);
     m_vars.push_back(v);
     return v;
 }
 
-Variable*
-VariableFactory::Get(int index)
+CVariable*
+CVariableFactory::Get(int index)
 {
     return m_vars[index];
 }
@@ -61,20 +61,17 @@ int
 generate_cpp(const string& filename, const string& originalSrc,
                 interface_type* iface)
 {
-    Class* cl;
+    CNamespace* ns;
 
     if (iface->document_item.item_type == INTERFACE_TYPE_BINDER) {
-        cl = generate_binder_interface_class(iface);
-    }
-    else if (iface->document_item.item_type == INTERFACE_TYPE_RPC) {
-        cl = generate_rpc_interface_class(iface);
+        ns = generate_binder_interface_class(iface);
     }
 
-    Document* document = new Document;
+    CDocument* document = new Document;
         document->comment = "";
         if (iface->package) document->package = iface->package;
         document->originalSrc = originalSrc;
-        document->classes.push_back(cl);
+        document->nss.push_back(ns);
 
 //    printf("outputting... filename=%s\n", filename.c_str());
     FILE* to;

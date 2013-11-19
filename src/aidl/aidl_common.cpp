@@ -1,4 +1,7 @@
 
+#include "aidl_common.h"
+
+
 static vector<string> g_importPaths;
 
 void
@@ -270,7 +273,7 @@ check_filename(const char* filename, const char* package, buffer_type* name)
     return 0;
 }
 
-static int
+int
 check_filenames(const char* filename, document_item_type* items)
 {
     int err = 0;
@@ -295,7 +298,7 @@ check_filenames(const char* filename, document_item_type* items)
 }
 
 // ==========================================================
-static const char*
+const char*
 kind_to_string(int kind)
 {
     switch (kind)
@@ -309,7 +312,7 @@ kind_to_string(int kind)
     }
 }
 
-static char*
+char*
 rfind(char* str, char c)
 {
     char* p = str + strlen(str) - 1;
@@ -595,3 +598,75 @@ check_outputFilePath(const string& path) {
     }
 }
 
+int
+preprocess_aidl(const Options& options)
+{
+    vector<string> lines;
+    int err;
+
+    // read files
+    int N = options.filesToPreprocess.size();
+    for (int i=0; i<N; i++) {
+        g_callbacks = &g_mainCallbacks;
+        err = parse_aidl(options.filesToPreprocess[i].c_str());
+        if (err != 0) {
+            return err;
+        }
+        document_item_type* doc = g_document;
+        string line;
+        if (doc->item_type == USER_DATA_TYPE) {
+            user_data_type* parcelable = (user_data_type*)doc;
+            if ((parcelable->flattening_methods & PARCELABLE_DATA) != 0) {
+                line = "parcelable ";
+            }
+            if ((parcelable->flattening_methods & RPC_DATA) != 0) {
+                line = "flattenable ";
+            }
+            if (parcelable->package) {
+                line += parcelable->package;
+                line += '.';
+            }
+            line += parcelable->name.data;
+        } else {
+            line = "interface ";
+            interface_type* iface = (interface_type*)doc;
+            if (iface->package) {
+                line += iface->package;
+                line += '.';
+            }
+            line += iface->name.data;
+        }
+        line += ";\n";
+        lines.push_back(line);
+    }
+
+    // write preprocessed file
+    int fd = open( options.outputFileName.c_str(), 
+                   O_RDWR|O_CREAT|O_TRUNC|O_BINARY,
+#ifdef HAVE_MS_C_RUNTIME
+                   _S_IREAD|_S_IWRITE);
+#else    
+                   S_IRUSR|S_IWUSR|S_IRGRP);
+#endif            
+    if (fd == -1) {
+        fprintf(stderr, "aidl: could not open file for write: %s\n",
+                options.outputFileName.c_str());
+        return 1;
+    }
+
+    N = lines.size();
+    for (int i=0; i<N; i++) {
+        const string& s = lines[i];
+        int len = s.length();
+        if (len != write(fd, s.c_str(), len)) {
+            fprintf(stderr, "aidl: error writing to file %s\n",
+                options.outputFileName.c_str());
+            close(fd);
+            unlink(options.outputFileName.c_str());
+            return 1;
+        }
+    }
+
+    close(fd);
+    return 0;
+}

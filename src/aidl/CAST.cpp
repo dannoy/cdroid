@@ -6,7 +6,7 @@ WriteModifiers(FILE* to, int mod, int mask)
 {
     int m = mod & mask;
 
-    if ((m & SCOPE_MASK) == PUBLIC) {
+    if ((m & SCOPE_MASK) == CPUBLIC) {
         fprintf(to, "public ");
     }
     else if ((m & SCOPE_MASK) == PRIVATE) {
@@ -168,6 +168,59 @@ CVariable::Write(FILE* to)
 {
     fprintf(to, "%s", name.c_str());
 }
+
+===========================================
+CEnum::CEnum()
+{
+}
+
+CEnum::~CEnum()
+{
+}
+
+void
+CEnum::GatherTypes(set<CType*>* types) const
+{
+    types->insert(this->type);
+}
+
+void
+CEnum::Write(FILE* to)
+{
+    fprintf(to, "enum %s {", name.c_str());
+    size_t N = elements.size();
+    for (size_t i=0; i<N; i++) {
+        elements[i]->Write(to);
+        if (i != N-1) {
+            fprintf(to, ", ");
+        }
+    }
+    fprintf(to, "};");
+}
+
+========================================
+
+CEnumElement::CEnumElement()
+{
+}
+
+CEnumElement::~CEnumElement()
+{
+}
+
+void
+CEnumElement::GatherTypes(set<CType*>* types) const
+{
+    types->insert(this->type);
+}
+
+void
+CEnumElement::Write(FILE* to)
+{
+    fprintf(to, "%s = %s", name.c_str(), value,c_str());
+}
+
+========================================
 
 CFieldVariable::CFieldVariable(CExpression* o, const string& n)
     :object(o),

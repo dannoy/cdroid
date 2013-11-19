@@ -341,6 +341,6 @@ generate_binder_interface_class(const interface_type* iface)
         index++;
     }
 
-    return interface;
+    return _namespace;
 }
 

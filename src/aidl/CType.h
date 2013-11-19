@@ -183,6 +183,17 @@ public:
                                     CVariable* parcel, CVariable** cl);
 };
 
+class CParcelType : public CType
+{
+public:
+                    CParcelType();
+
+    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
+                                    CVariable* parcel, CVariable** cl);
+};
+
 class CParcelableInterfaceType : public CType
 {
 public:
@@ -209,10 +220,6 @@ public:
     virtual void    ReadFromParcel(CStatementBlock* addTo, CVariable* v,
                                     CVariable* parcel, CVariable** cl);
 
-    virtual void    WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
-                                    CVariable* data, int flags);
-    virtual void    CreateFromRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
-                                    CVariable* data, CVariable** cl);
 };
 
 // For interface in preprocessed files
@@ -244,7 +251,7 @@ public:
     virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
                                     CVariable* parcel, CVariable** cl);
 
-}
+};
 
 
 class CTemplateType : public CType
@@ -310,7 +317,7 @@ extern CType* CIBINDER_TYPE;
 extern CType* CIINTERFACE_TYPE;
 /*extern CType* BINDER_NATIVE_TYPE;*/
 /*extern CType* BINDER_PROXY_TYPE;*/
-/*extern CType* CPARCEL_TYPE;*/
+extern CType* CPARCEL_TYPE;
 /*extern CType* CPARCELABLE_INTERFACE_TYPE;*/
 
 /*extern CType* CONTEXT_TYPE;*/
@@ -325,6 +332,7 @@ extern CExpression* CTHIS_VALUE;
 /*extern CExpression* SUPER_VALUE;*/
 extern CExpression* CTRUE_VALUE;
 extern CExpression* CFALSE_VALUE;
+extern CType* CSP_TEMPLATE_IBINDER_TYPE;
 
 void cregister_base_types();
 

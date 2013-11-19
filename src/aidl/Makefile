@@ -1,6 +1,7 @@
 LOCAL_SRC_FILES := \
 	aidl.cpp \
 	aidl_language.cpp \
+	aidl_common.cpp \
 	options.cpp \
 	AST.cpp \
     CAST.cpp \
@@ -9,6 +10,8 @@ LOCAL_SRC_FILES := \
 	generate_java.cpp \
 	generate_java_binder.cpp \
 	generate_java_rpc.cpp \
+	generate_cpp.cpp \
+	generate_cpp_binder.cpp \
     caidl.cpp \
     jaidl.cpp
 

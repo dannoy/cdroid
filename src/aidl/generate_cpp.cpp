@@ -13,7 +13,7 @@ CVariableFactory::CVariableFactory(const string& base)
 }
 
 CVariable*
-CVariableFactory::Get(Type* type)
+CVariableFactory::Get(CType* type)
 {
     char name[100];
     sprintf(name, "%s%d", m_base.c_str(), m_index);
@@ -30,65 +30,46 @@ CVariableFactory::Get(int index)
 }
 
 // =================================================
-string
-gather_comments(extra_text_type* extra)
-{
-    string s;
-    while (extra) {
-        if (extra->which == SHORT_COMMENT) {
-            s += extra->data;
-        }
-        else if (extra->which == LONG_COMMENT) {
-            s += "/*";
-            s += extra->data;
-            s += "*/";
-        }
-        extra = extra->next;
-    }
-    return s;
-}
-
-string
-append(const char* a, const char* b)
-{
-    string s = a;
-    s += b;
-    return s;
-}
-
 // =================================================
 int
-generate_cpp(const string& filename, const string& originalSrc,
-                interface_type* iface)
+generate_cpp(const string& headerf, const string &sourcef,
+                        const string& originalSrc,
+                        interface_type* iface)
 {
     CNamespace* ns;
 
     if (iface->document_item.item_type == INTERFACE_TYPE_BINDER) {
-        ns = generate_binder_interface_class(iface);
+        ns = cgenerate_binder_interface_class(iface);
     }
 
-    CDocument* document = new Document;
+    CDocument* document = new CDocument;
         document->comment = "";
-        if (iface->package) document->package = iface->package;
+        if (iface->package) document->_namespace = package2namespace(iface->package);
         document->originalSrc = originalSrc;
         document->nss.push_back(ns);
 
 //    printf("outputting... filename=%s\n", filename.c_str());
     FILE* to;
-    if (filename == "-") {
-        to = stdout;
-    } else {
-       /* open file in binary mode to ensure that the tool produces the
-        * same output on all platforms !!
-        */
-        to = fopen(filename.c_str(), "wb");
-        if (to == NULL) {
-            fprintf(stderr, "unable to open %s for write\n", filename.c_str());
-            return 1;
-        }
+   /* open file in binary mode to ensure that the tool produces the
+    * same output on all platforms !!
+    */
+    to = fopen(headerf.c_str(), "wb");
+    if (to == NULL) {
+        fprintf(stderr, "unable to open %s for write\n", headerf.c_str());
+        return 1;
     }
 
-    document->Write(to);
+    document->WriteToHeader(to);
+
+    fclose(to);
+
+    to = fopen(sourcef.c_str(), "wb");
+    if (to == NULL) {
+        fprintf(stderr, "unable to open %s for write\n", sourcef.c_str());
+        return 1;
+    }
+
+    document->WriteToSource(to);
 
     fclose(to);
     return 0;

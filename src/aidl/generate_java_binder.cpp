@@ -1,4 +1,5 @@
 #include "generate_java.h"
+#include "aidl_common.h"
 #include "Type.h"
 #include <string.h>
 #include <stdio.h>

@@ -1,6 +1,6 @@
 #include "CType.h"
 
-CNameContainer CCNAMES;
+CNameContainer CNAMES;
 
 CType* CVOID_TYPE;
 CType* CBOOLEAN_TYPE;
@@ -23,7 +23,7 @@ CType* CIINTERFACE_TYPE;
 //Type* BPINTERFACE_TYPE;
 //Type* BINDER_NATIVE_TYPE;
 //Type* BINDER_PROXY_TYPE;
-//CType* CPARCEL_TYPE;
+CType* CPARCEL_TYPE;
 CType* CPARCELABLE_INTERFACE_TYPE;
 //Type* CONTEXT_TYPE;
 //CType* MAP_TYPE;
@@ -35,7 +35,7 @@ CType* CPARCELABLE_INTERFACE_TYPE;
 
 CType* CSP_TEMPLATE_IBINDER_TYPE;
 
-CExpression* CCNULL_VALUE;
+CExpression* CNULL_VALUE;
 CExpression* CTHIS_VALUE;
 //Expression* SUPER_VALUE;
 CExpression* CTRUE_VALUE;
@@ -47,26 +47,26 @@ cregister_base_types()
 {
     CVOID_TYPE = new CBasicType("void",
             "XXX", "XXX", "XXX", "XXX");
-    CCNAMES.Add(CVOID_TYPE);
+    CNAMES.Add(CVOID_TYPE);
 
     CBOOLEAN_TYPE = new CBooleanType();
-    CCNAMES.Add(CBOOLEAN_TYPE);
+    CNAMES.Add(CBOOLEAN_TYPE);
 
     CBYTE_TYPE = new CBasicType("byte",
             "writeByte", "readByte",
             "putByte", "getByte");
-    CCNAMES.Add(CBYTE_TYPE);
+    CNAMES.Add(CBYTE_TYPE);
 
     CCHAR_TYPE = new CCharType();
-    CCNAMES.Add(CCHAR_TYPE);
+    CNAMES.Add(CCHAR_TYPE);
 
     CENUM_TYPE = new CEnumType();
-    CCNAMES.Add(CENUM_TYPE);
+    CNAMES.Add(CENUM_TYPE);
 
     CINT_TYPE = new CBasicType("int",
             "writeInt32", "readInt32",
             "putInteger", "getInteger");
-    CCNAMES.Add(CINT_TYPE);
+    CNAMES.Add(CINT_TYPE);
 
     CLONG_TYPE = new CBasicType("long",
             #ifdef LONG_BITS_32
@@ -76,30 +76,30 @@ cregister_base_types()
             "writeInt64", "readInt64",
             #endif
             "putLong", "getLong");
-    CCNAMES.Add(CLONG_TYPE);
+    CNAMES.Add(CLONG_TYPE);
 
     CFLOAT_TYPE = new CBasicType("float",
             "writeFloat", "readFloat",
             "putFloat", "getFloat");
-    CCNAMES.Add(CFLOAT_TYPE);
+    CNAMES.Add(CFLOAT_TYPE);
 
     CDOUBLE_TYPE = new CBasicType("double",
             "writeDouble", "readDouble",
             "putDouble", "getDouble");
-    CCNAMES.Add(CDOUBLE_TYPE);
+    CNAMES.Add(CDOUBLE_TYPE);
 
     CSTRING_TYPE = new CStringType();
-    CCNAMES.Add(CSTRING_TYPE);
+    CNAMES.Add(CSTRING_TYPE);
 
 
     CIBINDER_TYPE = new CIBinderType();
-    CCNAMES.Add(CIBINDER_TYPE);
+    CNAMES.Add(CIBINDER_TYPE);
 
     CIINTERFACE_TYPE = new CIInterfaceType();
-    CCNAMES.Add(CIINTERFACE_TYPE);
+    CNAMES.Add(CIINTERFACE_TYPE);
 
-    //PARCEL_TYPE = new ParcelType();
-    //CNAMES.Add(PARCEL_TYPE);
+    CPARCEL_TYPE = new CParcelType();
+    CNAMES.Add(CPARCEL_TYPE);
 
     CPARCELABLE_INTERFACE_TYPE = new CParcelableInterfaceType();
     CNAMES.Add(CPARCELABLE_INTERFACE_TYPE);
@@ -110,12 +110,10 @@ cregister_base_types()
     CNAMES.Add(CSP_TEMPLATE_IBINDER_TYPE);
 
 
-    CCNULL_VALUE = new CLiteralExpression("null");
+    CNULL_VALUE = new CLiteralExpression("null");
     CTHIS_VALUE = new CLiteralExpression("this");
     CTRUE_VALUE = new CLiteralExpression("true");
     CFALSE_VALUE = new CLiteralExpression("false");
-
-    CCNAMES.AddTemplateType("", "vector", 1);
 }
 
 // ================================================================
@@ -347,7 +345,7 @@ CCharType::CreateFromRpcData(CStatementBlock* addTo, CExpression* k, CVariable* 
     addTo->Add(new CAssignment(v, new CMethodCall(data, "getChar", 1, k)));
 }
 
-===================================================
+//===================================================
 CEnumType::CEnumType()
     :CType("enum", BUILT_IN, true, true, false)
 {
@@ -368,19 +366,6 @@ CEnumType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* par
                     "!=", new CMethodCall(parcel, "readInt32"))));
 }
 
-void
-CEnumType::WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
-        CVariable* data, int flags)
-{
-    addTo->Add(new CMethodCall(data, "putInteger", 2, k, v));
-}
-
-void
-CEnumType::CreateFromRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v, CVariable* data,
-        CVariable** cl)
-{
-    addTo->Add(new CAssignment(v, new CMethodCall(data, "getInteger", 1, k)));
-}
 
 // ================================================================
 
@@ -586,6 +571,24 @@ CUserDataType::ReadFromParcel(CStatementBlock* addTo, CVariable* v,
     addTo->Add(ifpart);
 }
 
+// ================================================================
+
+CParcelType::CParcelType()
+    :CType("android", "Parcel", BUILT_IN, false, false, false)
+{
+}
+
+void
+CParcelType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+{
+    fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__, __LINE__);
+}
+
+void
+CParcelType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+{
+    fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__, __LINE__);
+}
 
 // ================================================================
 
@@ -725,30 +728,6 @@ CNameContainer::Search(const string& name)
     for (int i=0; i<N; i++) {
         if (m_types[i]->Name() == name) {
             return m_types[i];
-        }
-    }
-
-    return NULL;
-}
-
-const CNameContainer::_CTemplate*
-CNameContainer::search_template(const string& name) const
-{
-    int N = m_templates.size();
-
-    // first exact match
-    for (int i=0; i<N; i++) {
-        const _CTemplate& g = m_templates[i];
-        if (g.qualified == name) {
-            return &g;
-        }
-    }
-
-    // then name match
-    for (int i=0; i<N; i++) {
-        const _CTemplate& g = m_templates[i];
-        if (g.name == name) {
-            return &g;
         }
     }
 

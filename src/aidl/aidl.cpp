@@ -17,9 +17,6 @@
 #include "aidl_common.h"
 
 
-#ifndef O_BINARY
-#  define O_BINARY  0
-#endif
 
 
 using namespace std;

@@ -4,6 +4,8 @@
 #include "caidl.h"
 #include "CType.h"
 #include "aidl_language.h"
+#include "aidl_common.h"
+#include "generate_cpp.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,11 +19,6 @@
 #include <io.h>
 #endif
 
-// The following are gotten as the offset from the allowable id's between
-// android.os.IBinder.FIRST_CALL_TRANSACTION=1 and
-// android.os.IBinder.LAST_CALL_TRANSACTION=16777215
-#define MIN_USER_SET_METHOD_ID                0
-#define MAX_USER_SET_METHOD_ID                16777214
 
 static vector<string> g_includePaths;
 
@@ -63,7 +60,7 @@ cgather_types(const char* filename, document_item_type* items)
                 // won't let us do it.
                 interface_type* c = (interface_type*)items;
 
-                vector<CType> args;
+                vector<CType*> args;
                 args.push_back(type);
                 CNAMES.Add(new CTemplateType(c->package ? package2namespace(c->package) : "",
                                         "BnInterface", args));
@@ -71,15 +68,15 @@ cgather_types(const char* filename, document_item_type* items)
                                         "BpInterface", args));
 
                 string name = string("Bn") + c->name.data;
-                Type* BnXXX = new Type(c->package ? package2namespace(c->package) : "",
-                                        name, Type::GENERATED, false, false, false,
+                CType* BnXXX = new CType(c->package ? package2namespace(c->package) : "",
+                                        name, CType::GENERATED, false, false, false,
                                         filename, c->name.lineno);
-                NAMES.Add(BnXXX);
+                CNAMES.Add(BnXXX);
                 name = string("Bp") + c->name.data;
-                Type* BpXXX = new Type(c->package ? package2namespace(c->package) : "",
-                                        name, Type::GENERATED, false, false, false,
+                CType* BpXXX = new CType(c->package ? package2namespace(c->package) : "",
+                                        name, CType::GENERATED, false, false, false,
                                         filename, c->name.lineno);
-                NAMES.Add(BpXXX);
+                CNAMES.Add(BpXXX);
 
             }
             else if (items->item_type == INTERFACE_TYPE_RPC) {
@@ -237,7 +234,7 @@ next:
 
 // ==========================================================
 void
-generate_dep_file(const Options& options, const document_item_type* items)
+cgenerate_dep_file(const Options& options, const document_item_type* items)
 {
     /* we open the file in binary mode to ensure that the same output is
      * generated on all platforms !!
@@ -328,16 +325,16 @@ cgenerate_outputFileName2(const Options& options, const buffer_type& name,
 
 // ==========================================================
 static string
-cgenerate_outputFileName(const Options& options, const document_item_type* items, int type)
+cgenerate_outputFileName(const Options& options, const document_item_type* items, int ftype)
 {
     // items has already been checked to have only one interface.
     if (items->item_type == INTERFACE_TYPE_BINDER || items->item_type == INTERFACE_TYPE_RPC) {
         interface_type* type = (interface_type*)items;
 
-        return generate_outputFileName2(options, type->name, type->package, type);
+        return cgenerate_outputFileName2(options, type->name, type->package, ftype);
     } else if (items->item_type == USER_DATA_TYPE) {
         user_data_type* type = (user_data_type*)items;
-        return generate_outputFileName2(options, type->name, type->package, int type);
+        return cgenerate_outputFileName2(options, type->name, type->package, ftype);
     }
 
     // I don't think we can come here, but safer than returning NULL.
@@ -412,7 +409,7 @@ ccompile_aidl(Options& options)
     }
 
     // gather the types that have been declared
-    err |= gather_types(options.inputFileName.c_str(), mainDoc);
+    err |= cgather_types(options.inputFileName.c_str(), mainDoc);
     import = g_imports;
     while (import) {
         err |= cgather_types(import->filename, import->doc);
@@ -461,7 +458,7 @@ ccompile_aidl(Options& options)
         // make sure the folders of the output file all exists
         //check_outputFilePath(options.outputFileName);
         check_outputFilePath(sf);
-        generate_dep_file(options, mainDoc);
+        cgenerate_dep_file(options, mainDoc);
     }
 
     // they didn't ask to fail on parcelables, so just exit quietly.
@@ -472,7 +469,7 @@ ccompile_aidl(Options& options)
     // make sure the folders of the output file all exists
     check_outputFilePath(sf);
 
-    err = cgenerate_cpp(hf, sf, options.inputFileName.c_str(),
+    err = generate_cpp(hf, sf, options.inputFileName.c_str(),
                         (interface_type*)mainDoc);
 
     return err;

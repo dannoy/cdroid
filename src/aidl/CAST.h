@@ -63,7 +63,7 @@ struct CStringLiteralExpression : public CExpression
 
 struct CVariable : public CExpression
 {
-    enum {
+    enum CVARIABLE_TYPE{
         VAR_POINTER,
         VAR_REF,
         VAR_VALUE
@@ -74,8 +74,8 @@ struct CVariable : public CExpression
     int val_type;
 
     CVariable();
-    CVariable(CType* type, const string& name, int _type = VAR_VALUE);
-    CVariable(CType* type, const string& name, int dimension, int _type = VAR_VALUE);
+    CVariable(CType* type, const string& name, enum CVARIABLE_TYPE _type = VAR_VALUE);
+    CVariable(CType* type, const string& name, int dimension, enum CVARIABLE_TYPE _type = VAR_VALUE);
     virtual ~CVariable();
 
     virtual void GatherTypes(set<CType*>* types) const;
@@ -348,6 +348,7 @@ struct CEnumElement
 {
     string name;
     string value;
+    CEnumElement();
     CEnumElement(string name, string value);
     virtual ~CEnumElement();
     virtual void GatherTypes(set<CType*>* types) const;
@@ -358,6 +359,7 @@ struct CEnumElement
 struct CEnum
 {
     vector<CEnumElement *> elements;
+    string name;
     CType *type;
 
     CEnum();
@@ -402,7 +404,8 @@ struct CDocument
     CDocument();
     virtual ~CDocument();
 
-    virtual void Write(FILE* to);
+    virtual void WriteToHeader(FILE* to);
+    virtual void WriteToSource(FILE* to);
 };
 
 #endif // AIDL_CAST_H

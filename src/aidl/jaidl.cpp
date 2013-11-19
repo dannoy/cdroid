@@ -2,6 +2,9 @@
 #include "options.h"
 #include <string.h>
 #include "aidl_language.h"
+#include "aidl_common.h"
+#include "generate_java.h"
+#include "Type.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -12,13 +15,6 @@
 #ifdef HAVE_MS_C_RUNTIME
 #include <io.h>
 #endif
-
-// The following are gotten as the offset from the allowable id's between
-// android.os.IBinder.FIRST_CALL_TRANSACTION=1 and
-// android.os.IBinder.LAST_CALL_TRANSACTION=16777215
-#define MIN_USER_SET_METHOD_ID                0
-#define MAX_USER_SET_METHOD_ID                16777214
-
 
 static int
 gather_types(const char* filename, document_item_type* items)
@@ -383,7 +379,7 @@ jcompile_aidl(Options& options)
     N = options.preprocessedFiles.size();
     for (int i=0; i<N; i++) {
         const string& s = options.preprocessedFiles[i];
-        err |= parse_preprocessed_file(s);
+        err |= parse_preprocessed_file(s, gather_types);
     }
     if (err != 0) {
         return err;

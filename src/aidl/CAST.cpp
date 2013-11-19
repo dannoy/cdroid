@@ -2,31 +2,31 @@
 #include "CAST.h"
 
 void
-WriteModifiers(FILE* to, int mod, int mask)
+CWriteModifiers(FILE* to, int mod, int mask)
 {
     int m = mod & mask;
 
-    if ((m & SCOPE_MASK) == CPUBLIC) {
+    if ((m & CSCOPE_MASK) == CPUBLIC) {
         fprintf(to, "public ");
     }
-    else if ((m & SCOPE_MASK) == PRIVATE) {
+    else if ((m & CSCOPE_MASK) == CPRIVATE) {
         fprintf(to, "private ");
     }
-    else if ((m & SCOPE_MASK) == PROTECTED) {
+    else if ((m & CSCOPE_MASK) == CPROTECTED) {
         fprintf(to, "protected ");
     }
 
-    if (m & STATIC) {
+    if (m & CSTATIC) {
         fprintf(to, "static ");
     }
 
-    if (m & VIRTUAL) {
+    if (m & CVIRTUAL) {
         fprintf(to, "virtual ");
     }
 }
 
 void
-WriteArgumentList(FILE* to, const vector<CExpression*>& arguments)
+CWriteArgumentList(FILE* to, const vector<CExpression*>& arguments)
 {
     size_t N = arguments.size();
     for (size_t i=0; i<N; i++) {
@@ -75,7 +75,7 @@ CField::Write(FILE* to)
     if (this->comment.length() != 0) {
         fprintf(to, "%s\n", this->comment.c_str());
     }
-    WriteModifiers(to, this->modifiers, SCOPE_MASK | STATIC );
+    CWriteModifiers(to, this->modifiers, CSCOPE_MASK | CSTATIC );
     fprintf(to, "%s %s", this->variable->type->QualifiedName().c_str(),
             this->variable->name.c_str());
     if (this->value.length() != 0) {
@@ -126,7 +126,7 @@ CVariable::CVariable()
 {
 }
 
-CVariable::CVariable(CType* t, const string& n, int _type)
+CVariable::CVariable(CType* t, const string& n, enum CVARIABLE_TYPE _type)
     :type(t),
      name(n),
      dimension(0),
@@ -134,7 +134,7 @@ CVariable::CVariable(CType* t, const string& n, int _type)
 {
 }
 
-CVariable::CVariable(CType* t, const string& n, int d, int _type)
+CVariable::CVariable(CType* t, const string& n, int d, enum CVARIABLE_TYPE _type)
     :type(t),
      name(n),
      dimension(d),
@@ -169,7 +169,7 @@ CVariable::Write(FILE* to)
     fprintf(to, "%s", name.c_str());
 }
 
-===========================================
+//===========================================
 CEnum::CEnum()
 {
 }
@@ -187,7 +187,12 @@ CEnum::GatherTypes(set<CType*>* types) const
 void
 CEnum::Write(FILE* to)
 {
-    fprintf(to, "enum %s {", name.c_str());
+    if(name.size()) {
+        fprintf(to, "enum %s {", name.c_str());
+    }
+    else {
+        fprintf(to, "enum {");
+    }
     size_t N = elements.size();
     for (size_t i=0; i<N; i++) {
         elements[i]->Write(to);
@@ -198,9 +203,13 @@ CEnum::Write(FILE* to)
     fprintf(to, "};");
 }
 
-========================================
+//========================================
 
 CEnumElement::CEnumElement()
+{
+}
+CEnumElement::CEnumElement(string n, string v)
+        : name(n), value(v)
 {
 }
 
@@ -211,16 +220,15 @@ CEnumElement::~CEnumElement()
 void
 CEnumElement::GatherTypes(set<CType*>* types) const
 {
-    types->insert(this->type);
 }
 
 void
 CEnumElement::Write(FILE* to)
 {
-    fprintf(to, "%s = %s", name.c_str(), value,c_str());
+    fprintf(to, "%s = %s", name.c_str(), value.c_str());
 }
 
-========================================
+//========================================
 
 CFieldVariable::CFieldVariable(CExpression* o, const string& n)
     :object(o),
@@ -411,7 +419,7 @@ CMethodCall::Write(FILE* to)
         fprintf(to, "%s.", this->clazz->QualifiedName().c_str());
     }
     fprintf(to, "%s(", this->name.c_str());
-    WriteArgumentList(to, this->arguments);
+    CWriteArgumentList(to, this->arguments);
     fprintf(to, ")");
 }
 
@@ -467,7 +475,7 @@ void
 CNewExpression::Write(FILE* to)
 {
     fprintf(to, "new %s(", this->type->InstantiableName().c_str());
-    WriteArgumentList(to, this->arguments);
+    CWriteArgumentList(to, this->arguments);
     fprintf(to, ")");
 }
 
@@ -849,7 +857,7 @@ CMethod::Write(FILE* to)
         fprintf(to, "%s\n", this->comment.c_str());
     }
 
-    WriteModifiers(to, this->modifiers, SCOPE_MASK | STATIC | VIRTUAL);
+    CWriteModifiers(to, this->modifiers, CSCOPE_MASK | CSTATIC | CVIRTUAL);
 
     if (this->returnType != NULL) {
         string dim;
@@ -926,7 +934,7 @@ CClass::Write(FILE* to)
         fprintf(to, "%s\n", this->comment.c_str());
     }
 
-    WriteModifiers(to, this->modifiers, ALL_MODIFIERS);
+    CWriteModifiers(to, this->modifiers, CALL_MODIFIERS);
 
     fprintf(to, "class ");
 
@@ -987,7 +995,7 @@ escape_backslashes(const string& str)
 }
 
 void
-CDocument::Write(FILE* to)
+CDocument::WriteToHeader(FILE* to)
 {
     size_t N, i;
 
@@ -1012,3 +1020,28 @@ CDocument::Write(FILE* to)
     }
 }
 
+void
+CDocument::WriteToSource(FILE* to)
+{
+    size_t N, i;
+
+    if (this->comment.length() != 0) {
+        fprintf(to, "%s\n", this->comment.c_str());
+    }
+    fprintf(to, "/*\n"
+                " * This file is auto-generated.  DO NOT MODIFY.\n"
+                " * Original file: %s\n"
+                " */\n", escape_backslashes(this->originalSrc).c_str());
+    if (this->_namespace.length() != 0) {
+        fprintf(to, "namespace %s{\n", this->_namespace.c_str());
+    }
+
+    N = this->classes.size();
+    for (i=0; i<N; i++) {
+        CClass* c = this->classes[i];
+        c->Write(to);
+    }
+    if (this->_namespace.length() != 0) {
+        fprintf(to, "};\n");
+    }
+}

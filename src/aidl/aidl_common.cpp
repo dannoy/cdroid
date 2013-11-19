@@ -1,5 +1,14 @@
 
 #include "aidl_common.h"
+#include "Type.h"
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 static vector<string> g_importPaths;
@@ -118,14 +127,6 @@ convert_direction(const char* direction)
 }
 
 // ==========================================================
-struct import_info {
-    const char* from;
-    const char* filename;
-    buffer_type statement;
-    const char* neededClass;
-    document_item_type* doc;
-    struct import_info* next;
-};
 
 document_item_type* g_document = NULL;
 import_info* g_imports = NULL;
@@ -178,7 +179,7 @@ main_import_parsed(buffer_type* statement)
     g_imports = import;
 }
 
-static ParserCallbacks g_mainCallbacks = {
+ParserCallbacks g_mainCallbacks = {
     &main_document_parsed,
     &main_import_parsed
 };
@@ -557,7 +558,7 @@ check_types(const char* filename, document_item_type* items,
                 if (member->item_type == METHOD_TYPE) {
                     method_type* m = (method_type*)member;
 
-                    err |= check_method(filename, items->item_type, m, check_method);
+                    err |= check_method(filename, items->item_type, m);
 
                     // prevent duplicate methods
                     if (methodNames.find(m->name.data) == methodNames.end()) {
@@ -670,3 +671,30 @@ preprocess_aidl(const Options& options)
     close(fd);
     return 0;
 }
+
+string
+gather_comments(extra_text_type* extra)
+{
+    string s;
+    while (extra) {
+        if (extra->which == SHORT_COMMENT) {
+            s += extra->data;
+        }
+        else if (extra->which == LONG_COMMENT) {
+            s += "/*";
+            s += extra->data;
+            s += "*/";
+        }
+        extra = extra->next;
+    }
+    return s;
+}
+
+string
+append(const char* a, const char* b)
+{
+    string s = a;
+    s += b;
+    return s;
+}
+

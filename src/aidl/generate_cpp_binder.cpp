@@ -58,17 +58,21 @@ cgenerate_method(const method_type* method, CClass* interface,
     // == the declaration in the interface ===================================
     CMethod* decl = new CMethod;
         decl->comment = gather_comments(method->comments_token->extra);
-        decl->modifiers = CPUBLIC;
+        decl->modifiers = CPUBLIC | CVIRTUAL;
         decl->returnType = CNAMES.Search(method->type.type.data);
-        decl->returnTypeDimension = method->type.dimension;
         decl->name = method->name.data;
+        decl->parent = interface;
     fprintf(stderr, "%s %d %p %s\n",__func__, __LINE__, decl->returnType, method->type.type.data);
 
     arg = method->args;
     while (arg != NULL) {
+        CType *t = CNAMES.Search(arg->type.type.data);
         decl->parameters.push_back(new CVariable(
-                            CNAMES.Search(arg->type.type.data), arg->name.data,
-                            arg->type.dimension));
+                            t, arg->name.data,
+                            arg->type.dimension,
+                            t->Kind() == CType::BUILT_IN ? 
+                                         CVariable::VAR_VALUE :
+                                         CVariable::VAR_REF));
         arg = arg->next;
     }
 
@@ -77,8 +81,8 @@ cgenerate_method(const method_type* method, CClass* interface,
     // == the BN method ====================================================
     {
         CVariable *transact_code = new CVariable(CINT_TYPE, "code");
-        CVariable *transact_data = new CVariable(CPARCEL_TYPE, "data");
-        CVariable *transact_reply = new CVariable(CPARCEL_TYPE, "reply");
+        CVariable *transact_data = new CVariable(CPARCEL_TYPE, "data", CVariable::VAR_REF);
+        CVariable *transact_reply = new CVariable(CPARCEL_TYPE, "reply", CVariable::VAR_REF);
         CVariable *transact_flags = new CVariable(CINT_TYPE, "flags");
         CVariable *dummy = new CVariable(CINT_TYPE, interface->type->Name());
 
@@ -131,8 +135,7 @@ cgenerate_method(const method_type* method, CClass* interface,
                 c->statements->Add(ex);
             }
         } else {
-            _result = new CVariable(decl->returnType, "_result",
-                                    decl->returnTypeDimension);
+            _result = new CVariable(decl->returnType, "_result");
             c->statements->Add(new CVariableDeclaration(_result, realCall));
 
             if (!oneway) {
@@ -179,9 +182,9 @@ cgenerate_method(const method_type* method, CClass* interface,
         proxy->comment = gather_comments(method->comments_token->extra);
         proxy->modifiers = CPUBLIC;
         proxy->returnType = CNAMES.Search(method->type.type.data);
-        proxy->returnTypeDimension = method->type.dimension;
         proxy->name = method->name.data;
         proxy->statements = new CStatementBlock;
+        proxy->parent = bp;
         arg = method->args;
         while (arg != NULL) {
             proxy->parameters.push_back(new CVariable(
@@ -192,11 +195,11 @@ cgenerate_method(const method_type* method, CClass* interface,
     bp->elements.push_back(proxy);
 
     // the parcels
-    CVariable* _data = new CVariable(CPARCEL_TYPE, "_data");
+    CVariable* _data = new CVariable(CPARCEL_TYPE, "_data", CVariable::VAR_REF);
     proxy->statements->Add(new CVariableDeclaration(_data));
     CVariable* _reply = NULL;
     if (!oneway) {
-        _reply = new CVariable(CPARCEL_TYPE, "_reply");
+        _reply = new CVariable(CPARCEL_TYPE, "_reply", CVariable::VAR_REF);
         proxy->statements->Add(new CVariableDeclaration(_reply));
     }
 
@@ -309,8 +312,8 @@ cgenerate_binder_interface_class(const interface_type* iface)
     // BnXXX init
     {
         CVariable *transact_code = new CVariable(CINT_TYPE, "code");
-        CVariable *transact_data = new CVariable(CPARCEL_TYPE, "data");
-        CVariable *transact_reply = new CVariable(CPARCEL_TYPE, "reply");
+        CVariable *transact_data = new CVariable(CPARCEL_TYPE, "data", CVariable::VAR_REF);
+        CVariable *transact_reply = new CVariable(CPARCEL_TYPE, "reply", CVariable::VAR_POINTER);
         CVariable *transact_flags = new CVariable(CINT_TYPE, "flags");
         CMethod* onTransact = new CMethod;
             onTransact->modifiers = CPUBLIC;

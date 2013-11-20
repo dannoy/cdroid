@@ -370,7 +370,7 @@ CEnumType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* par
 // ================================================================
 
 CStringType::CStringType()
-    :CType("android", "String8", BUILT_IN, true, true, false)
+    :CType("android", "String8", USERDATA, true, true, false)
 {
     //SetQualifiedName("android::String8");
 }
@@ -574,7 +574,7 @@ CUserDataType::ReadFromParcel(CStatementBlock* addTo, CVariable* v,
 // ================================================================
 
 CParcelType::CParcelType()
-    :CType("android", "Parcel", BUILT_IN, false, false, false)
+    :CType("android", "Parcel", USERDATA, false, false, false)
 {
 }
 

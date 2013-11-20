@@ -97,22 +97,6 @@ struct CFieldVariable : public CExpression
     void Write(FILE* to);
 };
 
-struct CField : public CClassElement
-{
-    string comment;
-    int modifiers;
-    CVariable *variable;
-    string value;
-
-    CField();
-    CField(int modifiers, CVariable* variable);
-    virtual ~CField();
-
-    virtual void GatherTypes(set<CType*>* types) const;
-    virtual void WriteToHeader(FILE* to);
-    virtual void WriteToSource(FILE* to);
-};
-
 struct CStatement
 {
     virtual ~CStatement();
@@ -327,17 +311,36 @@ struct CFunction : public CStatement
     virtual void Write(FILE* to);
 };
 
+struct CClass : public CClassElement
+{
+    string comment;
+    int modifiers;
+    CType* type;
+    vector<CType*> inherit;
+    vector<CClassElement*> elements;
+    CClass *parent;
+
+    CClass();
+    virtual ~CClass();
+
+    virtual void GatherTypes(set<CType*>* types) const;
+    virtual void WriteToHeader(FILE* to);
+    virtual void WriteToSource(FILE* to);
+private:
+    void WriteClassBegin(FILE* to);
+    void WriteClassEnd(FILE* to);
+};
+
 struct CMethod : public CClassElement
 {
     string comment;
     int modifiers;
     CType* returnType;
-    size_t returnTypeDimension;
     string name;
     vector<CVariable*> parameters;
     vector<CType*> exceptions;
     CStatementBlock* statements;
-    bool _virtual; //lijin
+    CClass *parent;
 
     CMethod();
     virtual ~CMethod();
@@ -345,7 +348,27 @@ struct CMethod : public CClassElement
     virtual void GatherTypes(set<CType*>* types) const;
     virtual void WriteToHeader(FILE* to);
     virtual void WriteToSource(FILE* to);
+private:
+    void WriteDeclaration(FILE* to);
 };
+
+struct CField : public CClassElement
+{
+    string comment;
+    int modifiers;
+    CVariable *variable;
+    string value;
+    CClass *parent;
+
+    CField();
+    CField(int modifiers, CVariable* variable);
+    virtual ~CField();
+
+    virtual void GatherTypes(set<CType*>* types) const;
+    virtual void WriteToHeader(FILE* to);
+    virtual void WriteToSource(FILE* to);
+};
+
 
 struct CEnumElement
 {
@@ -374,24 +397,6 @@ struct CEnum
     virtual void WriteToSource(FILE* to);
 };
 
-struct CClass : public CClassElement
-{
-    string comment;
-    int modifiers;
-    CType* type;
-    vector<CType*> inherit;
-    vector<CClassElement*> elements;
-
-    CClass();
-    virtual ~CClass();
-
-    virtual void GatherTypes(set<CType*>* types) const;
-    virtual void WriteToHeader(FILE* to);
-    virtual void WriteToSource(FILE* to);
-private:
-    void WriteClassBegin(FILE* to);
-    void WriteClassEnd(FILE* to);
-};
 
 struct CNamespace
 {

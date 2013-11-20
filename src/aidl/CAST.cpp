@@ -70,7 +70,22 @@ CField::GatherTypes(set<CType*>* types) const
 }
 
 void
-CField::Write(FILE* to)
+CField::WriteToHeader(FILE* to)
+{
+    if (this->comment.length() != 0) {
+        fprintf(to, "%s\n", this->comment.c_str());
+    }
+    CWriteModifiers(to, this->modifiers, CSCOPE_MASK | CSTATIC );
+    fprintf(to, "%s %s", this->variable->type->QualifiedName().c_str(),
+            this->variable->name.c_str());
+    if (this->value.length() != 0) {
+        fprintf(to, " = %s", this->value.c_str());
+    }
+    fprintf(to, ";\n");
+}
+
+void
+CField::WriteToSource(FILE* to)
 {
     if (this->comment.length() != 0) {
         fprintf(to, "%s\n", this->comment.c_str());
@@ -185,22 +200,26 @@ CEnum::GatherTypes(set<CType*>* types) const
 }
 
 void
-CEnum::Write(FILE* to)
+CEnum::WriteToHeader(FILE* to)
 {
     if(name.size()) {
-        fprintf(to, "enum %s {", name.c_str());
+        fprintf(to, "enum %s {\n", name.c_str());
     }
     else {
-        fprintf(to, "enum {");
+        fprintf(to, "enum {\n");
     }
     size_t N = elements.size();
     for (size_t i=0; i<N; i++) {
         elements[i]->Write(to);
-        if (i != N-1) {
-            fprintf(to, ", ");
-        }
+        fprintf(to, ", \n");
     }
-    fprintf(to, "};");
+    fprintf(to, "};\n");
+}
+
+void
+CEnum::WriteToSource(FILE* to)
+{
+    WriteToHeader(to);
 }
 
 //========================================
@@ -225,7 +244,7 @@ CEnumElement::GatherTypes(set<CType*>* types) const
 void
 CEnumElement::Write(FILE* to)
 {
-    fprintf(to, "%s = %s", name.c_str(), value.c_str());
+    fprintf(to, "%s = (%s)", name.c_str(), value.c_str());
 }
 
 //========================================
@@ -849,7 +868,7 @@ CMethod::GatherTypes(set<CType*>* types) const
 }
 
 void
-CMethod::Write(FILE* to)
+CMethod::WriteToHeader(FILE* to)
 {
     size_t N, i;
 
@@ -898,6 +917,57 @@ CMethod::Write(FILE* to)
     }
 }
 
+void
+CMethod::WriteToSource(FILE* to)
+{
+    size_t N, i;
+
+    if (this->comment.length() != 0) {
+        fprintf(to, "%s\n", this->comment.c_str());
+    }
+
+    CWriteModifiers(to, this->modifiers, CSCOPE_MASK | CSTATIC | CVIRTUAL);
+
+    if (this->returnType != NULL) {
+        string dim;
+        for (i=0; i<this->returnTypeDimension; i++) {
+            dim += "[]";
+        }
+        fprintf(to, "%s%s ", this->returnType->QualifiedName().c_str(),
+                dim.c_str());
+    }
+   
+    fprintf(to, "%s(", this->name.c_str());
+
+    N = this->parameters.size();
+    for (i=0; i<N; i++) {
+        this->parameters[i]->WriteDeclaration(to);
+        if (i != N-1) {
+            fprintf(to, ", ");
+        }
+    }
+
+    fprintf(to, ")");
+
+    N = this->exceptions.size();
+    for (i=0; i<N; i++) {
+        if (i == 0) {
+            fprintf(to, " throws ");
+        } else {
+            fprintf(to, ", ");
+        }
+        fprintf(to, "%s", this->exceptions[i]->QualifiedName().c_str());
+    }
+
+    if (this->statements == NULL) {
+        fprintf(to, ";\n");
+    } else {
+        fprintf(to, "\n");
+        this->statements->Write(to);
+    }
+}
+
+
 CClass::CClass()
     :modifiers(0),
      type(NULL)
@@ -926,22 +996,17 @@ CClass::GatherTypes(set<CType*>* types) const
 }
 
 void
-CClass::Write(FILE* to)
+CClass::WriteClassBegin(FILE* to)
 {
     size_t N, i;
 
-    if (this->comment.length() != 0) {
-        fprintf(to, "%s\n", this->comment.c_str());
-    }
-
-    CWriteModifiers(to, this->modifiers, CALL_MODIFIERS);
 
     fprintf(to, "class ");
 
     string name = this->type->Name();
-    size_t pos = name.rfind('.');
+    size_t pos = name.rfind(':');
     if (pos != string::npos) {
-        name = name.c_str() + pos + 1;
+        name = name.c_str() + pos + 2;
     }
 
     fprintf(to, "%s", name.c_str());
@@ -950,8 +1015,10 @@ CClass::Write(FILE* to)
     N = this->inherit.size();
 
     if (N != 0) {
+        fprintf(to, " : ");
+
         for (i=0; i < N -1; i++) {
-            fprintf(to, " public %s,", this->inherit[i]->QualifiedName().c_str());
+            fprintf(to, " public %s, ", this->inherit[i]->QualifiedName().c_str());
         }
         for (; i < N; i++) {
             fprintf(to, " public %s", this->inherit[i]->QualifiedName().c_str());
@@ -960,15 +1027,99 @@ CClass::Write(FILE* to)
 
     fprintf(to, "\n");
     fprintf(to, "{\n");
+}
+
+void
+CClass::WriteClassEnd(FILE* to)
+{
+    fprintf(to, "}\n");
+}
+
+void
+CClass::WriteToHeader(FILE* to)
+{
+    size_t N, i;
+
+    if(CPUBLIC != (modifiers & CSCOPE_MASK))
+        return;
+
+    if (this->comment.length() != 0) {
+        fprintf(to, "%s\n", this->comment.c_str());
+    }
+
+    if(CPRIVATE == (modifiers & CSCOPE_MASK))
+    WriteClassBegin(to);
 
     N = this->elements.size();
     for (i=0; i<N; i++) {
-        this->elements[i]->Write(to);
+        //this->elements[i]->WriteToHeader(to);
     }
 
-    fprintf(to, "}\n");
+    WriteClassEnd(to);
 
 }
+
+void
+CClass::WriteToSource(FILE* to)
+{
+    size_t N, i;
+
+    if (this->comment.length() != 0) {
+        fprintf(to, "%s\n", this->comment.c_str());
+    }
+
+    if(CPRIVATE == (modifiers & CSCOPE_MASK))
+        WriteClassBegin(to);
+
+    N = this->elements.size();
+    for (i=0; i<N; i++) {
+        //this->elements[i]->Write(to);
+    }
+
+    WriteClassEnd(to);
+
+}
+// ==========================================
+//
+void
+CNamespace::WriteToHeader(FILE* to)
+{
+    size_t N, i;
+    N = this->enums.size();
+    for (i=0; i<N; i++) {
+        CEnum* c = this->enums[i];
+        if(CPUBLIC == (c->modifiers & CSCOPE_MASK))
+            c->WriteToHeader(to);
+    }
+
+    N = this->classes.size();
+    for (i=0; i<N; i++) {
+        CClass* c = this->classes[i];
+        if(CPUBLIC == (c->modifiers & CSCOPE_MASK))
+            c->WriteToHeader(to);
+    }
+}
+
+void
+CNamespace::WriteToSource(FILE* to)
+{
+    size_t N, i;
+    N = this->enums.size();
+    fprintf(stderr, "%d enum in namespace\n",N);
+    for (i=0; i<N; i++) {
+        CEnum* c = this->enums[i];
+        if(CPRIVATE == (c->modifiers & CSCOPE_MASK))
+            c->WriteToSource(to);
+    }
+
+    N = this->classes.size();
+    fprintf(stderr, "%d classes in namespace\n",N);
+    for (i=0; i<N; i++) {
+        CClass* c = this->classes[i];
+        c->WriteToSource(to);
+    }
+}
+// =========================================
 
 CDocument::CDocument()
 {
@@ -994,6 +1145,28 @@ escape_backslashes(const string& str)
     return result;
 }
 
+string namespace2hierarchyBegin(string ns)
+{
+    int i;
+    string prefix("namespace ");
+    while((i = ns.find(':')) != ns.npos) {
+        ns.replace(i,2," {\nnamespace ");
+    }
+    return prefix + ns + "{\n";
+}
+
+string namespace2hierarchyEnd(string ns)
+{
+    int i;
+    string res("}\n");
+    while((i = ns.find(':')) != ns.npos) {
+        ns.replace(i,2,"");
+        res += "}\n";
+    }
+    return res;
+}
+
+
 void
 CDocument::WriteToHeader(FILE* to)
 {
@@ -1003,20 +1176,25 @@ CDocument::WriteToHeader(FILE* to)
         fprintf(to, "%s\n", this->comment.c_str());
     }
     fprintf(to, "/*\n"
-                " * This file is auto-generated.  DO NOT MODIFY.\n"
+                " * This file is auto-generated C++ header file.  DO NOT MODIFY.\n"
                 " * Original file: %s\n"
                 " */\n", escape_backslashes(this->originalSrc).c_str());
     if (this->_namespace.length() != 0) {
-        fprintf(to, "namespace %s{\n", this->_namespace.c_str());
+        fprintf(to, "%s\n", namespace2hierarchyBegin(this->_namespace.c_str()).c_str());
     }
 
     N = this->classes.size();
     for (i=0; i<N; i++) {
         CClass* c = this->classes[i];
-        c->Write(to);
+        if(CPUBLIC == (c->modifiers & CSCOPE_MASK))
+            c->WriteToHeader(to);
+    }
+    N = this->nss.size();
+    for (i=0; i<N; i++) {
+        nss[i]->WriteToHeader(to);
     }
     if (this->_namespace.length() != 0) {
-        fprintf(to, "};\n");
+        fprintf(to, "%s\n", namespace2hierarchyEnd(this->_namespace.c_str()).c_str());
     }
 }
 
@@ -1029,19 +1207,28 @@ CDocument::WriteToSource(FILE* to)
         fprintf(to, "%s\n", this->comment.c_str());
     }
     fprintf(to, "/*\n"
-                " * This file is auto-generated.  DO NOT MODIFY.\n"
+                " * This file is auto-generated C++ source file.  DO NOT MODIFY.\n"
                 " * Original file: %s\n"
                 " */\n", escape_backslashes(this->originalSrc).c_str());
     if (this->_namespace.length() != 0) {
-        fprintf(to, "namespace %s{\n", this->_namespace.c_str());
+        fprintf(to, "%s\n", namespace2hierarchyBegin(this->_namespace.c_str()).c_str());
     }
-
+    set<string>::iterator sit = includes.begin();
+    for (; sit != includes.end(); ++sit) {
+        fprintf(to, "#include <%s>\n",(*sit).c_str());
+    }
     N = this->classes.size();
+    fprintf(stderr, "%d classes in total\n",N);
     for (i=0; i<N; i++) {
         CClass* c = this->classes[i];
-        c->Write(to);
+        c->WriteToSource(to);
+    }
+    N = this->nss.size();
+    fprintf(stderr,"%d namespaces in total\n",N);
+    for (i=0; i<N; i++) {
+        nss[i]->WriteToSource(to);
     }
     if (this->_namespace.length() != 0) {
-        fprintf(to, "};\n");
+        fprintf(to, "%s\n", namespace2hierarchyEnd(this->_namespace.c_str()).c_str());
     }
 }

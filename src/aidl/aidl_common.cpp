@@ -54,6 +54,7 @@ find_import_file(const char* given)
             f += OS_PATH_SEPARATOR;
         }
         f.append(expected);
+        fprintf(stderr, "accessing %s ...",f.c_str());
 
 #ifdef HAVE_MS_C_RUNTIME
         /* check that the file exists and is not write-only */
@@ -62,8 +63,10 @@ find_import_file(const char* given)
 #else
         if (0 == access(f.c_str(), R_OK)) {
 #endif        
+            fprintf(stderr, "ok.\n");
             return strdup(f.c_str());
         }
+        fprintf(stderr, "failed.\n");
     }
 
     return NULL;

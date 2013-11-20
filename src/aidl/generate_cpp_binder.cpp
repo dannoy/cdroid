@@ -50,7 +50,7 @@ cgenerate_method(const method_type* method, CClass* interface,
     transactCodeName += method->name.data;
 
     char transactCodeValue[60];
-    sprintf(transactCodeValue, "(IBinder.FIRST_CALL_TRANSACTION + %d)", index);
+    sprintf(transactCodeValue, "IBinder::FIRST_CALL_TRANSACTION + %d", index);
 
     eu->elements.push_back(new CEnumElement(transactCodeName,
                             string(transactCodeValue)));
@@ -62,6 +62,7 @@ cgenerate_method(const method_type* method, CClass* interface,
         decl->returnType = CNAMES.Search(method->type.type.data);
         decl->returnTypeDimension = method->type.dimension;
         decl->name = method->name.data;
+    fprintf(stderr, "%s %d %p %s\n",__func__, __LINE__, decl->returnType, method->type.type.data);
 
     arg = method->args;
     while (arg != NULL) {
@@ -141,11 +142,13 @@ cgenerate_method(const method_type* method, CClass* interface,
                 c->statements->Add(ex);
             }
 
+    fprintf(stderr, "%s %d %p\n",__func__, __LINE__, decl->returnType);
             // marshall the return value
             cgenerate_write_to_parcel(decl->returnType, c->statements, _result,
                                         transact_reply,
                                         CType::PARCELABLE_WRITE_RETURN_VALUE);
         }
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
         // out parameters
         i = 0;
@@ -163,11 +166,13 @@ cgenerate_method(const method_type* method, CClass* interface,
 
             arg = arg->next;
         }
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
         // return true
         c->statements->Add(new CReturnStatement(CTRUE_VALUE));
         bnsw->cases.push_back(c);
     }
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
     // == the bp method ===================================================
     CMethod* proxy = new CMethod;
@@ -263,6 +268,7 @@ cgenerate_method(const method_type* method, CClass* interface,
 CNamespace*
 cgenerate_binder_interface_class(const interface_type* iface)
 {
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
     CInterfaceType* interfaceType = static_cast<CInterfaceType*>(
         CNAMES.Find(package2namespace(iface->package).c_str(), iface->name.data));
 
@@ -271,20 +277,28 @@ cgenerate_binder_interface_class(const interface_type* iface)
         _namespace->comment = gather_comments(iface->comments_token->extra);
     // the code enum
     CEnum * eu = new CEnum;
-    eu->type = CENUM_TYPE;
+        eu->type = CENUM_TYPE;
+        eu->modifiers = CPRIVATE;
 
     // the interface class
     CClass* interface = new CClass;
-    //interface->comment = gather_comments(iface->comments_token->extra);
+        interface->comment = gather_comments(iface->comments_token->extra);
         interface->type = interfaceType;
+        interface->modifiers = CPUBLIC;
 
     CClass *BnXXX = new CClass;
         BnXXX->inherit.push_back(CNAMES.Search("BnInterface"));
-        BnXXX->type = CNAMES.Find(append("Bn", iface->name.data));
+        BnXXX->type = CNAMES.Search(append("Bn", iface->name.data));
+        BnXXX->modifiers = CPUBLIC;
+        BnXXX->comment = interface->comment;
+    fprintf(stderr, "%s %d bn type %p %s\n",__func__, __LINE__, BnXXX->type, append("Bn", iface->name.data).c_str());
 
     CClass *BpXXX = new CClass;
         BpXXX->inherit.push_back(CNAMES.Search("BpInterface"));
-        BpXXX->type = CNAMES.Find(append("Bp", iface->name.data));
+        BpXXX->type = CNAMES.Search(append("Bp", iface->name.data));
+        BpXXX->modifiers = CPRIVATE;
+        BpXXX->comment = interface->comment;
+    fprintf(stderr, "%s %d bn type %p\n",__func__, __LINE__, BpXXX->type);
 
     _namespace->enums.push_back(eu);
     _namespace->classes.push_back(interface);
@@ -335,6 +349,7 @@ cgenerate_binder_interface_class(const interface_type* iface)
     while (item != NULL) {
         if (item->item_type == METHOD_TYPE) {
             method_type * method_item = (method_type*) item;
+            fprintf(stderr, "%s %d %p %s\n",__func__, __LINE__, item, method_item->type.type.data);
             cgenerate_method(method_item, interface, eu, BnXXX, bn_transact_switch, BpXXX, method_item->assigned_id);
         }
         item = item->next;

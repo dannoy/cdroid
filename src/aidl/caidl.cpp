@@ -30,6 +30,7 @@ static int
 cgather_types(const char* filename, document_item_type* items)
 {
     int err = 0;
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
     while (items) {
         CType* type;
         if (items->item_type == USER_DATA_TYPE) {
@@ -62,21 +63,23 @@ cgather_types(const char* filename, document_item_type* items)
 
                 vector<CType*> args;
                 args.push_back(type);
-                CNAMES.Add(new CTemplateType(c->package ? package2namespace(c->package) : "",
+                CNAMES.Add(new CTemplateType("android",
                                         "BnInterface", args));
-                CNAMES.Add(new CTemplateType(c->package ? package2namespace(c->package) : "",
+                CNAMES.Add(new CTemplateType("android",
                                         "BpInterface", args));
 
                 string name = string("Bn") + c->name.data;
                 CType* BnXXX = new CType(c->package ? package2namespace(c->package) : "",
                                         name, CType::GENERATED, false, false, false,
                                         filename, c->name.lineno);
+                fprintf(stderr, "%s %d name %s\n",__func__, __LINE__,name.c_str());
                 CNAMES.Add(BnXXX);
                 name = string("Bp") + c->name.data;
                 CType* BpXXX = new CType(c->package ? package2namespace(c->package) : "",
                                         name, CType::GENERATED, false, false, false,
                                         filename, c->name.lineno);
                 CNAMES.Add(BpXXX);
+                fprintf(stderr, "%s %d name %s\n",__func__, __LINE__,name.c_str());
 
             }
             else if (items->item_type == INTERFACE_TYPE_RPC) {
@@ -135,12 +138,31 @@ cmatches_keyword(const char* str)
     return false;
 }
 
+// translate String -> string
+//           boolean -> bool
+static char *_aidl_type_translate(char *origin)
+{
+    string orig = origin;
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
+
+    if(orig == "String") {
+        return (char *)"String8";
+    }
+    else if(orig == "boolean") {
+        return (char *)"bool";
+    }
+
+    return origin;
+}
+
 static int
 ccheck_method(const char* filename, int kind, method_type* m)
 {
     int err = 0;
 
+    fprintf(stderr, "%s %d method_type %p\n",__func__, __LINE__,m);
     // return type
+        m->type.type.data = _aidl_type_translate(m->type.type.data);
     CType* returnType = CNAMES.Search(m->type.type.data);
     if (returnType == NULL) {
         fprintf(stderr, "%s:%d unknown return type %s\n", filename,
@@ -148,6 +170,7 @@ ccheck_method(const char* filename, int kind, method_type* m)
         err = 1;
         return err;
     }
+    fprintf(stderr, "%s %d method_type %p %s\n",__func__, __LINE__,m, m->type.type.data);
 
     if (!(kind == INTERFACE_TYPE_BINDER ? returnType->CanWriteToParcel()
                 : returnType->CanWriteToRpcData())) {
@@ -167,6 +190,7 @@ ccheck_method(const char* filename, int kind, method_type* m)
 
     arg_type* arg = m->args;
     while (arg) {
+        arg->type.type.data = _aidl_type_translate(arg->type.type.data);
         CType* t = CNAMES.Search(arg->type.type.data);
 
         // check the arg type
@@ -356,6 +380,7 @@ ccompile_aidl(Options& options)
     set_import_paths(options.importPaths);
 
     cregister_base_types();
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
     // import the preprocessed file
     N = options.preprocessedFiles.size();
@@ -408,6 +433,7 @@ ccompile_aidl(Options& options)
         import = import->next;
     }
 
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
     // gather the types that have been declared
     err |= cgather_types(options.inputFileName.c_str(), mainDoc);
     import = g_imports;
@@ -416,8 +442,9 @@ ccompile_aidl(Options& options)
         import = import->next;
     }
 
-    // check the referenced types in mainDoc to make sure we've imported them
+    fprintf(stderr, "%s %d\n",__func__, __LINE__); // check the referenced types in mainDoc to make sure we've imported them
     err |= check_types(options.inputFileName.c_str(), mainDoc, ccheck_method);
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
     // finally, there really only needs to be one thing in mainDoc, and it
     // needs to be an interface.
@@ -436,6 +463,7 @@ ccompile_aidl(Options& options)
         return 1;
     }
 
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
     string hf,sf;
     // if needed, generate the outputFileName from the outputBaseFolder
     if (options.outputFileName.length() == 0 &&
@@ -448,7 +476,8 @@ ccompile_aidl(Options& options)
         sf = options.outputFileName;
         hf = options.outputFileName;
         int n = hf.find('.');
-        hf.replace(n + 1, 3, "h");
+        hf.replace(n + 1, 4, "h");
+        sf.replace(n + 1, 4, "cpp");
     }
 
     // if we were asked to, generate a make dependency file
@@ -470,7 +499,7 @@ ccompile_aidl(Options& options)
     check_outputFilePath(sf);
 
     err = generate_cpp(hf, sf, options.inputFileName.c_str(),
-                        (interface_type*)mainDoc);
+            (interface_type*)mainDoc);
 
     return err;
 }

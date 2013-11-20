@@ -52,6 +52,7 @@ parse_options(int argc, const char* const* argv, Options *options)
     options->task = COMPILE_AIDL;
     options->failOnParcelable = false;
     options->autoDepFile = false;
+    options->lang = TARGET_JAVA;
 
     // OPTIONS
     while (i < argc) {
@@ -70,10 +71,10 @@ parse_options(int argc, const char* const* argv, Options *options)
                 }
                 else if (s[1] == 'L') {
                     string lang = s + 2;
-                    if(s == "CPP") {
+                    if(lang == "CPP") {
                         options->lang = TARGET_CPP;
                     }
-                    else if(s == "JAVA") {
+                    else if(lang == "JAVA") {
                         options->lang = TARGET_JAVA;
                     } else {
                         fprintf(stderr, "-L option (%s) only supports JAVA,CPP.\n", s+2);

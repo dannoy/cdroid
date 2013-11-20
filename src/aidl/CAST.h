@@ -33,7 +33,8 @@ struct CClassElement
     virtual ~CClassElement();
 
     virtual void GatherTypes(set<CType*>* types) const = 0;
-    virtual void Write(FILE* to) = 0;
+    virtual void WriteToHeader(FILE* to) = 0;
+    virtual void WriteToSource(FILE* to) = 0;
 };
 
 struct CExpression
@@ -108,7 +109,8 @@ struct CField : public CClassElement
     virtual ~CField();
 
     virtual void GatherTypes(set<CType*>* types) const;
-    virtual void Write(FILE* to);
+    virtual void WriteToHeader(FILE* to);
+    virtual void WriteToSource(FILE* to);
 };
 
 struct CStatement
@@ -341,7 +343,8 @@ struct CMethod : public CClassElement
     virtual ~CMethod();
 
     virtual void GatherTypes(set<CType*>* types) const;
-    virtual void Write(FILE* to);
+    virtual void WriteToHeader(FILE* to);
+    virtual void WriteToSource(FILE* to);
 };
 
 struct CEnumElement
@@ -361,12 +364,14 @@ struct CEnum
     vector<CEnumElement *> elements;
     string name;
     CType *type;
+    int modifiers;
 
     CEnum();
     virtual ~CEnum();
 
     virtual void GatherTypes(set<CType*>* types) const;
-    virtual void Write(FILE* to);
+    virtual void WriteToHeader(FILE* to);
+    virtual void WriteToSource(FILE* to);
 };
 
 struct CClass : public CClassElement
@@ -381,7 +386,11 @@ struct CClass : public CClassElement
     virtual ~CClass();
 
     virtual void GatherTypes(set<CType*>* types) const;
-    virtual void Write(FILE* to);
+    virtual void WriteToHeader(FILE* to);
+    virtual void WriteToSource(FILE* to);
+private:
+    void WriteClassBegin(FILE* to);
+    void WriteClassEnd(FILE* to);
 };
 
 struct CNamespace
@@ -390,6 +399,8 @@ struct CNamespace
     vector<CFunction *> functions;
     vector<CEnum *> enums;
     string comment;
+    virtual void WriteToHeader(FILE* to);
+    virtual void WriteToSource(FILE* to);
 };
 
 struct CDocument

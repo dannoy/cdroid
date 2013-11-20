@@ -28,10 +28,13 @@ compile_aidl(Options& options)
     int err = 0;
 
     if(options.lang == TARGET_CPP) {
+        fprintf(stderr, "target:cpp\n");
         err = ccompile_aidl(options);
+
     }
     else if(options.lang == TARGET_JAVA) {
-        err = ccompile_aidl(options);
+        fprintf(stderr, "target:java\n");
+        err = jcompile_aidl(options);
     }
 
     return err;

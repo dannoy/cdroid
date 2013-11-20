@@ -414,7 +414,7 @@ jcompile_aidl(Options& options)
     }
     // bail out now if parsing wasn't successful
     if (err != 0 || mainDoc == NULL) {
-        //fprintf(stderr, "aidl: parsing failed, stopping.\n");
+        fprintf(stderr, "aidl: parsing failed, stopping.\n");
         return 1;
     }
 

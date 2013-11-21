@@ -21,6 +21,10 @@ enum {
     CSTATIC          = 0x00000010,
     CVIRTUAL         = 0x00000020,
 
+    CSTICK_TO_HEADER = 0x00000100,
+    CSTICK_TO_SOURCE = 0x00000200,
+    CSTICK_MASK      = 0x00000f00,
+
     CALL_MODIFIERS   = 0xffffffff
 };
 
@@ -29,7 +33,8 @@ void WriteModifiers(FILE* to, int mod, int mask);
 
 struct CClassElement
 {
-    CClassElement();
+    int modifiers;
+    CClassElement(int m);
     virtual ~CClassElement();
 
     virtual void GatherTypes(set<CType*>* types) const = 0;
@@ -39,6 +44,7 @@ struct CClassElement
 
 struct CExpression
 {
+    string comment;
     virtual ~CExpression();
     virtual void Write(FILE* to) = 0;
 };
@@ -62,6 +68,7 @@ struct CStringLiteralExpression : public CExpression
     virtual void Write(FILE* to);
 };
 
+
 struct CVariable : public CExpression
 {
     enum CVARIABLE_TYPE{
@@ -83,6 +90,25 @@ struct CVariable : public CExpression
     void WriteDeclaration(FILE* to);
     void Write(FILE* to);
 };
+
+struct CMethodVariable: public CExpression
+{
+    enum MethodVarType{
+        MVAR_POINTER            = 0x1,
+        MVAR_OBJECT_POINTER     = 0x3,
+        MVAR_REF                = 0x4,
+        MVAR_VALUE              = 0x8
+    };
+    CVariable *var;
+    MethodVarType mv_type;
+
+    CMethodVariable(CVariable *v, MethodVarType t = MVAR_VALUE);
+    virtual ~CMethodVariable();
+
+    virtual void GatherTypes(set<CType*>* types) const;
+    virtual void Write(FILE* to);
+};
+
 
 struct CFieldVariable : public CExpression
 {
@@ -314,7 +340,6 @@ struct CFunction : public CStatement
 struct CClass : public CClassElement
 {
     string comment;
-    int modifiers;
     CType* type;
     vector<CType*> inherit;
     vector<CClassElement*> elements;
@@ -334,7 +359,6 @@ private:
 struct CMethod : public CClassElement
 {
     string comment;
-    int modifiers;
     CType* returnType;
     string name;
     vector<CVariable*> parameters;
@@ -349,13 +373,12 @@ struct CMethod : public CClassElement
     virtual void WriteToHeader(FILE* to);
     virtual void WriteToSource(FILE* to);
 private:
-    void WriteDeclaration(FILE* to);
+    void WriteDeclaration(FILE* to, bool definition);
 };
 
 struct CField : public CClassElement
 {
     string comment;
-    int modifiers;
     CVariable *variable;
     string value;
     CClass *parent;

@@ -7,15 +7,14 @@ CWriteModifiers(FILE* to, int mod, int mask)
     int m = mod & mask;
 
     if ((m & CSCOPE_MASK) == CPUBLIC) {
-        fprintf(to, "public");
+        fprintf(to, "public:\n");
     }
     else if ((m & CSCOPE_MASK) == CPRIVATE) {
-        fprintf(to, "private");
+        fprintf(to, "private:\n");
     }
     else if ((m & CSCOPE_MASK) == CPROTECTED) {
-        fprintf(to, "protected");
+        fprintf(to, "protected:\n");
     }
-    fprintf(to, ":\n");
 
     if (m & CSTATIC) {
         fprintf(to, "static ");
@@ -38,7 +37,8 @@ CWriteArgumentList(FILE* to, const vector<CExpression*>& arguments)
     }
 }
 
-CClassElement::CClassElement()
+CClassElement::CClassElement(int m)
+    : modifiers(m)
 {
 }
 
@@ -47,16 +47,14 @@ CClassElement::~CClassElement()
 }
 
 CField::CField()
-    :CClassElement(),
-     modifiers(0),
+    :CClassElement(0),
      variable(NULL),
      parent(NULL)
 {
 }
 
 CField::CField(int m, CVariable* v)
-    :CClassElement(),
-     modifiers(m),
+    :CClassElement(m),
      variable(v),
      parent(NULL)
 {
@@ -174,19 +172,24 @@ void
 CVariable::WriteDeclaration(FILE* to)
 {
     //TODO:Translate to vector when dimension > 1
-    switch(val_type) {
-        case VAR_VALUE:
-            fprintf(to, "%s %s", this->type->QualifiedName().c_str(),
+    if(this->type){
+        switch(val_type) {
+            case VAR_VALUE:
+                fprintf(to, "%s %s", this->type->QualifiedName().c_str(),
                         this->name.c_str());
-        break;
-        case VAR_REF:
-            fprintf(to, "%s& %s", this->type->QualifiedName().c_str(),
+                break;
+            case VAR_REF:
+                fprintf(to, "%s& %s", this->type->QualifiedName().c_str(),
                         this->name.c_str());
-        break;
-        case VAR_POINTER:
-            fprintf(to, "%s* %s", this->type->QualifiedName().c_str(),
+                break;
+            case VAR_POINTER:
+                fprintf(to, "%s* %s", this->type->QualifiedName().c_str(),
                         this->name.c_str());
-        break;
+                break;
+        }
+    }
+    else {
+        fprintf(to, "%s", this->name.c_str());
     }
 }
 
@@ -194,6 +197,38 @@ void
 CVariable::Write(FILE* to)
 {
     fprintf(to, "%s", name.c_str());
+}
+//===========================================
+CMethodVariable::CMethodVariable(CVariable *v, enum MethodVarType t)
+    :var(v),
+     mv_type(t)
+{
+}
+CMethodVariable::~CMethodVariable()
+{
+}
+
+void
+CMethodVariable::GatherTypes(set<CType*>* types) const
+{
+    types->insert(this->var->type);
+}
+
+void
+CMethodVariable::Write(FILE* to)
+{
+    switch(mv_type) {
+        case MVAR_VALUE:
+        case MVAR_REF:
+            fprintf(to, "%s", this->var->name.c_str());
+            break;
+        case MVAR_POINTER:
+            fprintf(to, "&%s", this->var->name.c_str());
+            break;
+        case MVAR_OBJECT_POINTER:
+            fprintf(to, "%s", this->var->name.c_str());
+            break;
+    }
 }
 
 //===========================================
@@ -364,6 +399,9 @@ CAssignment::~CAssignment()
 void
 CAssignment::Write(FILE* to)
 {
+    if(comment.size()!=0) {
+        fprintf(to, "%s", comment.c_str());
+    }
     this->lvalue->Write(to);
     fprintf(to, " = ");
     if (this->cast != NULL) {
@@ -444,7 +482,13 @@ CMethodCall::Write(FILE* to)
 {
     if (this->obj != NULL) {
         this->obj->Write(to);
-        fprintf(to, ".");
+        CMethodVariable *p = dynamic_cast<CMethodVariable *>(this->obj);
+        if(0 != p && 0 != (CMethodVariable::MVAR_POINTER & p->mv_type)) {
+            fprintf(to, "->");
+        }
+        else {
+            fprintf(to, ".");
+        }
     }
     else if (this->clazz != NULL) {
         fprintf(to, "%s.", this->clazz->QualifiedName().c_str());
@@ -846,8 +890,7 @@ CFunction::Write(FILE* to)
 }
 
 CMethod::CMethod()
-    :CClassElement(),
-     modifiers(0),
+    :CClassElement(0),
      returnType(NULL), // (NULL means constructor)
      statements(NULL),
      parent(0)
@@ -879,17 +922,29 @@ CMethod::GatherTypes(set<CType*>* types) const
 }
 
 void
-CMethod::WriteDeclaration(FILE* to)
+CMethod::WriteDeclaration(FILE* to, bool definition)
 {
     size_t N, i;
 
-    CWriteModifiers(to, this->modifiers, CSCOPE_MASK | CSTATIC | CVIRTUAL);
+    if(!definition) {
+        CWriteModifiers(to, this->modifiers, CSTATIC | CVIRTUAL);
+    }
 
     if (this->returnType != NULL) {
-        fprintf(to, "%s ", this->returnType->QualifiedName().c_str());
+            fprintf(to, "%s ", this->returnType->QualifiedName().c_str());
     }
    
-    fprintf(to, "%s(", this->name.c_str());
+    if(definition) {
+        string prefix;
+        CClass *p = parent;
+        while(p) {
+            prefix = p->type->Name() + "::" + prefix;
+            p = p->parent;
+        }
+        fprintf(to, "%s%s(", prefix.c_str(), this->name.c_str());
+    } else {
+        fprintf(to, "%s(", this->name.c_str());
+    }
 
     N = this->parameters.size();
     for (i=0; i<N; i++) {
@@ -922,7 +977,7 @@ CMethod::WriteToHeader(FILE* to)
         fprintf(to, "%s\n", this->comment.c_str());
     }
 
-    WriteDeclaration(to);
+    WriteDeclaration(to, false);
 
     fprintf(to, ";\n");
 
@@ -936,34 +991,8 @@ CMethod::WriteToSource(FILE* to)
     if (this->comment.length() != 0) {
         fprintf(to, "%s\n", this->comment.c_str());
     }
+    WriteDeclaration(to, true);
 
-    CWriteModifiers(to, this->modifiers, CSCOPE_MASK | CSTATIC | CVIRTUAL);
-
-    if (this->returnType != NULL) {
-        fprintf(to, "%s ", this->returnType->QualifiedName().c_str());
-    }
-   
-    fprintf(to, "%s(", this->name.c_str());
-
-    N = this->parameters.size();
-    for (i=0; i<N; i++) {
-        this->parameters[i]->WriteDeclaration(to);
-        if (i != N-1) {
-            fprintf(to, ", ");
-        }
-    }
-
-    fprintf(to, ")");
-
-    N = this->exceptions.size();
-    for (i=0; i<N; i++) {
-        if (i == 0) {
-            fprintf(to, " throws ");
-        } else {
-            fprintf(to, ", ");
-        }
-        fprintf(to, "%s", this->exceptions[i]->QualifiedName().c_str());
-    }
 
     if (this->statements == NULL) {
         fprintf(to, ";\n");
@@ -975,7 +1004,7 @@ CMethod::WriteToSource(FILE* to)
 
 
 CClass::CClass()
-    :modifiers(0),
+    :CClassElement(0),
      type(NULL),
      parent(NULL)
 {
@@ -1039,7 +1068,7 @@ CClass::WriteClassBegin(FILE* to)
 void
 CClass::WriteClassEnd(FILE* to)
 {
-    fprintf(to, "}\n");
+    fprintf(to, "};\n");
 }
 
 void
@@ -1047,15 +1076,24 @@ CClass::WriteToHeader(FILE* to)
 {
     size_t N, i;
 
+
+    WriteClassBegin(to);
     if (this->comment.length() != 0) {
         fprintf(to, "%s\n", this->comment.c_str());
     }
 
-    WriteClassBegin(to);
-
     N = this->elements.size();
+    fprintf(to, "public:\n");
     for (i=0; i<N; i++) {
-        this->elements[i]->WriteToHeader(to);
+        if(CPUBLIC == (this->elements[i]->modifiers & CSCOPE_MASK) &&
+                CSTICK_TO_SOURCE != (this->elements[i]->modifiers & CSTICK_MASK))
+            this->elements[i]->WriteToHeader(to);
+    }
+    fprintf(to, "private:\n");
+    for (i=0; i<N; i++) {
+        if(CPRIVATE == (this->elements[i]->modifiers & CSCOPE_MASK) &&
+                CSTICK_TO_SOURCE != (this->elements[i]->modifiers & CSTICK_MASK))
+            this->elements[i]->WriteToHeader(to);
     }
 
     WriteClassEnd(to);
@@ -1073,7 +1111,9 @@ CClass::WriteToSource(FILE* to)
 
     N = this->elements.size();
     for (i=0; i<N; i++) {
-        //this->elements[i]->Write(to);
+        if(CSTICK_TO_HEADER != (this->elements[i]->modifiers & CSTICK_MASK)) {
+            this->elements[i]->WriteToSource(to);
+        }
     }
 
 
@@ -1162,7 +1202,7 @@ string namespace2hierarchyEnd(string ns)
         ns.replace(i,2,"");
         res += "}\n";
     }
-    return res;
+    return res + ";";
 }
 
 

@@ -34,7 +34,7 @@
  * }</pre>
  */
 namespace android{
-class Parcelable {
+class Parcelable : public virtual RefBase{
     public:
     /**
      * Flag for use with {@link #writeToParcel}: the object being written
@@ -76,10 +76,21 @@ class Parcelable {
      * from the given Parcel whose data had previously been written by
      * {@link Parcelable#writeToParcel Parcelable.writeToParcel()}.
      *
+     * NOTICE:this pointer might be NULL, NEVER use 'this' pointer
      * @param source The Parcel to read the object's data from.
      * @return Returns a new instance of the Parcelable class.
      */
-    Parcelable createFromParcel(Parcel& source) = 0;
+    Parcelable *createFromParcel(Parcel& source) = 0;
+    /**
+     * Create a new instance of the Parcelable class, instantiating it
+     * from the given Parcel whose data had previously been written by
+     * {@link Parcelable#writeToParcel Parcelable.writeToParcel()}.
+     *
+     * NOTICE:this pointer MUST NOT be NULL
+     * @param source The Parcel to read the object's data from.
+     * @return Returns a new instance of the Parcelable class.
+     */
+    void readFromParcel(Parcel& source) = 0;
 
     /**
      * Create a new array of the Parcelable class.

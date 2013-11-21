@@ -43,12 +43,12 @@ public:
     virtual string  IncludeName() const;
     virtual string  InstantiableName() const;
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
-    virtual void    ReadFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
+    virtual void    ReadFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 
     virtual void    WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
                                     CVariable* data, int flags);
@@ -83,10 +83,10 @@ public:
                               const string& marshallRpc,
                               const string& unmarshallRpc);
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 
     virtual void    WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
                                     CVariable* data, int flags);
@@ -105,10 +105,10 @@ class CBooleanType : public CType
 public:
                     CBooleanType();
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 
     virtual void    WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
                                     CVariable* data, int flags);
@@ -121,10 +121,10 @@ class CCharType : public CType
 public:
                     CCharType();
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 
     virtual void    WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
                                     CVariable* data, int flags);
@@ -139,10 +139,10 @@ class CStringType : public CType
 public:
                     CStringType();
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 
     virtual void    WriteToRpcData(CStatementBlock* addTo, CExpression* k, CVariable* v,
                                     CVariable* data, int flags);
@@ -155,10 +155,10 @@ class CRemoteExceptionType : public CType
 public:
                     CRemoteExceptionType();
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 };
 
 class CIBinderType : public CType
@@ -166,10 +166,10 @@ class CIBinderType : public CType
 public:
                     CIBinderType();
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 };
 
 class CIInterfaceType : public CType
@@ -177,10 +177,10 @@ class CIInterfaceType : public CType
 public:
                     CIInterfaceType();
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 };
 
 class CParcelType : public CType
@@ -188,10 +188,10 @@ class CParcelType : public CType
 public:
                     CParcelType();
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 };
 
 class CParcelableInterfaceType : public CType
@@ -199,10 +199,10 @@ class CParcelableInterfaceType : public CType
 public:
                     CParcelableInterfaceType();
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 };
 
 
@@ -213,12 +213,12 @@ public:
                             bool builtIn, bool canWriteToParcel, bool canWriteToRpcData,
                             const string& declFile = "", int declLine = -1);
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
-    virtual void    ReadFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
+    virtual void    ReadFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 
 };
 
@@ -233,10 +233,10 @@ public:
 
     bool            OneWay() const;
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 
 private:
     bool m_oneway;
@@ -246,10 +246,10 @@ class CEnumType : public CType
 {
 public:
                     CEnumType();
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 
 };
 
@@ -263,12 +263,12 @@ public:
     const vector<CType*>& TemplateArgumentTypes() const;
     string          TemplateArguments() const;
 
-    virtual void    WriteToParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, int flags);
-    virtual void    CreateFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
-    virtual void    ReadFromParcel(CStatementBlock* addTo, CVariable* v,
-                                    CVariable* parcel, CVariable** cl);
+    virtual void    WriteToParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, int flags);
+    virtual void    CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
+    virtual void    ReadFromParcel(CStatementBlock* addTo, CMethodVariable* v,
+                                    CMethodVariable* parcel, CMethodVariable** cl);
 
 private:
     string m_templateArguments;

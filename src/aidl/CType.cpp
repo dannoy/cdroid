@@ -110,8 +110,8 @@ cregister_base_types()
     CNAMES.Add(CSP_TEMPLATE_IBINDER_TYPE);
 
 
-    CNULL_VALUE = new CLiteralExpression("null");
-    CTHIS_VALUE = new CLiteralExpression("this");
+    CNULL_VALUE = new CLiteralExpression("NULL");
+    CTHIS_VALUE = new CMethodVariable(new CVariable(NULL,"this"), CMethodVariable::MVAR_OBJECT_POINTER);
     CTRUE_VALUE = new CLiteralExpression("true");
     CFALSE_VALUE = new CLiteralExpression("false");
 }
@@ -171,7 +171,7 @@ CType::InstantiableName() const
 
 
 void
-CType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+CType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     fprintf(stderr, "aidl:internal error %s:%d qualifiedName=%sn",
             __FILE__, __LINE__, m_qualifiedName.c_str());
@@ -180,7 +180,7 @@ CType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, in
 }
 
 void
-CType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
     fprintf(stderr, "aidl:internal error %s:%d qualifiedName=%s\n",
             __FILE__, __LINE__, m_qualifiedName.c_str());
@@ -189,7 +189,7 @@ CType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel,
 }
 
 void
-CType::ReadFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CType::ReadFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
     fprintf(stderr, "aidl:internal error %s:%d qualifiedName=%s\n",
             __FILE__, __LINE__, m_qualifiedName.c_str());
@@ -250,15 +250,15 @@ CBasicType::CBasicType(const string& name, const string& marshallParcel,
 }
 
 void
-CBasicType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+CBasicType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     addTo->Add(new CMethodCall(parcel, m_marshallParcel, 1, v));
 }
 
 void
-CBasicType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CBasicType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
-    addTo->Add(new CAssignment(v, new CMethodCall(parcel, m_unmarshallParcel)));
+    addTo->Add(new CAssignment(v->var, new CMethodCall(parcel, m_unmarshallParcel)));
 }
 
 void
@@ -283,7 +283,7 @@ CBooleanType::CBooleanType()
 }
 
 void
-CBooleanType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+CBooleanType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     addTo->Add(new CMethodCall(parcel, "writeInt32", 1, 
                 new CTernary(v, new CLiteralExpression("1"),
@@ -291,9 +291,9 @@ CBooleanType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* par
 }
 
 void
-CBooleanType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CBooleanType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
-    addTo->Add(new CAssignment(v, new CComparison(new CLiteralExpression("0"),
+    addTo->Add(new CAssignment(v->var, new CComparison(new CLiteralExpression("0"),
                     "!=", new CMethodCall(parcel, "readInt32"))));
 }
 
@@ -319,16 +319,16 @@ CCharType::CCharType()
 }
 
 void
-CCharType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+CCharType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     addTo->Add(new CMethodCall(parcel, "writeInt32", 1, 
                     new CCast(CINT_TYPE, v)));
 }
 
 void
-CCharType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CCharType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
-    addTo->Add(new CAssignment(v, new CMethodCall(parcel, "readInt32"), this));
+    addTo->Add(new CAssignment(v->var, new CMethodCall(parcel, "readInt32"), this));
 }
 
 void
@@ -352,7 +352,7 @@ CEnumType::CEnumType()
 }
 
 void
-CEnumType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+CEnumType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     addTo->Add(new CMethodCall(parcel, "writeInt32", 1, 
                 new CTernary(v, new CLiteralExpression("1"),
@@ -360,9 +360,9 @@ CEnumType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel
 }
 
 void
-CEnumType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CEnumType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
-    addTo->Add(new CAssignment(v, new CComparison(new CLiteralExpression("0"),
+    addTo->Add(new CAssignment(v->var, new CComparison(new CLiteralExpression("0"),
                     "!=", new CMethodCall(parcel, "readInt32"))));
 }
 
@@ -376,15 +376,15 @@ CStringType::CStringType()
 }
 
 void
-CStringType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+CStringType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     addTo->Add(new CMethodCall(parcel, "writeString8", 1, v));
 }
 
 void
-CStringType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CStringType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
-    addTo->Add(new CAssignment(v, new CMethodCall(parcel, "readString8")));
+    addTo->Add(new CAssignment(v->var, new CMethodCall(parcel, "readString8")));
 }
 
 void
@@ -409,13 +409,13 @@ CStringType::CreateFromRpcData(CStatementBlock* addTo, CExpression* k, CVariable
 //}
 
 //void
-//RemoteExceptionType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+//RemoteExceptionType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 //{
     //fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__, __LINE__);
 //}
 
 //void
-//RemoteExceptionType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+//RemoteExceptionType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 //{
     //fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__, __LINE__);
 //}
@@ -429,15 +429,15 @@ CIBinderType::CIBinderType()
 }
 
 void
-CIBinderType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+CIBinderType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     addTo->Add(new CMethodCall(parcel, "writeStrongBinder", 1, v));
 }
 
 void
-CIBinderType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CIBinderType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
-    addTo->Add(new CAssignment(v, new CMethodCall(parcel, "readStrongBinder")));
+    addTo->Add(new CAssignment(v->var, new CMethodCall(parcel, "readStrongBinder")));
 }
 
 // ================================================================
@@ -449,13 +449,13 @@ CIInterfaceType::CIInterfaceType()
 }
 
 void
-CIInterfaceType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+CIInterfaceType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__, __LINE__);
 }
 
 void
-CIInterfaceType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CIInterfaceType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
     fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__, __LINE__);
 }
@@ -477,7 +477,7 @@ CInterfaceType::OneWay() const
 }
 
 void
-CInterfaceType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+CInterfaceType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     // parcel.writeStrongBinder(v != null ? v.asBinder() : null);
     addTo->Add(new CMethodCall(parcel, "writeStrongBinder", 1, 
@@ -488,12 +488,12 @@ CInterfaceType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* p
 }
 
 void
-CInterfaceType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CInterfaceType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
     // v = Interface.asInterface(parcel.readStrongBinder());
-    string type = v->type->QualifiedName();
+    string type = v->var->type->QualifiedName();
     type += ".Stub";
-    addTo->Add(new CAssignment(v,
+    addTo->Add(new CAssignment(v->var,
                 new CMethodCall( CNAMES.Find(type), "asInterface", 1,
                     new CMethodCall(parcel, "readStrongBinder"))));
 }
@@ -512,7 +512,7 @@ CUserDataType::CUserDataType(const string& _namespace, const string& name,
 }
 
 void
-CUserDataType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+CUserDataType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     // if (v != null) {
     //     parcel.writeInt(1);
@@ -535,7 +535,7 @@ CUserDataType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* pa
 }
 
 void
-CUserDataType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CUserDataType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
     // if (0 != parcel.readInt()) {
     //     v = CLASS.CREATOR.createFromParcel(parcel)
@@ -543,21 +543,20 @@ CUserDataType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable*
     //     v = null;
     // }
     CIfStatement* elsepart = new CIfStatement();
-    elsepart->statements->Add(new CAssignment(v, CNULL_VALUE));
+    elsepart->statements->Add(new CAssignment(v->var, CNULL_VALUE));
 
     CIfStatement* ifpart = new CIfStatement();
     ifpart->expression = new CComparison(new CLiteralExpression("0"), "!=",
                 new CMethodCall(parcel, "readInt32"));
     ifpart->elseif = elsepart;
-    ifpart->statements->Add(new CAssignment(v,
-                new CMethodCall(v->type, "createFromParcel", 1, parcel)));
+    ifpart->statements->Add(new CAssignment(v->var,
+                new CMethodCall(v->var->type, "createFromParcel", 1, parcel)));
 
     addTo->Add(ifpart);
 }
 
 void
-CUserDataType::ReadFromParcel(CStatementBlock* addTo, CVariable* v,
-                    CVariable* parcel, CVariable**)
+CUserDataType::ReadFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
     // TODO: really, we don't need to have this extra check, but we
     // don't have two separate marshalling code paths
@@ -579,13 +578,13 @@ CParcelType::CParcelType()
 }
 
 void
-CParcelType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+CParcelType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__, __LINE__);
 }
 
 void
-CParcelType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CParcelType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
     fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__, __LINE__);
 }
@@ -598,13 +597,13 @@ CParcelableInterfaceType::CParcelableInterfaceType()
 }
 
 void
-CParcelableInterfaceType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
+CParcelableInterfaceType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__, __LINE__);
 }
 
 void
-CParcelableInterfaceType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CParcelableInterfaceType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
     fprintf(stderr, "aidl:internal error %s:%d\n", __FILE__, __LINE__);
 }
@@ -617,6 +616,7 @@ CTemplateType::CTemplateType(const string& _namespace, const string& name,
 {
     m_args = args;
 
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
     string gen = "<";
     int N = args.size();
@@ -645,20 +645,19 @@ CTemplateType::TemplateArguments() const
 }
 
 void
-CTemplateType::WriteToParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, int flags)
-{
-    fprintf(stderr, "implement GenericType::WriteToParcel\n");
-}
-
-void
-CTemplateType::CreateFromParcel(CStatementBlock* addTo, CVariable* v, CVariable* parcel, CVariable**)
+CTemplateType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, int flags)
 {
     fprintf(stderr, "implement GenericType::CreateFromParcel\n");
 }
 
 void
-CTemplateType::ReadFromParcel(CStatementBlock* addTo, CVariable* v,
-                            CVariable* parcel, CVariable**)
+CTemplateType::CreateFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
+{
+    fprintf(stderr, "implement GenericType::CreateFromParcel\n");
+}
+
+void
+CTemplateType::ReadFromParcel(CStatementBlock* addTo, CMethodVariable* v, CMethodVariable* parcel, CMethodVariable**)
 {
     fprintf(stderr, "implement GenericType::ReadFromParcel\n");
 }

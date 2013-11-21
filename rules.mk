@@ -2,8 +2,8 @@
 
 DEBUG = n
 CDEBUG = y
-CFLAGS := -m32 -I$(current_dir) $(local_cflags) -include config/linux-$(ARCH).h
-LDFLAGS := $(local_ldflags)
+CFLAGS := -m32 -I$(TOPDIR)/include -I$(current_dir) $(local_cflags) -include config/linux-$(ARCH).h
+LDFLAGS := -L$(TOPDIR)/lib $(local_ldflags)
 #OBJ = $(TOPDIR)/obj
 OBJ = obj
 
@@ -19,7 +19,8 @@ endif
 
 all:
 
-& = $(filter-out %.h %.hpp %.d %.a,$^)
+& = $(filter-out %.h %.hpp %.d %.a %.so,$^)
+&2 = $(filter-out %.h %.hpp %.d %.so,$^)
 
 %.lex.cpp: %.l
 	@echo  -e "\tLEX" $@
@@ -32,11 +33,11 @@ all:
 .PRECIOUS:%.lex.c %.tab.c
 
 define compile.prog
-	$(Q) $(2) -m32 $(LDFLAGS) -o $$@ $$^ -Wl,-Map,$(OBJ)/$(1).map
+	$(Q) $(2) -m32 -o $$@ $$(&2) $(LDFLAGS) -Wl,-Map,$(OBJ)/$(1).map
 endef
 
 define compile.slib
-	$(Q) $(2) -m32 -shared -Wl,-soname,$$(@F) $(LDFLAGS) -o $$@  $$^
+	$(Q) $(2) -m32 -shared -Wl,-soname,$$(@F) -o $$@  $$^ $(LDFLAGS)
 endef
 
 define compile.prog.o
@@ -53,7 +54,7 @@ endef
 
 #$(OBJ)/$(1:%.c=%.o):$(1) $(1:%.c=%.h)
 define prog_object_template
-$(filter %.o,$(OBJ)/$(1:%.cpp=%.o) $(OBJ)/$(1:%.c=%.o)):$(1) $(1:%.c=%.h)
+$(filter %.o,$(OBJ)/$(1:%.cpp=%.o) $(OBJ)/$(1:%.c=%.o)):$(1) $(filter %.d,$(OBJ)/$(1:%.cpp=%.d) $(OBJ)/$(1:%.c=%.d))
 	$(Q) mkdir -p $$(@D)
 	$(Q) echo -e "\tCC $$<"
 $(call compile.prog.o, $$&,$(if $(filter %.cpp,$(1)),$(CXX),$(CC)))

@@ -18,4 +18,5 @@ $(eval $(call includeSubDir,src/binder))
 $(eval $(call includeSubDir,src/aidl))
 $(eval $(call includeSubDir,src/cmds/logcat))
 $(eval $(call includeSubDir,src/cmds/servicemanager))
+$(eval $(call includeSubDir,src/cmds/service))
 

@@ -230,6 +230,7 @@ int svcmgr_handler(struct binder_state *bs,
         return -1;
     }
 
+    ALOGI("received request code %d\n",txn->code);
     switch(txn->code) {
     case SVC_MGR_GET_SERVICE:
     case SVC_MGR_CHECK_SERVICE:

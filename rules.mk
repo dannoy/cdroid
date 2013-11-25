@@ -1,7 +1,7 @@
 
 
 DEBUG = n
-CDEBUG = y
+CDEBUG = n
 CFLAGS := -m32 -I$(TOPDIR)/include -I$(current_dir) $(local_cflags) -include config/linux-$(ARCH).h
 LDFLAGS := -L$(TOPDIR)/lib $(local_ldflags)
 #OBJ = $(TOPDIR)/obj
@@ -15,6 +15,8 @@ endif
 
 ifeq ($(CDEBUG),y)
     CFLAGS += -g
+else
+    CFLAGS += -DLOG_NDEBUG
 endif
 
 all:

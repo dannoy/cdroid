@@ -28,8 +28,8 @@
 #define B_PACK_CHARS(c1, c2, c3, c4) \
 	((((c1)<<24)) | (((c2)<<16)) | (((c3)<<8)) | (c4))
 #define B_TYPE_LARGE 0x85
-#define CONFIG_ANDROID_BINDER_IPC_COMPAT_32
 
+#define CONFIG_ANDROID_BINDER_IPC_COMPAT_32
 #ifndef CONFIG_ANDROID_BINDER_IPC_COMPAT_32
 /*
  * Define strong types (and sizes) for the user-space structure elements.
@@ -92,12 +92,12 @@ struct flat_binder_object {
 
 	/* 8 bytes of data. */
 	union {
-		void*	binder;	/* local object */
+		binder_ptr	__user binder;	/* local object */
 		binder_long	handle;		/* remote object */
 	};
 
 	/* extra data associated with local object */
-	void*		cookie;
+	binder_ptr		__user cookie;
 };
 
 /*
@@ -178,9 +178,9 @@ struct binder_transaction_data {
 	union {
 		struct {
 			/* transaction data */
-			const void* buffer;
+			binder_const_ptr __user buffer;
 			/* offsets from buffer to flat_binder_object structs */
-			const void* offsets;
+			binder_const_ptr __user offsets;
 		} ptr;
 		uint8_t	buf[8];
 	} data;

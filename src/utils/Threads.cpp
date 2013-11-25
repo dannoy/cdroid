@@ -48,7 +48,7 @@
 #include <sys/prctl.h>
 #endif
 
-#ifdef HAVE_GETTID
+#ifndef HAVE_GETTID
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/syscall.h>

@@ -50,7 +50,12 @@ int ashmem_create_region(const char *name, size_t size)
 	if (name) {
 		char buf[ASHMEM_NAME_LEN];
 
+#if HAVE_STRLCPY
 		strlcpy(buf, name, sizeof(buf));
+#else
+		strncpy(buf, name, sizeof(buf));
+        buf[sizeof(buf) - 1] = '\0';
+#endif
 		ret = ioctl(fd, ASHMEM_SET_NAME, buf);
 		if (ret < 0)
 			goto error;

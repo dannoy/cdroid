@@ -183,7 +183,7 @@
 /*
  * Defined if we have the gettid() system call.
  */
-#define HAVE_GETTID
+/*#define HAVE_GETTID*/
 
 /* 
  * Defined if we have the sched_setscheduler() call

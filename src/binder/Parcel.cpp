@@ -103,7 +103,7 @@ void acquire_object(const sp<ProcessState>& proc,
         }
     }
 
-    ALOGD("Invalid object type 0x%08lx", obj.type);
+    ALOGD("Invalid object type 0x%08x", obj.type);
 }
 
 void release_object(const sp<ProcessState>& proc,
@@ -139,7 +139,7 @@ void release_object(const sp<ProcessState>& proc,
         }
     }
 
-    ALOGE("Invalid object type 0x%08lx", obj.type);
+    ALOGE("Invalid object type 0x%08x", obj.type);
 }
 
 inline static status_t finish_flatten_binder(

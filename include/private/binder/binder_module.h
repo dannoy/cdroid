@@ -24,6 +24,7 @@ namespace android {
 /* obtain structures and constants from the kernel header */
 
 #include <sys/ioctl.h>
+#include <signal.h>
 #include <linux/binder.h>
 
 #ifdef __cplusplus

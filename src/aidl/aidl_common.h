@@ -34,7 +34,7 @@ struct import_info {
 
 extern void set_import_paths(const vector<string>& importPaths);
 extern string package2namespace(string package);
-extern char* find_import_file(const char* given);
+extern char* find_import_file(const char* given, int lang);
 extern int convert_direction(const char* direction);
 extern int check_filenames(const char* filename, document_item_type* items);
 extern const char* kind_to_string(int kind);

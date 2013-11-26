@@ -136,7 +136,7 @@ cgenerate_method(const method_type* method, CClass* interface,
         //decl->returnType = CNAMES.Search(method->type.type.data);
         decl->name = method->name.data;
         decl->parent = interface;
-    fprintf(stderr, "%s %d %p %s\n",__func__, __LINE__, decl->returnType, method->type.type.data);
+        //fprintf(stderr, "%s %d %p %s\n",__func__, __LINE__, decl->returnType, method->type.type.data);
 
     arg = method->args;
     while (arg != NULL) {
@@ -220,13 +220,13 @@ cgenerate_method(const method_type* method, CClass* interface,
             }
 
             // marshall the return value
-    fprintf(stderr, "%s %d %p dimension %d\n",__func__, __LINE__, decl->returnType, _result->dimension);
+            //fprintf(stderr, "%s %d %p dimension %d\n",__func__, __LINE__, decl->returnType, _result->dimension);
             cgenerate_write_to_parcel(decl->returnType, c->statements,
                                         new CMethodVariable(_result, CMethodVariable::MVAR_OBJECT_POINTER),
                                         new CMethodVariable(transact_reply, CMethodVariable::MVAR_OBJECT_POINTER),
                                         CType::PARCELABLE_WRITE_RETURN_VALUE);
         }
-    fprintf(stderr, "%s %d\n",__func__, __LINE__);
+        //fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
         // out parameters
         i = 0;
@@ -244,13 +244,13 @@ cgenerate_method(const method_type* method, CClass* interface,
 
             arg = arg->next;
         }
-    fprintf(stderr, "%s %d\n",__func__, __LINE__);
+        //fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
         // return true
         c->statements->Add(new CReturnStatement(CTRUE_VALUE));
         bnsw->cases.push_back(c);
     }
-    fprintf(stderr, "%s %d\n",__func__, __LINE__);
+    //fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
     // == the bp method ===================================================
     CMethod* proxy = new CMethod;
@@ -353,7 +353,7 @@ cgenerate_method(const method_type* method, CClass* interface,
 CNamespace*
 cgenerate_binder_interface_class(const interface_type* iface)
 {
-    fprintf(stderr, "%s %d\n",__func__, __LINE__);
+    //fprintf(stderr, "%s %d\n",__func__, __LINE__);
     CInterfaceType* interfaceType = static_cast<CInterfaceType*>(
         CNAMES.Find(package2namespace(iface->package).c_str(), iface->name.data));
 
@@ -397,14 +397,14 @@ cgenerate_binder_interface_class(const interface_type* iface)
         BnXXX->type = CNAMES.Search(append("Bn", iface->name.data));
         BnXXX->modifiers = CPUBLIC;
         BnXXX->comment = interface->comment;
-    fprintf(stderr, "%s %d bn type %p %s\n",__func__, __LINE__, BnXXX->type, append("Bn", iface->name.data).c_str());
+        //fprintf(stderr, "%s %d bn type %p %s\n",__func__, __LINE__, BnXXX->type, append("Bn", iface->name.data).c_str());
 
     CClass *BpXXX = new CClass;
         BpXXX->inherit.push_back(CNAMES.Search("BpInterface"));
         BpXXX->type = CNAMES.Search(append("Bp", iface->name.data));
         BpXXX->modifiers = CPRIVATE;
         BpXXX->comment = interface->comment;
-    fprintf(stderr, "%s %d bn type %p\n",__func__, __LINE__, BpXXX->type);
+        //fprintf(stderr, "%s %d bn type %p\n",__func__, __LINE__, BpXXX->type);
 
     _namespace->enums.push_back(eu);
     _namespace->classes.push_back(interface);
@@ -458,7 +458,7 @@ cgenerate_binder_interface_class(const interface_type* iface)
     while (item != NULL) {
         if (item->item_type == METHOD_TYPE) {
             method_type * method_item = (method_type*) item;
-            fprintf(stderr, "%s %d %p %s\n",__func__, __LINE__, item, method_item->type.type.data);
+            //fprintf(stderr, "%s %d %p %s\n",__func__, __LINE__, item, method_item->type.type.data);
             cgenerate_method(method_item, interface, eu, BnXXX, bn_transact_switch, BpXXX, method_item->assigned_id);
         }
         item = item->next;

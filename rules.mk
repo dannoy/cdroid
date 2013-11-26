@@ -24,6 +24,10 @@ all:
 & = $(filter-out %.h %.hpp %.d %.a %.so,$^)
 &2 = $(filter-out %.h %.hpp %.d %.so,$^)
 
+%_aidl.cpp: %.aidl
+	@echo  -e "\tAIDL" $@
+	$(Q) bin/aidl -LCPP -I$(current_dir) $< $@
+
 %.lex.cpp: %.l
 	@echo  -e "\tLEX" $@
 	$(Q) flex -o $@ $<

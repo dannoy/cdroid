@@ -435,6 +435,8 @@ struct CDocument
 {
     string comment;
     string _namespace;
+    string header_file;
+    string source_file;
     string originalSrc;
     set<string> includes;
     vector<CClass*> classes;

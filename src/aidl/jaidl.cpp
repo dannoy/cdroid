@@ -396,7 +396,7 @@ jcompile_aidl(Options& options)
     import_info* import = g_imports;
     while (import) {
         if (NAMES.Find(import->neededClass) == NULL) {
-            import->filename = find_import_file(import->neededClass);
+            import->filename = find_import_file(import->neededClass, options.lang);
             if (!import->filename) {
                 fprintf(stderr, "%s:%d: couldn't find import for class %s\n",
                         import->from, import->statement.lineno,

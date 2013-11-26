@@ -30,7 +30,7 @@ static int
 cgather_types(const char* filename, document_item_type* items)
 {
     int err = 0;
-    fprintf(stderr, "%s %d\n",__func__, __LINE__);
+    //fprintf(stderr, "%s %d\n",__func__, __LINE__);
     while (items) {
         CType* type;
         if (items->item_type == USER_DATA_TYPE) {
@@ -72,14 +72,14 @@ cgather_types(const char* filename, document_item_type* items)
                 CType* BnXXX = new CType(c->package ? package2namespace(c->package) : "",
                                         name, CType::GENERATED, false, false, false,
                                         filename, c->name.lineno);
-                fprintf(stderr, "%s %d name %s\n",__func__, __LINE__,name.c_str());
+                //fprintf(stderr, "%s %d name %s\n",__func__, __LINE__,name.c_str());
                 CNAMES.Add(BnXXX);
                 name = string("Bp") + c->name.data;
                 CType* BpXXX = new CType(c->package ? package2namespace(c->package) : "",
                                         name, CType::GENERATED, false, false, false,
                                         filename, c->name.lineno);
                 CNAMES.Add(BpXXX);
-                fprintf(stderr, "%s %d name %s\n",__func__, __LINE__,name.c_str());
+                //fprintf(stderr, "%s %d name %s\n",__func__, __LINE__,name.c_str());
 
             }
             else if (items->item_type == INTERFACE_TYPE_RPC) {
@@ -143,7 +143,7 @@ cmatches_keyword(const char* str)
 static char *_aidl_type_translate(char *origin)
 {
     string orig = origin;
-    fprintf(stderr, "%s %d\n",__func__, __LINE__);
+    //fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
     if(orig == "String") {
         return (char *)"String8";
@@ -160,7 +160,7 @@ ccheck_method(const char* filename, int kind, method_type* m)
 {
     int err = 0;
 
-    fprintf(stderr, "%s %d method_type %p\n",__func__, __LINE__,m);
+    //fprintf(stderr, "%s %d method_type %p\n",__func__, __LINE__,m);
     // return type
         m->type.type.data = _aidl_type_translate(m->type.type.data);
     CType* returnType = CNAMES.Search(m->type.type.data);
@@ -170,7 +170,7 @@ ccheck_method(const char* filename, int kind, method_type* m)
         err = 1;
         return err;
     }
-    fprintf(stderr, "%s %d method_type %p %s\n",__func__, __LINE__,m, m->type.type.data);
+    //fprintf(stderr, "%s %d method_type %p %s\n",__func__, __LINE__,m, m->type.type.data);
 
     if (!(kind == INTERFACE_TYPE_BINDER ? returnType->CanWriteToParcel()
                 : returnType->CanWriteToRpcData())) {
@@ -391,19 +391,21 @@ ccompile_aidl(Options& options)
     if (err != 0) {
         return err;
     }
+    //fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
     // parse the main file
     g_callbacks = &g_mainCallbacks;
     err = parse_aidl(options.inputFileName.c_str());
     document_item_type* mainDoc = g_document;
     g_document = NULL;
+    fprintf(stderr, "%s %d ret %d g_document %p\n",__func__, __LINE__,err, mainDoc);
 
     // parse the imports
     g_callbacks = &g_mainCallbacks;
     import_info* import = g_imports;
     while (import) {
         if (CNAMES.Find(import->neededClass) == NULL) {
-            import->filename = find_import_file(import->neededClass);
+            import->filename = find_import_file(import->neededClass, options.lang);
             if (!import->filename) {
                 fprintf(stderr, "%s:%d: couldn't find import for class %s\n",
                         import->from, import->statement.lineno,
@@ -411,6 +413,7 @@ ccompile_aidl(Options& options)
                 err |= 1;
             } else {
                 err |= parse_aidl(import->filename);
+    fprintf(stderr, "%s %d ret %d\n",__func__, __LINE__,err);
                 import->doc = g_document;
                 if (import->doc == NULL) {
                     err |= 1;
@@ -419,19 +422,23 @@ ccompile_aidl(Options& options)
         }
         import = import->next;
     }
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
     // bail out now if parsing wasn't successful
     if (err != 0 || mainDoc == NULL) {
-        //fprintf(stderr, "aidl: parsing failed, stopping.\n");
+        fprintf(stderr, "aidl: parsing failed, stopping.\n");
         return 1;
     }
 
     // complain about ones that aren't in the right files
+    /*
     err |= check_filenames(options.inputFileName.c_str(), mainDoc);
+    fprintf(stderr, "%s %d\n",__func__, __LINE__);
     import = g_imports;
     while (import) {
         err |= check_filenames(import->filename, import->doc);
         import = import->next;
     }
+    */
 
     fprintf(stderr, "%s %d\n",__func__, __LINE__);
     // gather the types that have been declared
@@ -442,9 +449,9 @@ ccompile_aidl(Options& options)
         import = import->next;
     }
 
-    fprintf(stderr, "%s %d\n",__func__, __LINE__); // check the referenced types in mainDoc to make sure we've imported them
+    //fprintf(stderr, "%s %d\n",__func__, __LINE__); // check the referenced types in mainDoc to make sure we've imported them
     err |= check_types(options.inputFileName.c_str(), mainDoc, ccheck_method);
-    fprintf(stderr, "%s %d\n",__func__, __LINE__);
+    //fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
     // finally, there really only needs to be one thing in mainDoc, and it
     // needs to be an interface.
@@ -476,9 +483,18 @@ ccompile_aidl(Options& options)
         sf = options.outputFileName;
         hf = options.outputFileName;
         int n = hf.find('.');
+        if(n != hf.npos) {
+            int n1 = hf.find('.', n+1);
+            if(n1 != hf.npos) {
+                n = n1;
+            }
+        }
         hf.replace(n + 1, 4, "h");
         sf.replace(n + 1, 4, "cpp");
     }
+    //fprintf(stderr, "output file file %s\n",options.outputFileName.c_str());
+    fprintf(stderr, "output header file %s\n",hf.c_str());
+    fprintf(stderr, "output source file %s\n",sf.c_str());
 
     // if we were asked to, generate a make dependency file
     // unless it's a parcelable *and* it's supposed to fail on parcelable

@@ -28,20 +28,37 @@ string package2namespace(string package)
     return package;
 }
 
-
-char*
-find_import_file(const char* given)
+string get_import_file_name(const char *given, int lang)
 {
     string expected = given;
-
-    int N = expected.length();
-    for (int i=0; i<N; i++) {
-        char c = expected[i];
-        if (c == '.') {
-            expected[i] = OS_PATH_SEPARATOR;
-        }
+    switch(lang) {
+        case TARGET_CPP:
+            {
+                char *p = rfind(const_cast<char *>(given), '.');
+                expected = string(p + 1);
+            }
+            break;
+        case TARGET_JAVA:
+            {
+                int N = expected.length();
+                for (int i=0; i<N; i++) {
+                    char c = expected[i];
+                    if (c == '.') {
+                        expected[i] = OS_PATH_SEPARATOR;
+                    }
+                }
+            }
+            break;
     }
     expected += ".aidl";
+
+    return expected;
+}
+
+char*
+find_import_file(const char* given, int lang)
+{
+    string expected = get_import_file_name(given, lang);
 
     vector<string>& paths = g_importPaths;
     for (vector<string>::iterator it=paths.begin(); it!=paths.end(); it++) {
@@ -137,6 +154,7 @@ import_info* g_imports = NULL;
 static void
 main_document_parsed(document_item_type* d)
 {
+    fprintf(stderr, "%s %d d %p\n",__func__, __LINE__, d);
     g_document = d;
 }
 
@@ -177,6 +195,7 @@ main_import_parsed(buffer_type* statement)
     import->statement.lineno = statement->lineno;
     import->statement.data = strdup(statement->data);
     import->statement.extra = NULL;
+    fprintf(stderr, "import extra %s\n",statement->extra ?statement->extra->data:"null");
     import->next = g_imports;
     import->neededClass = parse_import_statement(statement->data);
     g_imports = import;

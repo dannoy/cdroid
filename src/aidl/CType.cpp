@@ -616,8 +616,6 @@ CTemplateType::CTemplateType(const string& _namespace, const string& name,
 {
     m_args = args;
 
-    fprintf(stderr, "%s %d\n",__func__, __LINE__);
-
     string gen = "<";
     int N = args.size();
     for (int i=0; i<N; i++) {

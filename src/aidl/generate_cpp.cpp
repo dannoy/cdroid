@@ -44,6 +44,8 @@ generate_cpp(const string& headerf, const string &sourcef,
 
     CDocument* document = new CDocument;
         document->comment = "";
+        document->header_file = headerf;
+        document->source_file = sourcef;
         if (iface->package) document->_namespace = package2namespace(iface->package);
         document->originalSrc = originalSrc;
         document->nss.push_back(ns);

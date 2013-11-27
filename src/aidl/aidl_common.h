@@ -51,6 +51,7 @@ extern int preprocess_aidl(const Options& options);
 extern document_item_type* g_document;
 extern import_info* g_imports;
 extern ParserCallbacks g_mainCallbacks;
+extern extra_text_type *g_copyExtra;
 
 extern string gather_comments(extra_text_type* extra);
 extern string append(const char* a, const char* b);

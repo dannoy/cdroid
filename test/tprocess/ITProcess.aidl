@@ -5,17 +5,16 @@
 
 package com.routon.os;
 
-cinclude{
-test
+%%{
 #include <stdint.h>
 #include <sys/types.h>
 #include <utils/Errors.h>
 #include <utils/RefBase.h>
 #include <binder/IInterface.h>
+#include <binder/Binder.h>
 #include <binder/Parcel.h>
-#include <ui/Rect.h>
-#include <utils/String8.h> 
-}cend
+#include <utils/String8.h>
+}%%
 
 import com.routon.os.TResult;
 

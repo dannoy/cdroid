@@ -129,6 +129,7 @@ $(OBJ):
 clean:
 	$(Q) find src -name "*.tab*" -exec rm -rf '{}' \;
 	$(Q) find src -name "*.lex*" -exec rm -rf '{}' \;
+	$(Q) find . -name "*_aidl*" -exec rm -rf '{}' \;
 	$(Q) rm -rf $(TOPDIR)/{bin,lib,obj}
 distclean:
 	$(Q) rm -rf $(TOPDIR)/{bin,lib,obj} cscope* tags

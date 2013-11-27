@@ -68,13 +68,13 @@ cgather_types(const char* filename, document_item_type* items)
                 CNAMES.Add(new CTemplateType("android",
                                         "BpInterface", args));
 
-                string name = string("Bn") + c->name.data;
+                string name = string("Bn") + (c->name.data + 1);
                 CType* BnXXX = new CType(c->package ? package2namespace(c->package) : "",
                                         name, CType::GENERATED, false, false, false,
                                         filename, c->name.lineno);
                 //fprintf(stderr, "%s %d name %s\n",__func__, __LINE__,name.c_str());
                 CNAMES.Add(BnXXX);
-                name = string("Bp") + c->name.data;
+                name = string("Bp") + (c->name.data + 1);
                 CType* BpXXX = new CType(c->package ? package2namespace(c->package) : "",
                                         name, CType::GENERATED, false, false, false,
                                         filename, c->name.lineno);
@@ -380,7 +380,7 @@ ccompile_aidl(Options& options)
     set_import_paths(options.importPaths);
 
     cregister_base_types();
-    fprintf(stderr, "%s %d\n",__func__, __LINE__);
+    //fprintf(stderr, "%s %d\n",__func__, __LINE__);
 
     // import the preprocessed file
     N = options.preprocessedFiles.size();
@@ -398,7 +398,7 @@ ccompile_aidl(Options& options)
     err = parse_aidl(options.inputFileName.c_str());
     document_item_type* mainDoc = g_document;
     g_document = NULL;
-    fprintf(stderr, "%s %d ret %d g_document %p\n",__func__, __LINE__,err, mainDoc);
+    //fprintf(stderr, "%s %d ret %d g_document %p\n",__func__, __LINE__,err, mainDoc);
 
     // parse the imports
     g_callbacks = &g_mainCallbacks;
@@ -413,7 +413,7 @@ ccompile_aidl(Options& options)
                 err |= 1;
             } else {
                 err |= parse_aidl(import->filename);
-    fprintf(stderr, "%s %d ret %d\n",__func__, __LINE__,err);
+                //fprintf(stderr, "%s %d ret %d\n",__func__, __LINE__,err);
                 import->doc = g_document;
                 if (import->doc == NULL) {
                     err |= 1;
@@ -422,7 +422,7 @@ ccompile_aidl(Options& options)
         }
         import = import->next;
     }
-    fprintf(stderr, "%s %d\n",__func__, __LINE__);
+    //fprintf(stderr, "%s %d\n",__func__, __LINE__);
     // bail out now if parsing wasn't successful
     if (err != 0 || mainDoc == NULL) {
         fprintf(stderr, "aidl: parsing failed, stopping.\n");
@@ -440,7 +440,7 @@ ccompile_aidl(Options& options)
     }
     */
 
-    fprintf(stderr, "%s %d\n",__func__, __LINE__);
+    //fprintf(stderr, "%s %d\n",__func__, __LINE__);
     // gather the types that have been declared
     err |= cgather_types(options.inputFileName.c_str(), mainDoc);
     import = g_imports;
@@ -470,7 +470,7 @@ ccompile_aidl(Options& options)
         return 1;
     }
 
-    fprintf(stderr, "%s %d\n",__func__, __LINE__);
+    //fprintf(stderr, "%s %d\n",__func__, __LINE__);
     string hf,sf;
     // if needed, generate the outputFileName from the outputBaseFolder
     if (options.outputFileName.length() == 0 &&
@@ -493,8 +493,8 @@ ccompile_aidl(Options& options)
         sf.replace(n + 1, 4, "cpp");
     }
     //fprintf(stderr, "output file file %s\n",options.outputFileName.c_str());
-    fprintf(stderr, "output header file %s\n",hf.c_str());
-    fprintf(stderr, "output source file %s\n",sf.c_str());
+    //fprintf(stderr, "output header file %s\n",hf.c_str());
+    //fprintf(stderr, "output source file %s\n",sf.c_str());
 
     // if we were asked to, generate a make dependency file
     // unless it's a parcelable *and* it's supposed to fail on parcelable

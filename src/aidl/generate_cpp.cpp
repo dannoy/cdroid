@@ -50,6 +50,19 @@ generate_cpp(const string& headerf, const string &sourcef,
         document->originalSrc = originalSrc;
         document->nss.push_back(ns);
 
+    import_info* import = g_imports;
+        while (import) {
+            char *pos = rfind(const_cast<char *>(import->filename),'/');
+
+            if(pos != NULL) {
+                string f(pos+1);
+                int n = f.find('.');
+                f.replace(n + 1, 4, "h");
+                document->includes.insert(f);
+            }
+            import = import->next;
+        }
+
 //    printf("outputting... filename=%s\n", filename.c_str());
     FILE* to;
    /* open file in binary mode to ensure that the tool produces the
@@ -61,6 +74,9 @@ generate_cpp(const string& headerf, const string &sourcef,
         return 1;
     }
 
+    if(g_copyExtra) {
+        fprintf(to,"%s", g_copyExtra->data);
+    }
     document->WriteToHeader(to);
 
     fclose(to);

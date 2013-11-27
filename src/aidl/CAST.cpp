@@ -1,5 +1,6 @@
 #include "CType.h"
 #include "CAST.h"
+#include "aidl_common.h"
 
 void
 CWriteModifiers(FILE* to, int mod, int mask)
@@ -138,22 +139,25 @@ CVariable::CVariable()
     :type(NULL),
      name(),
      dimension(0),
+     isConst(false),
      val_type(VAR_VALUE)
 {
 }
 
-CVariable::CVariable(CType* t, const string& n, enum CVARIABLE_TYPE _type)
+CVariable::CVariable(CType* t, const string& n, enum CVARIABLE_TYPE _type, bool is_const)
     :type(t),
      name(n),
      dimension(0),
+     isConst(is_const),
      val_type(_type)
 {
 }
 
-CVariable::CVariable(CType* t, const string& n, int d, enum CVARIABLE_TYPE _type)
+CVariable::CVariable(CType* t, const string& n, int d, enum CVARIABLE_TYPE _type, bool is_const)
     :type(t),
      name(n),
      dimension(d),
+     isConst(is_const),
      val_type(_type)
 {
 }
@@ -175,15 +179,15 @@ CVariable::WriteDeclaration(FILE* to)
     if(this->type){
         switch(val_type) {
             case VAR_VALUE:
-                fprintf(to, "%s %s", this->type->QualifiedName().c_str(),
+                fprintf(to, "%s%s %s", isConst ? "const ":"", this->type->QualifiedName().c_str(),
                         this->name.c_str());
                 break;
             case VAR_REF:
-                fprintf(to, "%s& %s", this->type->QualifiedName().c_str(),
+                fprintf(to, "%s%s& %s", isConst ? "const ":"", this->type->QualifiedName().c_str(),
                         this->name.c_str());
                 break;
             case VAR_POINTER:
-                fprintf(to, "%s* %s", this->type->QualifiedName().c_str(),
+                fprintf(to, "%s%s* %s", isConst ? "const " : "", this->type->QualifiedName().c_str(),
                         this->name.c_str());
                 break;
         }
@@ -201,6 +205,13 @@ CVariable::Write(FILE* to)
 //===========================================
 CMethodVariable::CMethodVariable(CVariable *v, enum MethodVarType t)
     :var(v),
+     mvar(NULL),
+     mv_type(t)
+{
+}
+CMethodVariable::CMethodVariable(CMethodCall *v, enum MethodVarType t)
+    :var(NULL),
+     mvar(v),
      mv_type(t)
 {
 }
@@ -220,15 +231,20 @@ CMethodVariable::Write(FILE* to)
     switch(mv_type) {
         case MVAR_VALUE:
         case MVAR_REF:
-            fprintf(to, "%s", this->var->name.c_str());
+            //fprintf(to, "%s", this->var->name.c_str());
             break;
         case MVAR_POINTER:
-            fprintf(to, "&%s", this->var->name.c_str());
+            //fprintf(to, "&%s", this->var->name.c_str());
+            fprintf(to, "&");
             break;
         case MVAR_OBJECT_POINTER:
-            fprintf(to, "%s", this->var->name.c_str());
+            //fprintf(to, "%s", this->var->name.c_str());
             break;
     }
+    if(var)
+        var->Write(to);
+    else if(mvar)
+        mvar->Write(to);
 }
 
 //===========================================
@@ -319,11 +335,12 @@ CFieldVariable::Write(FILE* to)
 {
     if (this->object != NULL) {
         this->object->Write(to);
+        fprintf(to, ".%s", name.c_str());
     }
     else if (this->clazz != NULL) {
         fprintf(to, "%s", this->clazz->QualifiedName().c_str());
+        fprintf(to, "::%s", name.c_str());
     }
-    fprintf(to, ".%s", name.c_str());
 }
 
 
@@ -979,6 +996,9 @@ CMethod::WriteToHeader(FILE* to)
 
     WriteDeclaration(to, false);
 
+    if(CPUREVIRTUAL == (this->modifiers & CPUREVIRTUAL))
+        fprintf(to, " = 0");
+
     fprintf(to, ";\n");
 
 }
@@ -993,8 +1013,24 @@ CMethod::WriteToSource(FILE* to)
     }
     WriteDeclaration(to, true);
 
+    N = initial_list.size();
+    if(N > 0) {
+        fprintf(to, "\n:");
+        for(i = 0; i < N-1; ++i) {
+            initial_list[i]->first->Write(to);
+            fprintf(to, "(");
+            initial_list[i]->second->Write(to);
+            fprintf(to, "),\n");
+        }
+        initial_list[i]->first->Write(to);
+            fprintf(to, "(");
+            initial_list[i]->second->Write(to);
+            fprintf(to, ")\n");
+    }
+
 
     if (this->statements == NULL) {
+        CVariable* impl = new CVariable(CSP_TEMPLATE_IBINDER_TYPE, "impl", CVariable::VAR_REF);
         fprintf(to, ";\n");
     } else {
         fprintf(to, "\n");
@@ -1144,7 +1180,7 @@ CNamespace::WriteToSource(FILE* to)
 {
     size_t N, i;
     N = this->enums.size();
-    fprintf(stderr, "%d enum in namespace\n",N);
+    //fprintf(stderr, "%d enum in namespace\n",N);
     for (i=0; i<N; i++) {
         CEnum* c = this->enums[i];
         if(CPRIVATE == (c->modifiers & CSCOPE_MASK))
@@ -1152,7 +1188,7 @@ CNamespace::WriteToSource(FILE* to)
     }
 
     N = this->classes.size();
-    fprintf(stderr, "%d classes in namespace\n",N);
+    //fprintf(stderr, "%d classes in namespace\n",N);
     for (i=0; i<N; i++) {
         CClass* c = this->classes[i];
         c->WriteToSource(to);
@@ -1197,12 +1233,12 @@ string namespace2hierarchyBegin(string ns)
 string namespace2hierarchyEnd(string ns)
 {
     int i;
-    string res("}\n");
+    string res("};\n");
     while((i = ns.find(':')) != ns.npos) {
         ns.replace(i,2,"");
-        res += "}\n";
+        res += "};\n";
     }
-    return res + ";";
+    return res;
 }
 
 
@@ -1218,6 +1254,10 @@ CDocument::WriteToHeader(FILE* to)
                 " * This file is auto-generated C++ header file.  DO NOT MODIFY.\n"
                 " * Original file: %s\n"
                 " */\n", escape_backslashes(this->originalSrc).c_str());
+    set<string>::iterator sit = includes.begin();
+    for (; sit != includes.end(); ++sit) {
+        fprintf(to, "#include <%s>\n",(*sit).c_str());
+    }
     if (this->_namespace.length() != 0) {
         fprintf(to, "%s\n", namespace2hierarchyBegin(this->_namespace.c_str()).c_str());
     }
@@ -1245,6 +1285,12 @@ CDocument::WriteToSource(FILE* to)
     if (this->comment.length() != 0) {
         fprintf(to, "%s\n", this->comment.c_str());
     }
+
+    char* pos = rfind(const_cast<char *>(header_file.c_str()),'/');
+
+    if(pos != NULL) {
+        fprintf(to, "#include <%s>\n", pos+1);
+    }
     fprintf(to, "/*\n"
                 " * This file is auto-generated C++ source file.  DO NOT MODIFY.\n"
                 " * Original file: %s\n"
@@ -1252,18 +1298,14 @@ CDocument::WriteToSource(FILE* to)
     if (this->_namespace.length() != 0) {
         fprintf(to, "%s\n", namespace2hierarchyBegin(this->_namespace.c_str()).c_str());
     }
-    set<string>::iterator sit = includes.begin();
-    for (; sit != includes.end(); ++sit) {
-        fprintf(to, "#include <%s>\n",(*sit).c_str());
-    }
     N = this->classes.size();
-    fprintf(stderr, "%d classes in total\n",N);
+    //fprintf(stderr, "%d classes in total\n",N);
     for (i=0; i<N; i++) {
         CClass* c = this->classes[i];
         c->WriteToSource(to);
     }
     N = this->nss.size();
-    fprintf(stderr,"%d namespaces in total\n",N);
+    //fprintf(stderr,"%d namespaces in total\n",N);
     for (i=0; i<N; i++) {
         nss[i]->WriteToSource(to);
     }

@@ -20,6 +20,7 @@ enum {
 
     CSTATIC          = 0x00000010,
     CVIRTUAL         = 0x00000020,
+    CPUREVIRTUAL     = 0x00000060,
 
     CSTICK_TO_HEADER = 0x00000100,
     CSTICK_TO_SOURCE = 0x00000200,
@@ -80,10 +81,11 @@ struct CVariable : public CExpression
     string name;
     int dimension;
     int val_type;
+    bool isConst;
 
     CVariable();
-    CVariable(CType* type, const string& name, enum CVARIABLE_TYPE _type = VAR_VALUE);
-    CVariable(CType* type, const string& name, int dimension, enum CVARIABLE_TYPE _type = VAR_VALUE);
+    CVariable(CType* type, const string& name, enum CVARIABLE_TYPE _type = VAR_VALUE, bool is_const = false);
+    CVariable(CType* type, const string& name, int dimension, enum CVARIABLE_TYPE _type = VAR_VALUE, bool is_const = false);
     virtual ~CVariable();
 
     virtual void GatherTypes(set<CType*>* types) const;
@@ -91,6 +93,7 @@ struct CVariable : public CExpression
     void Write(FILE* to);
 };
 
+struct CMethodCall;
 struct CMethodVariable: public CExpression
 {
     enum MethodVarType{
@@ -100,9 +103,11 @@ struct CMethodVariable: public CExpression
         MVAR_VALUE              = 0x8
     };
     CVariable *var;
+    CMethodCall *mvar;
     MethodVarType mv_type;
 
     CMethodVariable(CVariable *v, MethodVarType t = MVAR_VALUE);
+    CMethodVariable(CMethodCall *v, MethodVarType t = MVAR_VALUE);
     virtual ~CMethodVariable();
 
     virtual void GatherTypes(set<CType*>* types) const;
@@ -115,6 +120,7 @@ struct CFieldVariable : public CExpression
     CExpression* object;
     CType* clazz;
     string name;
+    bool isStatic;
 
     CFieldVariable(CExpression* object, const string& name);
     CFieldVariable(CType* clazz, const string& name);
@@ -364,6 +370,7 @@ struct CMethod : public CClassElement
     vector<CVariable*> parameters;
     vector<CType*> exceptions;
     CStatementBlock* statements;
+    vector<pair<CVariable *,CExpression *>* > initial_list;
     CClass *parent;
 
     CMethod();

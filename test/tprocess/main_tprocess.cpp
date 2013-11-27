@@ -58,7 +58,7 @@ static void signal_init(void)
 
     act.sa_handler = sigchld_handler;
     act.sa_flags = SA_NOCLDSTOP;
-    act.sa_mask = 0;
+    //act.sa_mask = 0;
     act.sa_restorer = NULL;
     sigaction(SIGCHLD, &act, 0);
 }
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 
     //signal_init();
 
-    TProcessService::instantiate();
+    com::routon::os::TProcessService::instantiate();
 
     ProcessState::self()->startThreadPool();
 

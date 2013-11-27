@@ -45,7 +45,8 @@ CSPTemplateType::WriteToParcel(CStatementBlock* addTo, CMethodVariable* v, CMeth
     ifpart->elseif = elsepart;
     ifpart->statements->Add(new CMethodCall(parcel, "writeInt32", 1,
                                 new CLiteralExpression("1")));
-    ifpart->statements->Add(new CMethodCall(v, "writeToParcel", 2,
+    ifpart->statements->Add(new CMethodCall(new CMethodVariable(v->var, CMethodVariable::MVAR_OBJECT_POINTER),
+                                "writeToParcel", 2,
                                 parcel, BuildWriteToParcelFlags(flags)));
 
     addTo->Add(ifpart);
@@ -121,7 +122,7 @@ cgenerate_method(const method_type* method, CClass* interface,
     transactCodeName += method->name.data;
 
     char transactCodeValue[60];
-    sprintf(transactCodeValue, "IBinder::FIRST_CALL_TRANSACTION + %d", index);
+    sprintf(transactCodeValue, "android::IBinder::FIRST_CALL_TRANSACTION + %d", index);
 
     eu->elements.push_back(new CEnumElement(transactCodeName,
                             string(transactCodeValue)));
@@ -129,7 +130,7 @@ cgenerate_method(const method_type* method, CClass* interface,
     // == the declaration in the interface ===================================
     CMethod* decl = new CMethod;
         decl->comment = gather_comments(method->comments_token->extra);
-        decl->modifiers = CPUBLIC | CVIRTUAL | CSTICK_TO_HEADER;
+        decl->modifiers = CPUBLIC | CPUREVIRTUAL | CSTICK_TO_HEADER;
     vector<CType *> decl_sp_param;
         decl_sp_param.push_back(CNAMES.Search(method->type.type.data));
         decl->returnType = new CSPTemplateType(decl_sp_param);
@@ -144,14 +145,14 @@ cgenerate_method(const method_type* method, CClass* interface,
         decl->parameters.push_back(new CVariable(
                             t, arg->name.data,
                             arg->type.dimension,
-                            t->Kind() == CType::BUILT_IN ? 
+                            t->Kind() == CType::BUILT_IN ?
                                          CVariable::VAR_VALUE :
                                          CVariable::VAR_REF));
         arg = arg->next;
     }
 
     interface->elements.push_back(decl);
-    CMethodVariable *cl = new CMethodVariable(NULL);
+    CMethodVariable *cl = new CMethodVariable((CVariable *)NULL);
 
     // == the BN method ====================================================
     {
@@ -204,7 +205,7 @@ cgenerate_method(const method_type* method, CClass* interface,
 
             if (!oneway) {
                 // report that there were no exceptions
-                CMethodCall* ex = new CMethodCall(transact_reply,
+                CMethodCall* ex = new CMethodCall(new CMethodVariable(transact_reply,CMethodVariable::MVAR_OBJECT_POINTER),
                         "writeNoException", 0);
                 c->statements->Add(ex);
             }
@@ -214,7 +215,7 @@ cgenerate_method(const method_type* method, CClass* interface,
 
             if (!oneway) {
                 // report that there were no exceptions
-                CMethodCall* ex = new CMethodCall(transact_reply,
+                CMethodCall* ex = new CMethodCall(new CMethodVariable(transact_reply,CMethodVariable::MVAR_OBJECT_POINTER),
                         "writeNoException", 0);
                 c->statements->Add(ex);
             }
@@ -222,7 +223,8 @@ cgenerate_method(const method_type* method, CClass* interface,
             // marshall the return value
             //fprintf(stderr, "%s %d %p dimension %d\n",__func__, __LINE__, decl->returnType, _result->dimension);
             cgenerate_write_to_parcel(decl->returnType, c->statements,
-                                        new CMethodVariable(_result, CMethodVariable::MVAR_OBJECT_POINTER),
+                    //new CMethodVariable(_result, CMethodVariable::MVAR_OBJECT_POINTER),
+                                        new CMethodVariable(_result),
                                         new CMethodVariable(transact_reply, CMethodVariable::MVAR_OBJECT_POINTER),
                                         CType::PARCELABLE_WRITE_RETURN_VALUE);
         }
@@ -263,9 +265,13 @@ cgenerate_method(const method_type* method, CClass* interface,
         proxy->parent = bp;
         arg = method->args;
         while (arg != NULL) {
+            CType *t = CNAMES.Search(arg->type.type.data);
             proxy->parameters.push_back(new CVariable(
-                            CNAMES.Search(arg->type.type.data), arg->name.data,
-                            arg->type.dimension));
+                            t, arg->name.data,
+                            arg->type.dimension,
+                            t->Kind() == CType::BUILT_IN ?
+                                         CVariable::VAR_VALUE :
+                                         CVariable::VAR_REF));
             arg = arg->next;
         }
     bp->elements.push_back(proxy);
@@ -306,7 +312,8 @@ cgenerate_method(const method_type* method, CClass* interface,
     }
 
     // the transact call
-    CMethodCall* call = new CMethodCall(new CMethodCall((CExpression *)NULL, "remote"), "transact", 4,
+    CMethodCall* call = new CMethodCall(new CMethodVariable(new CMethodCall((CExpression *)NULL, "remote"),CMethodVariable::MVAR_OBJECT_POINTER),
+                            "transact", 4,
                             new CLiteralExpression(transactCodeName),
                             new CMethodVariable(_data),
                             _reply ? new CMethodVariable(_reply, CMethodVariable::MVAR_POINTER) : CNULL_VALUE,
@@ -373,12 +380,43 @@ cgenerate_binder_interface_class(const interface_type* iface)
         interface->type = interfaceType;
         interface->modifiers = CPUBLIC;
         CMethod* dummy = new CMethod;
-        CVariable *dv = new CVariable(NULL, iface->name.data);
+        CVariable *dv = new CVariable(NULL, iface->name.data + 1);
             dummy->modifiers = CPUBLIC | CSTICK_TO_HEADER;
             dummy->returnType = NULL;
             dummy->name = "DECLARE_META_INTERFACE";
             dummy->parameters.push_back(dv);
         interface->elements.push_back(dummy);
+        //CMethod* dummy2 = new CMethod;
+        //string dv2n = "\"";
+        //dv2n += interfaceType->QualifiedName();
+        //dv2n += "\"";
+        //CVariable *dv2 = new CVariable(NULL, dv2n);
+            //dummy2->modifiers = CPUBLIC | CSTICK_TO_SOURCE;
+            //dummy2->returnType = NULL;
+            //dummy2->name = "IMPLEMENT_META_INTERFACE";
+            //dummy2->parameters.push_back(dv);
+            //dummy2->parameters.push_back(dv2);
+        //interface->elements.push_back(dummy2);
+    }
+
+    CClass *BnXXX = new CClass;
+        BnXXX->inherit.push_back(CNAMES.Search("BnInterface"));
+        BnXXX->type = CNAMES.Search(append("Bn", iface->name.data+1));
+        BnXXX->modifiers = CPUBLIC;
+        BnXXX->comment = interface->comment;
+        //fprintf(stderr, "%s %d bn type %p %s\n",__func__, __LINE__, BnXXX->type, append("Bn", iface->name.data).c_str());
+
+    CClass *BpXXX = new CClass;
+        BpXXX->inherit.push_back(CNAMES.Search("BpInterface"));
+        BpXXX->type = CNAMES.Search(append("Bp", iface->name.data+1));
+        BpXXX->modifiers = CPRIVATE;
+        BpXXX->comment = interface->comment;
+        //fprintf(stderr, "%s %d bn type %p\n",__func__, __LINE__, BpXXX->type);
+
+    // dummy class2
+    CClass* dc = new CClass;
+    {
+        CVariable *dv = new CVariable(NULL, iface->name.data + 1);
         CMethod* dummy2 = new CMethod;
         string dv2n = "\"";
         dv2n += interfaceType->QualifiedName();
@@ -389,27 +427,13 @@ cgenerate_binder_interface_class(const interface_type* iface)
             dummy2->name = "IMPLEMENT_META_INTERFACE";
             dummy2->parameters.push_back(dv);
             dummy2->parameters.push_back(dv2);
-        interface->elements.push_back(dummy2);
+        dc->elements.push_back(dummy2);
     }
-
-    CClass *BnXXX = new CClass;
-        BnXXX->inherit.push_back(CNAMES.Search("BnInterface"));
-        BnXXX->type = CNAMES.Search(append("Bn", iface->name.data));
-        BnXXX->modifiers = CPUBLIC;
-        BnXXX->comment = interface->comment;
-        //fprintf(stderr, "%s %d bn type %p %s\n",__func__, __LINE__, BnXXX->type, append("Bn", iface->name.data).c_str());
-
-    CClass *BpXXX = new CClass;
-        BpXXX->inherit.push_back(CNAMES.Search("BpInterface"));
-        BpXXX->type = CNAMES.Search(append("Bp", iface->name.data));
-        BpXXX->modifiers = CPRIVATE;
-        BpXXX->comment = interface->comment;
-        //fprintf(stderr, "%s %d bn type %p\n",__func__, __LINE__, BpXXX->type);
-
     _namespace->enums.push_back(eu);
     _namespace->classes.push_back(interface);
     _namespace->classes.push_back(BnXXX);
     _namespace->classes.push_back(BpXXX);
+    _namespace->classes.push_back(dc);
 
     CSwitchStatement* bn_transact_switch;
     // BnXXX init
@@ -440,15 +464,16 @@ cgenerate_binder_interface_class(const interface_type* iface)
     // BpXXX init
     {
         CMethod* ctor = new CMethod;
-        CVariable* impl = new CVariable(CSP_TEMPLATE_IBINDER_TYPE, "impl", CVariable::VAR_REF);
+        CVariable* impl = new CVariable(CSP_TEMPLATE_IBINDER_TYPE, "impl", CVariable::VAR_REF, true);
             ctor->parent = BpXXX;
             ctor->modifiers = CPUBLIC;
             ctor->name = BpXXX->type->Name();
             ctor->statements = new CStatementBlock;
             ctor->parameters.push_back(impl);
-        CMethodCall* superCtor = new CMethodCall(BpXXX->inherit[0]->QualifiedName().c_str(), 1,
-                                        impl);
-            ctor->statements->Add(superCtor);
+            ctor->initial_list.push_back(new pair<CVariable *, CExpression *>(
+                                            new CVariable(BpXXX->inherit[0],
+                                                            BpXXX->inherit[0]->QualifiedName().c_str()),
+                                                new CLiteralExpression("impl")));
         BpXXX->elements.push_back(ctor);
     }
 

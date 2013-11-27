@@ -1,3 +1,6 @@
+#include <vector>
+#include <utils/RefBase.h>
+#include <binder/Parcel.h>
 
 /**
  * Interface for classes whose instances can be written to
@@ -44,14 +47,14 @@ class Parcelable : public virtual RefBase{
      * "<code>void someFunction(inout Parcelable)</code>".  Some implementations
      * may want to release resources at this point.
      */
-    static final int PARCELABLE_WRITE_RETURN_VALUE = 0x0001;
+    static int const PARCELABLE_WRITE_RETURN_VALUE = 0x0001;
 
     /**
      * Bit masks for use with {@link #describeContents}: each bit represents a
      * kind of object considered to have potential special significance when
      * marshalled.
      */
-    static final int CONTENTS_FILE_DESCRIPTOR = 0x0001;
+    static int const CONTENTS_FILE_DESCRIPTOR = 0x0001;
 
     /**
      * Describe the kinds of special objects contained in this Parcelable's
@@ -60,7 +63,7 @@ class Parcelable : public virtual RefBase{
      * @return a bitmask indicating the set of special object types marshalled
      * by the Parcelable.
      */
-    int describeContents();
+    virtual int describeContents() = 0;
 
     /**
      * Flatten this object in to a Parcel.
@@ -69,7 +72,7 @@ class Parcelable : public virtual RefBase{
      * @param flags Additional flags about how the object should be written.
      * May be 0 or {@link #PARCELABLE_WRITE_RETURN_VALUE}.
      */
-    void writeToParcel(Parcel& dest, int flags) = 0;
+    virtual void writeToParcel(Parcel* dest, int flags) = 0;
 
     /**
      * Create a new instance of the Parcelable class, instantiating it
@@ -80,7 +83,7 @@ class Parcelable : public virtual RefBase{
      * @param source The Parcel to read the object's data from.
      * @return Returns a new instance of the Parcelable class.
      */
-    Parcelable *createFromParcel(Parcel& source) = 0;
+    virtual Parcelable *createFromParcel(Parcel& source) = 0;
     /**
      * Create a new instance of the Parcelable class, instantiating it
      * from the given Parcel whose data had previously been written by
@@ -90,7 +93,7 @@ class Parcelable : public virtual RefBase{
      * @param source The Parcel to read the object's data from.
      * @return Returns a new instance of the Parcelable class.
      */
-    void readFromParcel(Parcel& source) = 0;
+    virtual void readFromParcel(Parcel& source) = 0;
 
     /**
      * Create a new array of the Parcelable class.
@@ -99,6 +102,6 @@ class Parcelable : public virtual RefBase{
      * @return Returns an array of the Parcelable class, with every entry
      * initialized to null.
      */
-    Parcelable[] newArray(int size) = 0;
+    virtual std::vector<Parcelable *> newArray(int size) = 0;
 };
 };

@@ -71,7 +71,7 @@ find_import_file(const char* given, int lang)
             f += OS_PATH_SEPARATOR;
         }
         f.append(expected);
-        fprintf(stderr, "accessing %s ...",f.c_str());
+        //fprintf(stderr, "accessing %s ...",f.c_str());
 
 #ifdef HAVE_MS_C_RUNTIME
         /* check that the file exists and is not write-only */
@@ -79,10 +79,11 @@ find_import_file(const char* given, int lang)
             0 == _access(f.c_str(), 4) ) { /* mode 4=readable */
 #else
         if (0 == access(f.c_str(), R_OK)) {
-#endif        
-            fprintf(stderr, "ok.\n");
+#endif
+            //fprintf(stderr, "ok.\n");
             return strdup(f.c_str());
         }
+        fprintf(stderr, "accessing %s ...",f.c_str());
         fprintf(stderr, "failed.\n");
     }
 
@@ -154,7 +155,6 @@ import_info* g_imports = NULL;
 static void
 main_document_parsed(document_item_type* d)
 {
-    fprintf(stderr, "%s %d d %p\n",__func__, __LINE__, d);
     g_document = d;
 }
 
@@ -195,7 +195,7 @@ main_import_parsed(buffer_type* statement)
     import->statement.lineno = statement->lineno;
     import->statement.data = strdup(statement->data);
     import->statement.extra = NULL;
-    fprintf(stderr, "import extra %s\n",statement->extra ?statement->extra->data:"null");
+    //fprintf(stderr, "import extra %s\n",statement->extra ?statement->extra->data:"null");
     import->next = g_imports;
     import->neededClass = parse_import_statement(statement->data);
     g_imports = import;
@@ -216,6 +216,7 @@ static ParserCallbacks g_importCallbacks = {
     &main_document_parsed,
     &import_import_parsed
 };
+extra_text_type *g_copyExtra = NULL;
 
 // ==========================================================
 static int

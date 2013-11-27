@@ -6,6 +6,7 @@
 
 //extern YYSTYPE yylval;
 
+extern extra_text_type *g_copyExtra;
 // comment and whitespace handling
 // these functions save a copy of the buffer
 static void begin_extra_text(unsigned lineno, which_extra_text which);
@@ -30,7 +31,7 @@ static void do_package_statement(const char* importText);
 %option yylineno
 %option noyywrap
 
-%x LJ LONG_COMMENT
+%x COPYING LONG_COMMENT
 
 identifier  [_a-zA-Z][_a-zA-Z0-9\.]*
 whitespace  ([ \t\n\r]+)
@@ -40,27 +41,18 @@ idvalue     (0|[1-9][0-9]*)
 %%
 
 
-cinclude\{              { begin_extra_text(yylineno, COPY_TEXT); BEGIN(LJ); }
-\/\*              { begin_extra_text(yylineno, COPY_TEXT); BEGIN(LJ); }
-<LJ>\}cend     { BEGIN(INITIAL); 
-    fprintf(stderr, "LJ end\n",__func__, __LINE__);
-}
-<LJ>\**\/     { BEGIN(INITIAL); 
-    fprintf(stderr, "LJ end\n",__func__, __LINE__);
-}
-<LJ>.*\n       { append_extra_text(yytext); }
-<LJ>.*         { append_extra_text(yytext); }
-<LJ>\n+        { append_extra_text(yytext); }
+\%\%\{              { begin_extra_text(yylineno, COPY_TEXT); BEGIN(COPYING); }
+<COPYING>\}\%\%     { BEGIN(INITIAL); g_copyExtra = get_extra_text(); }
+<COPYING>[^\%]*\n       { append_extra_text(yytext); }
+<COPYING>\n+        { append_extra_text(yytext); }
 
 
-comment                            { begin_extra_text(yylineno, (which_extra_text)LONG_COMMENT);
+\/\*                            { begin_extra_text(yylineno, (which_extra_text)LONG_COMMENT);
                                   BEGIN(LONG_COMMENT); }
 <LONG_COMMENT>[^*]*             { append_extra_text(yytext); }
 <LONG_COMMENT>\*+[^/]           { append_extra_text(yytext); }
 <LONG_COMMENT>\n                { append_extra_text(yytext); }
-<LONG_COMMENT>\**\/             { BEGIN(INITIAL); 
-    fprintf(stderr, "long comment end\n",__func__, __LINE__);
-}
+<LONG_COMMENT>\**\/             { BEGIN(INITIAL); }
 
 ^{whitespace}?import{whitespace}[^ \t\r\n]+{whitespace}?;  {
                                                 SET_BUFFER(IMPORT);
@@ -120,7 +112,6 @@ extra_text_type* g_nextExtraText = NULL;
 
 void begin_extra_text(unsigned lineno, which_extra_text which)
 {
-    fprintf(stderr, "%s %d which %d\n",__func__, __LINE__, which);
     extra_text_type* text = (extra_text_type*)malloc(sizeof(extra_text_type));
     text->lineno = lineno;
     text->which = which;
@@ -137,7 +128,6 @@ void begin_extra_text(unsigned lineno, which_extra_text which)
 
 void append_extra_text(char* text)
 {
-    fprintf(stderr, "%s %d append %s",__func__, __LINE__, text);
     if (g_nextExtraText->data == NULL) {
         g_nextExtraText->data = strdup(text);
         g_nextExtraText->len = strlen(text);

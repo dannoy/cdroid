@@ -303,6 +303,7 @@ extern CType* CBOOLEAN_TYPE;
 extern CType* CBYTE_TYPE;
 extern CType* CCHAR_TYPE;
 extern CType* CINT_TYPE;
+extern CType* CUINT32_TYPE;
 extern CType* CLONG_TYPE;
 extern CType* CFLOAT_TYPE;
 extern CType* CDOUBLE_TYPE;

@@ -438,13 +438,13 @@ cgenerate_binder_interface_class(const interface_type* iface)
     CSwitchStatement* bn_transact_switch;
     // BnXXX init
     {
-        CVariable *transact_code = new CVariable(CINT_TYPE, "code");
-        CVariable *transact_data = new CVariable(CPARCEL_TYPE, "data", CVariable::VAR_REF);
+        CVariable *transact_code = new CVariable(CUINT32_TYPE, "code");
+        CVariable *transact_data = new CVariable(CPARCEL_TYPE, "data", CVariable::VAR_REF, true);
         CVariable *transact_reply = new CVariable(CPARCEL_TYPE, "reply", CVariable::VAR_POINTER);
-        CVariable *transact_flags = new CVariable(CINT_TYPE, "flags");
+        CVariable *transact_flags = new CVariable(CUINT32_TYPE, "flags");
         CMethod* onTransact = new CMethod;
             onTransact->modifiers = CPUBLIC | CVIRTUAL;
-            onTransact->returnType = CBOOLEAN_TYPE;
+            onTransact->returnType = CINT_TYPE;
             onTransact->name = "onTransact";
             onTransact->parameters.push_back(transact_code);
             onTransact->parameters.push_back(transact_data);

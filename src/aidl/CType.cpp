@@ -7,6 +7,7 @@ CType* CBOOLEAN_TYPE;
 CType* CBYTE_TYPE;
 CType* CCHAR_TYPE;
 CType* CINT_TYPE;
+CType* CUINT32_TYPE;
 CType* CLONG_TYPE;
 CType* CFLOAT_TYPE;
 CType* CDOUBLE_TYPE;
@@ -67,6 +68,11 @@ cregister_base_types()
             "writeInt32", "readInt32",
             "putInteger", "getInteger");
     CNAMES.Add(CINT_TYPE);
+
+    CUINT32_TYPE = new CBasicType("uint32_t",
+            "writeInt32", "readInt32",
+            "putInteger", "getInteger");
+    CNAMES.Add(CUINT32_TYPE);
 
     CLONG_TYPE = new CBasicType("long",
             #ifdef LONG_BITS_32

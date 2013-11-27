@@ -144,6 +144,15 @@ int main(int argc, char* const argv[])
                                 break;
                             }
                             data.writeString16(String16(argv[optind++]));
+                        } else if (strcmp(argv[optind], "s8") == 0) {
+                            optind++;
+                            if (optind >= argc) {
+                                aerr << "service: no string supplied for 's16'" << endl;
+                                wantsUsage = true;
+                                result = 10;
+                                break;
+                            }
+                            data.writeString8(String8(argv[optind++]));
                         } else if (strcmp(argv[optind], "null") == 0) {
                             optind++;
                             data.writeStrongBinder(NULL);
@@ -261,7 +270,7 @@ int main(int argc, char* const argv[])
         aout << "Usage: service [-h|-?]\n"
                 "       service list\n"
                 "       service check SERVICE\n"
-                "       service call SERVICE CODE [i32 INT | s16 STR] ...\n"
+                "       service call SERVICE CODE [i32 INT | s16 STR | s8 STR] ...\n"
                 "Options:\n"
                 "   i32: Write the integer INT into the send parcel.\n"
                 "   s16: Write the UTF-16 string STR into the send parcel.\n";

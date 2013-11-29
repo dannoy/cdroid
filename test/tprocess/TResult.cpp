@@ -1,8 +1,12 @@
 #include "TResult.h"
+#include <utils/TextOutput.h>
 
 namespace com {
     namespace routon {
         namespace os {
+            TResult::~TResult() {
+                android::aerr << "TResult::~TResult"<<android::endl;
+            }
             void TResult::writeToParcel(Parcel *out, int flags) {
                 out->writeInt32(mStatus);
                 out->writeString8(mStdoutStr);
@@ -22,6 +26,7 @@ namespace com {
                 String8 ou = source.readString8();
                 int st = source.readInt32();
                 return new TResult(st,ou, err);
+                //return NULL;
             }
 
             void TResult::readFromParcel(Parcel& source) {

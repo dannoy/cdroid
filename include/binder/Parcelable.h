@@ -72,7 +72,8 @@ class Parcelable : public virtual RefBase{
      * @param flags Additional flags about how the object should be written.
      * May be 0 or {@link #PARCELABLE_WRITE_RETURN_VALUE}.
      */
-    virtual void writeToParcel(Parcel* dest, int flags) = 0;
+    /*virtual void writeToParcel(Parcel* dest, int flags) = 0;*/
+    void writeToParcel(Parcel* dest, int flags);
 
     /**
      * Create a new instance of the Parcelable class, instantiating it
@@ -83,7 +84,8 @@ class Parcelable : public virtual RefBase{
      * @param source The Parcel to read the object's data from.
      * @return Returns a new instance of the Parcelable class.
      */
-    virtual Parcelable *createFromParcel(Parcel& source) = 0;
+    /*virtual Parcelable *createFromParcel(Parcel& source) = 0;*/
+    Parcelable *createFromParcel(Parcel& source);
     /**
      * Create a new instance of the Parcelable class, instantiating it
      * from the given Parcel whose data had previously been written by
@@ -93,7 +95,8 @@ class Parcelable : public virtual RefBase{
      * @param source The Parcel to read the object's data from.
      * @return Returns a new instance of the Parcelable class.
      */
-    virtual void readFromParcel(Parcel& source) = 0;
+    /*virtual void readFromParcel(Parcel& source) = 0;*/
+    void readFromParcel(Parcel& source);
 
     /**
      * Create a new array of the Parcelable class.
@@ -102,6 +105,7 @@ class Parcelable : public virtual RefBase{
      * @return Returns an array of the Parcelable class, with every entry
      * initialized to null.
      */
-    virtual std::vector<Parcelable *> newArray(int size) = 0;
+    /*virtual std::vector<Parcelable *> newArray(int size) = 0;*/
+    std::vector<Parcelable *> newArray(int size);
 };
 };

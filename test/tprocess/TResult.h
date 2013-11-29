@@ -16,6 +16,7 @@ namespace com {
                     TResult(int rc, const String8& _stdout, const String8& _stderr):
                         mStatus(rc), mStdoutStr(_stdout), mStderrStr(_stderr){
                         }
+                    ~TResult();
 
                     int describeContents();
                     void writeToParcel(Parcel *out, int flags);
@@ -23,7 +24,7 @@ namespace com {
                     void readFromParcel(Parcel& source);
                     std::vector<Parcelable *> newArray(int size);
 
-                private:
+                public:
                     int mStatus;
                     String8 mStdoutStr;
                     String8 mStderrStr;

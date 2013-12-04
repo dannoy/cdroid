@@ -275,6 +275,8 @@ int main(int argc, char **argv)
     struct binder_state *bs;
     void *svcmgr = BINDER_SERVICE_MANAGER;
 
+    ALOGI("service manager started");
+
     bs = binder_open(128*1024);
 
     if (binder_become_context_manager(bs)) {

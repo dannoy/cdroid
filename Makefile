@@ -19,5 +19,7 @@ $(eval $(call includeSubDir,src/tools/aidl))
 $(eval $(call includeSubDir,src/cmds/logcat))
 $(eval $(call includeSubDir,src/cmds/servicemanager))
 $(eval $(call includeSubDir,src/cmds/service))
+$(eval $(call includeSubDir,src/cmds/cdroidruntime))
+$(eval $(call includeSubDir,src/cmds/app_process))
 $(eval $(call includeSubDir,test/tprocess))
 

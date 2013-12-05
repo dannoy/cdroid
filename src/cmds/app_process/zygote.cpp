@@ -1,4 +1,5 @@
 #define LOG_TAG "Zygote"
+
 #include <utils/Log.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -14,7 +15,7 @@
 
 namespace cdroid {
 
-using android::String8;
+    //using android::String8;
 
 int Zygote::mZygoteSocket = -1;
 
@@ -32,7 +33,10 @@ int Zygote::registerZygoteSocket()
 
 int Zygote::handleZygoteClient(int fd)
 {
-    vector<string> arg;
+    int ret;
+    //vector<string> arg;
+
+    return ret;
 }
 
 class ZygoteSocketLooperCallback : public LooperCallback {
@@ -51,7 +55,7 @@ class ZygoteSocketLooperCallback : public LooperCallback {
         } while (cfd < 0 && errno == EINTR);
 
         if(cfd < 0) {
-            ALOGE("zygote client socket %d < 0",fd, events);
+            ALOGE("zygote client socket %d < 0",fd);
 
             return cfd;
         }

@@ -39,7 +39,7 @@ all:
 .PRECIOUS:%.lex.c %.tab.c
 
 define compile.prog
-	$(Q) $(2) -m32 -o $$@ $$(&2) $(LDFLAGS) -Wl,-Map,$(OBJ)/$(1).map
+	$(Q) $(2) -m32  -Wl,--no-as-needed -o $$@ $$(&2) $(LDFLAGS) -Wl,-Map,$(OBJ)/$(1).map
 endef
 
 define compile.slib

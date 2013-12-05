@@ -25,6 +25,7 @@ namespace android {
 
 #include <sys/ioctl.h>
 #include <signal.h>
+#include <linux/types.h>
 #include <linux/binder.h>
 
 #ifdef __cplusplus

@@ -17,6 +17,8 @@
 #include "service.h"
 #include "input.h"
 
+namespace cdroid{
+
 
 int system_init()
 {
@@ -35,13 +37,14 @@ int io_init()
     //output_init();
     return ret;
 }
+};
 
 int main()
 {
     int ret = 0;
 
-    system_init();
-    io_init();
+    cdroid::system_init();
+    cdroid::io_init();
     android::ProcessState::self()->startThreadPool();
     android::IPCThreadState::self()->joinThreadPool();
 

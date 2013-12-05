@@ -3,7 +3,7 @@
 
 #define SYSTEM_BIN_DIR "bin"
 #define SYSTEM_LIB_DIR "lib"
-#define SYSTEM_SOCKET_DIR "bin/runtime/dev/socket"
+#define SYSTEM_SOCKET_DIR "obj"
 #define SYSTEM_SOCKET_ENV_PREFIX "cdroid_service_socket_"
 
 #include <cutils/list.h>
@@ -22,6 +22,7 @@
 
 #include "service.h"
 
+namespace cdroid{
 
 static struct listnode svc_list;
 
@@ -131,7 +132,7 @@ int create_socket(const char *name, int type, mode_t perm, uid_t uid, gid_t gid)
         goto out_unlink;
     }
 
-    chown(addr.sun_path, uid, gid);
+    //chown(addr.sun_path, uid, gid);
     chmod(addr.sun_path, perm);
 
     ALOGI("Created socket '%s' with mode '%o', user '%d', group '%d'\n",
@@ -211,7 +212,7 @@ void service_start(struct service *svc)
         arg_ptrs[2] = svc->args[1];
         arg_ptrs[3] = '\0';
         if (execve(svc->file, (char**) arg_ptrs, (char**) ENV) < 0) {
-            ALOGE("cannot execve('%s'): %s\n", svc->args[0], strerror(errno));
+            ALOGE("cannot execve('%s'): %s\n", svc->file, strerror(errno));
         }
         _exit(127);
     }
@@ -246,3 +247,4 @@ int service_init()
     }
     service_for_each(service_start);
 }
+};

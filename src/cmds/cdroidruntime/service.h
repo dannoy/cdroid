@@ -4,6 +4,7 @@
 #include <cutils/list.h>
 #include <sys/stat.h>
 
+namespace cdroid {
 struct service{
     struct listnode slist;
 
@@ -26,5 +27,6 @@ struct socketinfo {
 };
 
 extern int service_init();
+};
 
 #endif

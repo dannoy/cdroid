@@ -6,6 +6,8 @@
 #include <errno.h>
 #include <termios.h>
 
+namespace cdroid {
+
 #define TC_VTIME 1
 #define TC_MIN_CHAR 20
 
@@ -50,4 +52,5 @@ int input_init()
             printf("char (%c:%x)\n", buf[i], buf[i]);
         }
     };
+}
 }

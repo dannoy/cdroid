@@ -1,5 +1,12 @@
+#Fix the following error, instead of renaming, use SYMLINK
+#systemd-udevd[4168]: NAME="logg/events" ignored, kernel device nodes can not be renamed; please fix it in /etc/udev/rules.d/50-android-dev.rules:4
+
 KERNEL=="binder",SUBSYSTEM=="misc",MODE="0666"
-KERNEL=="log_system",SUBSYSTEM=="misc",NAME="logg/system",MODE="0666"
-KERNEL=="log_main",SUBSYSTEM=="misc",NAME="logg/main",MODE="0666"
-KERNEL=="log_events",SUBSYSTEM=="misc",NAME="logg/events",MODE="0666"
-KERNEL=="log_radio",SUBSYSTEM=="misc",NAME="logg/radio",MODE="0666"
+#KERNEL=="log_system",SUBSYSTEM=="misc",NAME="logg/system",MODE="0666"
+#KERNEL=="log_main",SUBSYSTEM=="misc",NAME="logg/main",MODE="0666"
+#KERNEL=="log_events",SUBSYSTEM=="misc",NAME="logg/events",MODE="0666"
+#KERNEL=="log_radio",SUBSYSTEM=="misc",NAME="logg/radio",MODE="0666"
+KERNEL=="log_system",SUBSYSTEM=="misc",SYMLINK="logg/system",MODE="0666"
+KERNEL=="log_main",SUBSYSTEM=="misc",SYMLINK="logg/main",MODE="0666"
+KERNEL=="log_events",SUBSYSTEM=="misc",SYMLINK="logg/events",MODE="0666"
+KERNEL=="log_radio",SUBSYSTEM=="misc",SYMLINK="logg/radio",MODE="0666"

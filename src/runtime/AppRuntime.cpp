@@ -1,6 +1,8 @@
 #define LOG_TAG "AppRuntime"
 #include <cutils/log.h>
 #include <cutils/process_name.h>
+#include <binder/ProcessState.h>
+#include <binder/IPCThreadState.h>
 
 #include <runtime/Process.h>
 #include <runtime/AppRuntime.h>
@@ -8,6 +10,8 @@
 
 namespace cdroid {
 
+using android::ProcessState;
+using android::IPCThreadState;
 
 int AppRuntime::main(Vector<String8>& args, int argc, char *argv[])
 {
@@ -46,20 +50,17 @@ int AppRuntime::main(Vector<String8>& args, int argc, char *argv[])
     ActivityThread::main(activityArgs);
 }
 
-int AppRuntime::onStart()
+void AppRuntime::onStart()
 {
     sp<ProcessState> proc = ProcessState::self();
-    ALOGV("App process: starting thread pool.\n");
+    ALOGI("App process: starting thread pool.\n");
     proc->startThreadPool();
 }
 
-virtual void onExit(int code)
+void AppRuntime::onExit()
 {
-    if (mClassName == NULL) {
-        IPCThreadState::self()->stopProcess();
-    }
+    IPCThreadState::self()->stopProcess();
 
-    AndroidRuntime::onExit(code);
 }
 
 

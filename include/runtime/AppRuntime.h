@@ -8,7 +8,8 @@ namespace cdroid {
 class AppRuntime {
 public:
     static int main(Vector<String8>& args, int argc, char *argv[]);
-    static int onStart();
+    static void onStart();
+    static void onExit();
 
 };
 

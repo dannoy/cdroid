@@ -82,6 +82,7 @@ private:
 class Handler : public android::MessageHandler {
 public:
     Handler();
+    Handler(sp<Looper> l);
     virtual void handleMessage(const android::Message& message);
     virtual void handleMessage(const Message& message) = 0;
 

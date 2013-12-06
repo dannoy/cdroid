@@ -25,7 +25,7 @@ namespace cdroid {
 int SystemServer_Run()
 {
     android::ProcessState::self()->startThreadPool();
-    //Looper.loop();
+    android::IPCThreadState::self()->joinThreadPool();
 
     return 0;
 }

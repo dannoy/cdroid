@@ -3,11 +3,16 @@
 
 #include <utils/RefBase.h>
 #include <utils/Mutex.h>
+#include <utils/Vector.h>
+#include <utils/String8.h>
 
 namespace cdroid {
     using android::sp;
     using android::Mutex;
     using android::AutoMutex;
+    using android::Vector;
+    using android::String8;
+    using android::RefBase;
 };
 
 

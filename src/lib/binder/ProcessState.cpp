@@ -279,7 +279,7 @@ void ProcessState::setArgV0(const char* txt)
 {
     if (mArgV != NULL) {
         strncpy((char*)mArgV[0], txt, mArgLen);
-        set_process_name(txt);
+        set_process_name(txt, NULL);
     }
 }
 

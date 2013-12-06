@@ -15,6 +15,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <cutils/process_name.h>
 #include <cutils/properties.h>
@@ -32,7 +33,7 @@
 static const char* process_name = "unknown";
 static int running_in_emulator = -1;
 
-void set_process_name(const char* new_name) {
+void set_process_name(const char* new_name, char *argv[]) {
     char  propBuf[PROPERTY_VALUE_MAX];
 
     if (new_name == NULL) {
@@ -47,12 +48,29 @@ void set_process_name(const char* new_name) {
 
 #if defined(HAVE_PRCTL)
     if (len < 16) {
-        prctl(PR_SET_NAME, (unsigned long) new_name, 0, 0, 0);
+        //prctl(PR_SET_NAME, (unsigned long) new_name, 0, 0, 0);
+        prctl(PR_SET_NAME, (unsigned long) new_name);
     } else {
         prctl(PR_SET_NAME, (unsigned long) new_name + len - 15, 0, 0, 0);
     }
 #endif
 
+    if(argv){
+        // Then let's directly modify the arguments
+        // This needs a pointer to the original arvg, as passed to main(),
+        // and is limited to the length of the original argv[0]
+        size_t argv0_len = strlen(argv[0]);
+        size_t procname_len = strlen(new_name);
+        size_t max_procname_len = (argv0_len > new_name) ? (procname_len) : (argv0_len);
+
+        // Copy the maximum
+        strncpy(argv[0], new_name, max_procname_len);
+        // Clear out the rest (yes, this is needed, or the remaining part of the old
+        // process name will still show up in ps)
+        memset(&argv[0][max_procname_len], '\0', argv0_len - max_procname_len);
+    }
+
+    /*
     // If we know we are not running in the emulator, then return.
     if (running_in_emulator == 0) {
         return;
@@ -82,6 +100,7 @@ void set_process_name(const char* new_name) {
         return;
     write(fd, process_name, strlen(process_name) + 1);
     close(fd);
+    */
 }
 
 const char* get_process_name(void) {

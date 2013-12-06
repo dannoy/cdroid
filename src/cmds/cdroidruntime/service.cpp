@@ -1,4 +1,4 @@
-#define LOG_TAG "CDROIDRUNTIME"
+#define LOG_TAG "CDroidRuntime"
 #include <cutils/log.h>
 
 #define SYSTEM_BIN_DIR "bin"

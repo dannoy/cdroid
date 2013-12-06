@@ -220,6 +220,7 @@ int Looper::pollInner(int timeoutMillis) {
     // Acquire lock.
     mLock.lock();
 
+    //ALOGW("0Poll failed with eventCount %d, errno=%d", eventCount, errno);
     // Check for poll error.
     if (eventCount < 0) {
         if (errno == EINTR) {
@@ -336,7 +337,8 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
         int result;
         do {
             result = pollOnce(timeoutMillis, outFd, outEvents, outData);
-        } while (result == ALOOPER_POLL_CALLBACK);
+        } while (result == ALOOPER_POLL_CALLBACK || errno == EINTR);
+        //ALOGE("--------result %d ",result);
         return result;
     } else {
         nsecs_t endTime = systemTime(SYSTEM_TIME_MONOTONIC)

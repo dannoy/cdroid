@@ -23,6 +23,11 @@ Handler::Handler()
     mLooper = Looper::myLooper();
 }
 
+Handler::Handler(sp<Looper> l)
+{
+    mLooper = l;
+}
+
 void Handler::handleMessage(const android::Message &message)
 {
     handleMessage((const Message&)message);

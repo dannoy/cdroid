@@ -1,4 +1,4 @@
-#define LOG_TAG "CDROIDRUNTIME"
+#define LOG_TAG "CDroidRuntime"
 
 #include <binder/IPCThreadState.h>
 #include <binder/ProcessState.h>
@@ -39,10 +39,35 @@ int io_init()
 }
 };
 
+static void sigchld_handler(int s)
+{
+    pid_t pid;
+    int status;
+
+    /* no block */
+    while ( (pid = waitpid(-1, &status, WNOHANG)) == -1 && errno == EINTR );
+
+    ALOGD("pid %d exit", pid);
+}
+
+static void signal_init(void)
+{
+    int s[2];
+
+    struct sigaction act;
+
+    act.sa_handler = sigchld_handler;
+    act.sa_flags = SA_NOCLDSTOP;
+    //act.sa_mask = {0};
+    act.sa_restorer = NULL;
+    sigaction(SIGCHLD, &act, 0);
+}
+
 int main()
 {
     int ret = 0;
 
+    signal_init();
     cdroid::system_init();
     cdroid::io_init();
     android::ProcessState::self()->startThreadPool();

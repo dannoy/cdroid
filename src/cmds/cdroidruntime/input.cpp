@@ -1,4 +1,4 @@
-#define LOG_TAG "CDROIDRUNTIME"
+#define LOG_TAG "CDroidRuntime"
 #include <utils/Log.h>
 #include "input.h"
 #include <stdio.h>

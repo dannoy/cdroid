@@ -81,4 +81,19 @@ int Process::startViaZygoteArgs(Vector<String8>& args)
     return 0;
 }
 
+pid_t Process::myPid()
+{
+    return getpid();
+}
+
+uid_t Process::myUid()
+{
+    return getuid();
+}
+
+uid_t Process::myEUid()
+{
+    return geteuid();
+}
+
 };

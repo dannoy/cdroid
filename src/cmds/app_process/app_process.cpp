@@ -44,7 +44,7 @@ int startSystemServer(int argc, char *argv[])
             String8 name("testProg");
             Process::startViaZygote(name, 0, 0, gids, args);
         }
-        SystemServer_Run();
+        SystemServer::main(argc, argv);
         exit(-1);
         ALOGE("SystemServer forbidden path!!!");
     }

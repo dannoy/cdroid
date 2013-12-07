@@ -17,13 +17,37 @@
 
 #include <iostream>
 
-#include "service/SystemServer.h"
+#include <service/SystemServer.h>
+
+#include "ActivityManagerService.h"
 
 
 namespace cdroid {
 
-int SystemServer_Run()
+class ServerThread : public Thread {
+public:
+    ServerThread()
+        :Thread(false)
+    {
+    }
+    virtual ~ServerThread()
+    {
+    }
+
+    virtual bool threadLoop(){
+    }
+};
+
+int SystemServer::main(int argc, char *argv[])
 {
+
+    /*
+     * Create a thread to enable handle binder request while
+     * we are starting servers
+     */
+    sp<ServerThread> thread = new ServerThread;
+    thread->run();
+
     android::ProcessState::self()->startThreadPool();
     android::IPCThreadState::self()->joinThreadPool();
 

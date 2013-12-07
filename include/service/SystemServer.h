@@ -2,7 +2,10 @@
 #define _SERVICE_SYSTEM_SERVER_H
 
 namespace cdroid {
-extern int SystemServer_Run();
+class SystemServer {
+public:
+    static int main(int argc, char *argv[]);
+};
 
 };
 

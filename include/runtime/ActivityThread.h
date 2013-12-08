@@ -33,7 +33,8 @@ public:
     static int main(Vector<String8>& args);
     static sp<Handler> getMainHandler();
     static sp<ActivityThread> getCurrentActivityThread();
-private:
+        static sp<ActivityThread> systemMain();
+    private:
     static sp<Handler> sMainThreadHandler;
     static sp<ActivityThread> sCurrentActivityThread;
 };

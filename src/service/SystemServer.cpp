@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include <service/SystemServer.h>
+#include <runtime/Looper.h>
 
 #include "ActivityManagerService.h"
 
@@ -35,6 +36,16 @@ public:
     }
 
     virtual bool threadLoop(){
+        Looper::prepareMainLooper();
+
+        ActivityManagerService::main();
+
+        ActivityManagerService::setSystemProcess();
+
+
+        Looper::loop();
+
+        return true;
     }
 };
 

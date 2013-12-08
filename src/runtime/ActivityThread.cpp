@@ -31,6 +31,14 @@ int ActivityThread::main(Vector<String8>& args)
     Looper::loop();
 }
 
+sp<ActivityThread> ActivityThread::systemMain()
+{
+    sp<ActivityThread> thread = new ActivityThread;
+    thread->attach(true);
+
+    return thread;
+}
+
 sp<Handler> ActivityThread::getHandler()
 {
     return mH;

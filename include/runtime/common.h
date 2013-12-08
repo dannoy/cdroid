@@ -29,9 +29,9 @@ template <class T>
     class Singleton
     {
         public:
-            static T* Instance() {
-                if(!m_pInstance) m_pInstance = new T;
-                assert(m_pInstance != NULL);
+            static sp<T> Instance() {
+                if(!m_pInstance.get()) m_pInstance = new T;
+                assert(m_pInstance.get() != NULL);
                 return m_pInstance;
             }
         protected:
@@ -40,10 +40,10 @@ template <class T>
         private:
             Singleton(Singleton const&);
             Singleton& operator=(Singleton const&);
-            static T* m_pInstance;
+            static sp<T> m_pInstance;
     };
 
-template <class T> T* Singleton<T>::m_pInstance=NULL;
+template <class T> sp<T> Singleton<T>::m_pInstance=NULL;
 
 };
 

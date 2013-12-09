@@ -63,9 +63,7 @@ int ActivityManagerService::main()
     while(thr->mLooper.get() == NULL) {
         cond->wait(mutex);
     };
-    //ALOGE("ActivityManagerService main5 %d", Process::myPid());
     mSelf->mMainStack = new ActivityStack(mSelf, context, true, thr->mLooper);
-    //ALOGE("ActivityManagerService main6 %d", Process::myPid());
 }
 
 int ActivityManagerService::setSystemProcess()

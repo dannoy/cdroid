@@ -125,6 +125,10 @@ int main(int argc, char *argv[])
     if(bStartSystemServer) {
         cdroid::startSystemServer(argc, argv);
     }
+    set_process_name("Zygote", argv);
+    for(int i = 1; i < argc; ++i) {
+        memset(argv[i], 0, strlen(argv[i]));
+    }
 
     if(bStartZygote) {
         cdroid::Zygote::init(argc, argv, cdroid::gPidFile);

@@ -51,8 +51,10 @@ static struct cdroid::ActivityManifest launcherManifest= {
     createLauncherActivity
 };
 
-static cdroid::ApplicationManifest APPLICATION_INFO_SYM = {
+extern "C" {
+cdroid::ApplicationManifest APPLICATION_INFO_SYM = {
     (const char *)"LauncherApplication",
     NULL,
     &launcherManifest
+};
 };

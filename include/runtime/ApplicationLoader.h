@@ -33,7 +33,7 @@ private:
 };
 
 #define APPLICATION_INFO_SYM appinfo
-#define APPLICATION_INFO_SYM_AS_STR "_ZL7appinfo"
+#define APPLICATION_INFO_SYM_AS_STR "appinfo"
 
 
 };

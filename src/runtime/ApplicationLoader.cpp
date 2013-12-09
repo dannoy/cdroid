@@ -1,4 +1,4 @@
-//#define LOG_NDEBUG 0
+#define LOG_NDEBUG 1
 
 #define LOG_TAG "Application"
 #include <cutils/log.h>
@@ -45,7 +45,7 @@ int ApplicationLoader::handleFile(const char *filename, ApplicationManifest **am
     /* Get the address of the struct hal_module_info. */
     pam = (struct ApplicationManifest *)dlsym(handle, sym);
     if (pam == NULL) {
-        ALOGE("load: couldn't find symbol %s in %s", sym, filename);
+        //ALOGE("load: couldn't find symbol %s in %s", sym, filename);
         status = -EINVAL;
         goto done;
     }

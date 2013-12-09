@@ -23,6 +23,7 @@ private:
 public:
     static int main();
     static int setSystemProcess();
+    static sp<ActivityManagerService> self();
 
     static sp<ActivityManagerService> mSelf;
     static sp<ActivityThread> mSystemThread;

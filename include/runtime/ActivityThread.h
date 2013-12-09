@@ -5,12 +5,15 @@
 #include <runtime/Looper.h>
 #include <runtime/IApplicationThread.h>
 
+#include <runtime/ContextImpl.h>
+
 namespace cdroid {
 
 class ActivityThread : public virtual RefBase{
 public:
     ActivityThread();
     sp<Handler> getHandler();
+    sp<ContextImpl> getSystemContext();
 
 private:
     class H : public Handler {
@@ -33,10 +36,11 @@ public:
     static int main(Vector<String8>& args);
     static sp<Handler> getMainHandler();
     static sp<ActivityThread> getCurrentActivityThread();
-        static sp<ActivityThread> systemMain();
+    static sp<ActivityThread> systemMain();
     private:
     static sp<Handler> sMainThreadHandler;
     static sp<ActivityThread> sCurrentActivityThread;
+    static sp<ContextImpl> sSystemContext;
 };
 
 };

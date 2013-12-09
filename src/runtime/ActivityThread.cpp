@@ -2,12 +2,14 @@
 #include <cutils/log.h>
 
 #include <runtime/ActivityThread.h>
+#include <runtime/Process.h>
 #include <service/IActivityManager.h>
 
 namespace cdroid {
 
 sp<Handler> ActivityThread::sMainThreadHandler;
 sp<ActivityThread> ActivityThread::sCurrentActivityThread;
+sp<ContextImpl> ActivityThread::sSystemContext;
 
 ActivityThread::ActivityThread()
 {
@@ -47,8 +49,11 @@ sp<Handler> ActivityThread::getHandler()
 int ActivityThread::attach(bool system)
 {
     mSystemThread = system;
-    sp<IActivityManager> mgr = ActivityManagerNative::getDefault();
-    mgr->attachApplication(mAppThread);
+    // If system is true, activitymanagerservice hasn't been ready
+    if(!system) {
+        sp<IActivityManager> mgr = ActivityManagerNative::getDefault();
+        mgr->attachApplication(mAppThread);
+    }
 
     return 0;
 }
@@ -61,6 +66,16 @@ sp<Handler> ActivityThread::getMainHandler()
 sp<ActivityThread> ActivityThread::getCurrentActivityThread()
 {
     return sCurrentActivityThread;
+}
+
+sp<ContextImpl> ActivityThread::getSystemContext()
+{
+    if(sSystemContext == NULL) {
+        ContextImpl *context = ContextImpl::createSystemContext(this);
+
+        sSystemContext = context;
+    }
+    return sSystemContext;
 }
 
 void ActivityThread::H::handleMessage(const Message& message)

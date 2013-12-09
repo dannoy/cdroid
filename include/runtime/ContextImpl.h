@@ -5,7 +5,15 @@
 
 namespace cdroid {
 
+class ActivityThread;
 class ContextImpl : public Context {
+public:
+    ContextImpl();
+    static ContextImpl* createSystemContext(ActivityThread *mainThread);
+private:
+    void init(ActivityThread *mainThread);
+
+    sp<ActivityThread> mMainThread;
 };
 
 };

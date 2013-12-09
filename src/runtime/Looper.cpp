@@ -49,6 +49,10 @@ void Handler::sendMessageAtTime(nsecs_t uptime, const Message& message)
 {
     mLooper->sendMessageAtTime(uptime, this, message);
 }
+bool Handler::post(const Runnable& r)
+{
+    return true;
+}
 
 sp<Looper> Looper::mMainLooper;
 

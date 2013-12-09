@@ -5,10 +5,13 @@
 #include <utils/Mutex.h>
 #include <utils/Vector.h>
 #include <utils/String8.h>
+#include <utils/String16.h>
 #include <utils/Thread.h>
+#include <utils/Condition.h>
 #include <binder/IInterface.h>
 #include <binder/IBinder.h>
 #include <binder/Parcel.h>
+#include <binder/IServiceManager.h>
 
 namespace cdroid {
     using android::sp;
@@ -17,6 +20,7 @@ namespace cdroid {
     using android::AutoMutex;
     using android::Vector;
     using android::String8;
+    using android::String16;
     using android::RefBase;
     using android::IInterface;
     using android::IBinder;
@@ -24,6 +28,8 @@ namespace cdroid {
     using android::BpInterface;
     using android::Parcel;
     using android::Thread;
+    using android::Condition;
+    using android::IServiceManager;
 
 template <class T>
     class Singleton

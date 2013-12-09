@@ -37,14 +37,14 @@ int startSystemServer(int argc, char *argv[])
             memset(argv[i], 0, strlen(argv[i]));
         }
         set_process_name("SystemServer", argv);
-        ALOGE("SystemServer stopped!!!");
-        {
-            Vector<int> gids;
-            Vector<String8> args;
-            String8 name("testProg");
-            Process::startViaZygote(name, 0, 0, gids, args);
-        }
+        //{
+            //Vector<int> gids;
+            //Vector<String8> args;
+            //String8 name("testProg");
+            //Process::startViaZygote(name, 0, 0, gids, args);
+        //}
         SystemServer::main(argc, argv);
+        ALOGE("SystemServer stopped!!!");
         exit(-1);
         ALOGE("SystemServer forbidden path!!!");
     }

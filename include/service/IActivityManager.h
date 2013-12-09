@@ -21,6 +21,10 @@ class ActivityManagerNative : public BnActivityManager {
 public:
     static sp<IActivityManager> getDefault();
 
+
+    static sp<IActivityManager> sProxy;
+    static Mutex mSingletonMutex;
+
 };
 
 

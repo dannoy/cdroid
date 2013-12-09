@@ -11,9 +11,11 @@ namespace cdroid {
 class AThread : public Thread {
 public:
     sp<Looper> mLooper;
-    AThread(sp<Condition> cond)
+    Condition *mCond;
+    AThread(Condition* cond)
         :Thread(false)
     {
+        mCond = cond;
     }
     virtual ~AThread()
     {
@@ -23,8 +25,9 @@ public:
         Looper::prepare();
 
         mLooper = Looper::myLooper();
+    ALOGE("ActivityManagerService threadloop %d %p", Process::myPid(), mLooper.get());
 
-        cond->signal();
+        mCond->signal();
 
 
         Looper::loop();
@@ -53,13 +56,16 @@ int ActivityManagerService::main()
     Condition* cond = new Condition;
     Mutex mutex;
     AThread* thr = new AThread(cond);;
+    thr->run();
     mSelf = ActivityManagerServiceSingleton::Instance();
     mSystemThread = ActivityThread::systemMain();
-    sp<Context> = mSystemThread->getSystemContext();
-    while(thr->mLooper == NULL) {
+    sp<Context> context= mSystemThread->getSystemContext();
+    while(thr->mLooper.get() == NULL) {
         cond->wait(mutex);
     };
-    mMainStack = new ActivityStack(mSelf, context, true, thr->mLooper);
+    //ALOGE("ActivityManagerService main5 %d", Process::myPid());
+    mSelf->mMainStack = new ActivityStack(mSelf, context, true, thr->mLooper);
+    //ALOGE("ActivityManagerService main6 %d", Process::myPid());
 }
 
 int ActivityManagerService::setSystemProcess()
@@ -69,12 +75,15 @@ int ActivityManagerService::setSystemProcess()
     return 0;
 }
 
+sp<ActivityManagerService> ActivityManagerService::self()
+{
+    return mSelf;
+}
+
 void ActivityManagerService::systemReady()
 {
     ALOGI("System now ready");
     mMainStack->resumeTopActivityLocked(NULL);
-
-    return 0;
 }
 
 };

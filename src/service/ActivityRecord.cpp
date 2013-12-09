@@ -1,5 +1,6 @@
 #define LOG_TAG "ActivityRecord"
 #include <cutils/log.h>
+#include "ActivityManagerService.h"
 
 #include "ActivityRecord.h"
 

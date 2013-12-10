@@ -50,7 +50,7 @@ struct socketinfo zygote_socket = {
 struct service zygote = {
     {NULL,NULL},
     "zygote",
-    SYSTEM_BIN_DIR"/app_process",
+    SYSTEM_BIN_DIR"/application_process",
     0,
     0,
     0,

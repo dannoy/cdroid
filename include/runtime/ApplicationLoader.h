@@ -7,13 +7,15 @@
 namespace cdroid {
 
 struct ActivityManifest {
-        char*               name;
+        String8               name;
+        String8               action;
+        String8               category;
         ActivityManifest    *next;
         Activity*           (*createActivity)();
 };
 
 struct ApplicationManifest {
-    char *name;
+    String8 name;
     // shared lib handle
     void *dso;
     ActivityManifest *activity;

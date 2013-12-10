@@ -37,12 +37,6 @@ int startSystemServer(int argc, char *argv[])
             memset(argv[i], 0, strlen(argv[i]));
         }
         set_process_name("SystemServer", argv);
-        //{
-            //Vector<int> gids;
-            //Vector<String8> args;
-            //String8 name("testProg");
-            //Process::startViaZygote(name, 0, 0, gids, args);
-        //}
         SystemServer::main(argc, argv);
         ALOGE("SystemServer stopped!!!");
         exit(-1);
@@ -125,10 +119,10 @@ int main(int argc, char *argv[])
     if(bStartSystemServer) {
         cdroid::startSystemServer(argc, argv);
     }
-    set_process_name("Zygote", argv);
-    for(int i = 1; i < argc; ++i) {
-        memset(argv[i], 0, strlen(argv[i]));
-    }
+    //set_process_name("Zygote", argv);
+    //for(int i = 1; i < argc; ++i) {
+        //memset(argv[i], 0, strlen(argv[i]));
+    //}
 
     if(bStartZygote) {
         cdroid::Zygote::init(argc, argv, cdroid::gPidFile);

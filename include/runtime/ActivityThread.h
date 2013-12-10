@@ -21,6 +21,8 @@ private:
     };
 
     class ApplicationThread : public BnApplicationThread {
+    public:
+        virtual void schedulePauseActivity(sp<IBinder> token);
     };
 
     int attach(bool system);

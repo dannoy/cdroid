@@ -10,7 +10,7 @@ namespace cdroid {
 
 #define ZYGOTE_SOCKET "obj/zygote"
 
-int Process::startViaZygote(String8& niceName, int uid, int gid, Vector<int>& gids, Vector<String8>& extraArgs)
+int Process::startViaZygote(String8& niceName, int uid, int gid, Vector<int>& gids, Vector<String8>& extraArgs, pid_t *pid)
 {
     Vector<String8> args;
     String8 niceNameArg("--nice-name=");
@@ -39,10 +39,10 @@ int Process::startViaZygote(String8& niceName, int uid, int gid, Vector<int>& gi
         args.push_back(extraArgs[i]);
     }
 
-    return startViaZygoteArgs(args);
+    return startViaZygoteArgs(args, pid);
 }
 
-int Process::startViaZygoteArgs(Vector<String8>& args)
+int Process::startViaZygoteArgs(Vector<String8>& args, pid_t *pid)
 {
     struct sockaddr_un addr;
     int fd, ret;
@@ -75,6 +75,9 @@ int Process::startViaZygoteArgs(Vector<String8>& args)
     //ALOGI("client read pid- '%d'", newPid);
     read(fd, &newPid, sizeof(newPid));
     //ALOGI("client read pid '%d'", newPid);
+    if(pid) {
+        *pid = newPid;
+    }
 
     close(fd);
 

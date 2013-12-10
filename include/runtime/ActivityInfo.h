@@ -5,12 +5,28 @@
 
 namespace cdroid {
 
-class ActivityInfo : public RefBase {
+class ActivityInfo : public Parcelable {
 public:
-    ActivityInfo();
-private:
-    String8 name;
-    String8 filename;
+    ActivityInfo(String8 name, String8 filename);
+    int describeContents();
+    void writeToParcel(Parcel *out, int flags);
+    ActivityInfo *createFromParcel(Parcel& source);
+    void readFromParcel(Parcel& source);
+    std::vector<Parcelable *> newArray(int size);
+
+    String8& getName() {
+        return mName;
+    }
+
+    String8& getFilename() {
+        return mFilename;
+    }
+
+    String8 mName;
+    String8 mApplicationName;
+    String8 mAction;
+    String8 mCategory;
+    String8 mFilename;
 };
 
 

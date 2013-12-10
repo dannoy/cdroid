@@ -1,11 +1,8 @@
 #define LOG_TAG "Launcher"
 #include <cutils/log.h>
 
-#include <runtime/Activity.h>
-#include <runtime/ApplicationLoader.h>
+#include <runtime/AppCommon.h>
 
-using cdroid::Activity;
-using cdroid::Bundle;
 
 class Launcher : public Activity {
     virtual void onCreate(Bundle savedInstanceState);
@@ -46,14 +43,16 @@ static Activity *createLauncherActivity()
 }
 
 static struct cdroid::ActivityManifest launcherManifest= {
-    (const char *)"LauncherActivity",
+    String8("LauncherActivity"),
+    Intent::ACTION_MAIN,
+    Intent::CATEGORY_DEFAULT,
     NULL,
     createLauncherActivity
 };
 
 extern "C" {
 cdroid::ApplicationManifest APPLICATION_INFO_SYM = {
-    (const char *)"LauncherApplication",
+    String8("LauncherApplication"),
     NULL,
     &launcherManifest
 };

@@ -11,6 +11,7 @@ class IPackageManager : public IInterface {
 public:
     DECLARE_META_INTERFACE(PackageManager);
     virtual sp<ActivityInfo> getActivityInfo(String8 name) = 0; 
+    virtual sp<ActivityInfo> resolveActivityInfo(String8 action) = 0; 
 };
 
 class BnPackageManager : public BnInterface<IPackageManager> {

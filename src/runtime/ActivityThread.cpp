@@ -83,6 +83,10 @@ void ActivityThread::H::handleMessage(const Message& message)
 }
 
 
+void ActivityThread::ApplicationThread::schedulePauseActivity(sp<IBinder> token)
+{
+}
+
 
 };
 

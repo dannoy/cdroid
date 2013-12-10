@@ -8,9 +8,11 @@
 #include <utils/String16.h>
 #include <utils/Thread.h>
 #include <utils/Condition.h>
+#include <utils/BasicHashtable.h>
 #include <binder/IInterface.h>
 #include <binder/IBinder.h>
 #include <binder/Parcel.h>
+#include <binder/Parcelable.h>
 #include <binder/IServiceManager.h>
 
 namespace cdroid {
@@ -27,9 +29,12 @@ namespace cdroid {
     using android::BnInterface;
     using android::BpInterface;
     using android::Parcel;
+    using android::Parcelable;
     using android::Thread;
     using android::Condition;
     using android::IServiceManager;
+    using android::interface_cast;
+    using android::BasicHashtable;
 
 template <class T>
     class Singleton

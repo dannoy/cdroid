@@ -4,6 +4,7 @@
 #include <service/IActivityManager.h>
 #include <runtime/ActivityThread.h>
 #include "ActivityStack.h"
+#include "ProcessRecord.h"
 
 namespace cdroid {
 
@@ -15,10 +16,18 @@ public:
 // IActivityManager interfaces
 public:
     int attachApplication(sp<IApplicationThread> appThread);
+    bool startHomeActivityLocked();
+    sp<ProcessRecord> getRecordForAppLocked(sp<IApplicationThread> thread);
+    sp<ProcessRecord> getProcessRecordLocked(String8 appName);
+    sp<ProcessRecord> startProcessLocked(String8 appName);
+
 private:
 
     pid_t MY_PID;
     sp<ActivityStack> mMainStack;
+    String8 mTopAction;
+    Vector<sp<ProcessRecord> > mProcesses;
+    Vector<sp<ProcessRecord> > mProcessesPending;
 
 public:
     static int main();

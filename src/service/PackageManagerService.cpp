@@ -21,7 +21,8 @@ PMS_ApplicationLoaderCallback::PMS_ApplicationLoaderCallback(sp<PackageManagerSe
 
 int PMS_ApplicationLoaderCallback::onApplication(struct ApplicationManifest *appM, String8 filename)
 {
-    ALOGI("Found ApplicationManifest %s", appM->name);
+    ALOGI("Found ApplicationManifest %s", appM->name.string());
+    mService->addApplicationManifest(appM, filename);
 }
 
 PackageManagerService::PackageManagerService()
@@ -38,16 +39,52 @@ PackageManagerService::PackageManagerService()
     appLoader->loadApplications(cb);
 }
 
+void PackageManagerService::addApplicationManifest(struct ApplicationManifest *appM, String8 filename)
+{
+    mApplicationMF.push_back(appM);
+    mApplicationMF_file.push_back(filename);
+
+    struct ActivityManifest *amf = appM->activity;
+
+    while(amf) {
+        mActivityMF.push_back(amf);
+        sp<ActivityInfo> ai = new ActivityInfo(amf->name, filename);
+        ai->mAction = amf->action;
+        ai->mCategory = amf->category;
+        ai->mApplicationName = appM->name;
+
+        mActivities.push_back(ai);
+
+        amf = amf->next;
+    }
+
+}
+
 void PackageManagerService::instantiate()
 {
     android::defaultServiceManager()->addService(android::String16("package"), new PackageManagerService());
-    //ALOGI("PMS added");
 }
 sp<ActivityInfo> PackageManagerService::getActivityInfo(String8 name)
 {
-    sp<ActivityInfo> ai = new ActivityInfo;
+    for(Vector<sp<ActivityInfo> >::iterator it = mActivities.begin(); it != mActivities.end(); ++it) {
+        if((*it)->mName == name) {
+            return *it;
+        }
+    }
 
-    return ai;
+    return NULL;
+}
+
+sp<ActivityInfo> PackageManagerService::resolveActivityInfo(String8 action)
+{
+    for(Vector<sp<ActivityInfo> >::iterator it = mActivities.begin(); it != mActivities.end(); ++it) {
+        //ALOGI("Looking ActivityManifest action %s", (*it)->mAction.string());
+        if((*it)->mAction == action) {
+            return *it;
+        }
+    }
+
+    return NULL;
 }
 
 

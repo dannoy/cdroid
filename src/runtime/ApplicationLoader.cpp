@@ -95,7 +95,7 @@ int ApplicationLoader::loadApplications(sp<ApplicationLoaderCallback> callback)
         handleFile(filename, &app);
 
         if(app) {
-            callback->onApplication(app, String8(filename));
+            callback->onApplication(app, String8(devname));
         }
     }
     closedir(dir);

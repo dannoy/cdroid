@@ -29,8 +29,7 @@ sp<IActivityManager> ActivityManagerNative::getDefault()
         if(!sProxy.get()) {
             sp<IServiceManager> sm = android::defaultServiceManager();
             sp<IBinder> const service = sm->checkService(String16("activity"));
-
-            sProxy = new BpActivityManager(service);
+            sProxy = IActivityManager::asInterface(service);
             assert(sProxy.get() != NULL);
         }
     }

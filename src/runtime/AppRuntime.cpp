@@ -53,14 +53,13 @@ int AppRuntime::main(Vector<String8>& args, int argc, char *argv[])
 void AppRuntime::onStart()
 {
     sp<ProcessState> proc = ProcessState::self();
-    ALOGI("App process: starting thread pool.\n");
+    ALOGI("Process %s: onStart.\n",get_process_name());
     proc->startThreadPool();
 }
 
 void AppRuntime::onExit()
 {
     IPCThreadState::self()->stopProcess();
-
 }
 
 

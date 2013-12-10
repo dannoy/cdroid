@@ -4,6 +4,7 @@
 
 #include <service/IActivityManager.h>
 #include <runtime/Process.h>
+#include <runtime/Intent.h>
 #include "ActivityManagerService.h"
 
 
@@ -25,7 +26,7 @@ public:
         Looper::prepare();
 
         mLooper = Looper::myLooper();
-    ALOGE("ActivityManagerService threadloop %d %p", Process::myPid(), mLooper.get());
+        //ALOGE("ActivityManagerService threadloop %d %p", Process::myPid(), mLooper.get());
 
         mCond->signal();
 
@@ -64,6 +65,8 @@ int ActivityManagerService::main()
         cond->wait(mutex);
     };
     mSelf->mMainStack = new ActivityStack(mSelf, context, true, thr->mLooper);
+
+    mSelf->mTopAction = Intent::ACTION_MAIN;
 }
 
 int ActivityManagerService::setSystemProcess()
@@ -82,6 +85,56 @@ void ActivityManagerService::systemReady()
 {
     ALOGI("System now ready");
     mMainStack->resumeTopActivityLocked(NULL);
+}
+
+bool ActivityManagerService::startHomeActivityLocked()
+{
+    sp<Intent> intent = new Intent(mTopAction);
+
+    mMainStack->startActivityLocked(NULL, intent, NULL, 0, 0, 0);
+}
+
+sp<ProcessRecord> ActivityManagerService::getRecordForAppLocked(sp<IApplicationThread> thread)
+{
+    for(Vector<sp<ProcessRecord> >::iterator it = mProcesses.begin(); it != mProcesses.end(); ++it) {
+        if((*it)->thread == thread) {
+            return *it;
+        }
+    }
+
+    return NULL;
+}
+
+sp<ProcessRecord> ActivityManagerService::getProcessRecordLocked(String8 appName)
+{
+    for(Vector<sp<ProcessRecord> >::iterator it = mProcesses.begin(); it != mProcesses.end(); ++it) {
+        if((*it)->name == appName) {
+            return *it;
+        }
+    }
+
+    return NULL;
+}
+
+sp<ProcessRecord> ActivityManagerService::startProcessLocked(String8 appName)
+{
+    sp<ProcessRecord> app = getProcessRecordLocked(appName);
+
+    if(app == NULL) {
+        app = new ProcessRecord;
+        app->name = appName;
+        mProcesses.push_back(app);
+
+        Vector<int> gids;
+        Vector<String8> args;
+        int ret = Process::startViaZygote(appName, 0, 0, gids, args, &app->pid);
+        if(0 == ret) {
+            mProcessesPending.push_back(app);
+            ALOGI("Process [%s] started, pid %d",appName.string(), app->pid);
+        }
+    }
+
+    return NULL;
 }
 
 };

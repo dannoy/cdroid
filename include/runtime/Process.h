@@ -10,14 +10,14 @@ namespace cdroid {
 
 class Process {
 public:
-    static int startViaZygote(String8& niceName, int uid, int gid, Vector<int>& gids, Vector<String8>& extraArgs);
+    static int startViaZygote(String8& niceName, int uid, int gid, Vector<int>& gids, Vector<String8>& extraArgs, pid_t *pid);
 
     static pid_t myPid();
     static uid_t myUid();
     static uid_t myEUid();
 
 private:
-    static int startViaZygoteArgs(Vector<String8>& args);
+    static int startViaZygoteArgs(Vector<String8>& args, pid_t *pid);
 };
 
 };

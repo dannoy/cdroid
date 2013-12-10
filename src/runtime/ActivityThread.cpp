@@ -3,6 +3,7 @@
 
 #include <runtime/ActivityThread.h>
 #include <runtime/Process.h>
+#include <runtime/ApplicationLoader.h>
 #include <service/IActivityManager.h>
 
 namespace cdroid {
@@ -13,8 +14,8 @@ sp<ContextImpl> ActivityThread::sSystemContext;
 
 ActivityThread::ActivityThread()
 {
-    mH = new H;
-    mAppThread = new ApplicationThread;
+    mH = new H(this);
+    mAppThread = new ApplicationThread(mH);
 }
 
 
@@ -78,8 +79,19 @@ sp<ContextImpl> ActivityThread::getSystemContext()
     return sSystemContext;
 }
 
-void ActivityThread::H::handleMessage(const Message& message)
+void ActivityThread::H::handleMessage(const sp<Message>& message)
 {
+    switch(message->what) {
+        case LAUNCH_ACTIVITY:
+            {
+    ALOGI("H::handleMessage launchactivity %p ",message->obj.get());
+                sp<ActivityInfo> ai = reinterpret_cast<ActivityInfo*>(message->obj.get());
+    ALOGI("H::handleMessage launchactivity ai %p %p",ai.get(),mThread.get());
+                mThread->scheduleLaunchActivity(ai);
+    ALOGI("H::handleMessage launchactivity ai %p over",ai.get());
+            }
+            break;
+    }
 }
 
 
@@ -89,8 +101,31 @@ void ActivityThread::ApplicationThread::schedulePauseActivity(sp<IBinder> token)
 
 void ActivityThread::ApplicationThread::bindApplication(String8 appName)
 {
+    mAppName = appName;
+    ALOGI("bindApplication %s",appName.string());
 }
 
+void ActivityThread::ApplicationThread::scheduleLaunchActivity(sp<ActivityInfo> ai)
+{
+    sp<Message> msg = new Message(H::LAUNCH_ACTIVITY, ai);
+    ai->incStrong(this);
+    ai->incStrong(this);
+    ALOGI("scheduleLaunchActivity sendmessage %p",msg->obj.get());
+
+    mH->sendMessage(msg);
+}
+
+void ActivityThread::scheduleLaunchActivity(sp<ActivityInfo> ai)
+{
+    ALOGI("scheduleLaunchActivity phase II %s %p",ai->mName.string(), ai.get());
+
+    ActivityManifest* am = ActivityLoader::loadActivity(ai->mFilename, ai->mName);
+    if(!am) {
+        ALOGI("cannot found activity: %s",ai->mName.string());
+        return;
+    }
+    ALOGI("scheduleLaunchActivity %s found",am->name.string());
+}
 
 };
 

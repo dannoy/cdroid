@@ -14,16 +14,35 @@ public:
     ActivityThread();
     sp<Handler> getHandler();
     sp<ContextImpl> getSystemContext();
+    void scheduleLaunchActivity(sp<ActivityInfo> ai);
 
 private:
     class H : public Handler {
-        virtual void handleMessage(const Message& message);
+    public:
+        H(sp<ActivityThread> at)
+            : mThread(at)
+        {
+        }
+        enum {
+            LAUNCH_ACTIVITY = 1,
+        };
+        virtual void handleMessage(const sp<Message>& message);
+    private:
+        sp<ActivityThread> mThread;
     };
 
     class ApplicationThread : public BnApplicationThread {
     public:
+        ApplicationThread(sp<Handler> h)
+            : mH(h)
+        {
+        }
         virtual void schedulePauseActivity(sp<IBinder> token);
         virtual void bindApplication(String8 appName);
+        virtual void scheduleLaunchActivity(sp<ActivityInfo> ai);
+    private:
+        String8 mAppName;
+        sp<Handler> mH;
     };
 
     int attach(bool system);

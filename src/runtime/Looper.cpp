@@ -18,6 +18,23 @@
 
 namespace cdroid {
 
+Message::Message()
+    : android::Message()
+{
+}
+
+Message::Message(int what, sp<RefBase> o)
+    : android::Message(what),
+      obj(o)
+{
+}
+
+Message::Message(sp<Runnable> r)
+    : android::Message(),
+      runnable(r)
+{
+}
+
 Handler::Handler()
 {
     mLooper = Looper::myLooper();
@@ -28,29 +45,33 @@ Handler::Handler(sp<Looper> l)
     mLooper = l;
 }
 
-void Handler::handleMessage(const android::Message &message)
+void Handler::handleMessage(const sp<android::Message>& message)
 {
-    handleMessage((const Message&)message);
+    ALOGI("handleMessage");
+    sp<Message> msg = reinterpret_cast<Message*>(message.get());
+    handleMessage(msg);
 }
 
-void Handler::sendMessage(const Message& message)
+void Handler::sendMessage(const sp<Message>& message)
 {
     nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
     sendMessageAtTime(now, message);
 }
 
-void Handler::sendMessageDelayed(nsecs_t uptimeDelay, const Message& message)
+void Handler::sendMessageDelayed(nsecs_t uptimeDelay, const sp<Message>& message)
 {
     nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
     sendMessageAtTime(now + uptimeDelay, message);
 }
 
-void Handler::sendMessageAtTime(nsecs_t uptime, const Message& message)
+void Handler::sendMessageAtTime(nsecs_t uptime, const sp<Message>& message)
 {
     mLooper->sendMessageAtTime(uptime, this, message);
 }
-bool Handler::post(const Runnable& r)
+bool Handler::post(sp<Runnable> r)
 {
+    sp<Message> msg = new Message(r);
+    sendMessage(msg);
     return true;
 }
 
@@ -65,6 +86,7 @@ void Looper::prepare()
 {
     sp<android::Looper> looper = android::Looper::getForThread();
     if (looper == NULL) {
+        //ALOGI("prepare new looper ");
         looper = new Looper();
         android::Looper::setForThread(looper);
     }
@@ -98,6 +120,16 @@ int Looper::addFd(int fd, int events, const sp<LooperCallback>& callback, void* 
 void Looper::loop()
 {
     myLooper().get()->pollAll(-1);
+}
+
+void Looper::clear()
+{
+    sp<android::Looper> looper = android::Looper::getForThread();
+    if (looper != NULL) {
+        //ALOGI("clear looper not null");
+        looper = NULL;
+        android::Looper::setForThread(NULL);
+    }
 }
 
 };

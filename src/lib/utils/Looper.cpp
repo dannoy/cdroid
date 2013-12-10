@@ -33,7 +33,7 @@ WeakMessageHandler::WeakMessageHandler(const wp<MessageHandler>& handler) :
 WeakMessageHandler::~WeakMessageHandler() {
 }
 
-void WeakMessageHandler::handleMessage(const Message& message) {
+void WeakMessageHandler::handleMessage(const sp<Message>& message) {
     sp<MessageHandler> handler = mHandler.promote();
     if (handler != NULL) {
         handler->handleMessage(message);
@@ -283,7 +283,7 @@ Done: ;
             // we reacquire our lock.
             { // obtain handler
                 sp<MessageHandler> handler = messageEnvelope.handler;
-                Message message = messageEnvelope.message;
+                sp<Message> message = messageEnvelope.message;
                 mMessageEnvelopes.removeAt(0);
                 mSendingMessage = true;
                 mLock.unlock();
@@ -292,7 +292,9 @@ Done: ;
                 ALOGD("%p ~ pollOnce - sending message: handler=%p, what=%d",
                         this, handler.get(), message.what);
 #endif
+            ALOGI("handleMessage 00000000000000000000");
                 handler->handleMessage(message);
+            ALOGI("handleMessage 111111111111111111111");
             } // release handler
 
             mLock.lock();
@@ -338,7 +340,7 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
         do {
             result = pollOnce(timeoutMillis, outFd, outEvents, outData);
         } while (result == ALOOPER_POLL_CALLBACK || errno == EINTR);
-        //ALOGE("--------result %d ",result);
+        ALOGE("--------result %d ",result);
         return result;
     } else {
         nsecs_t endTime = systemTime(SYSTEM_TIME_MONOTONIC)
@@ -480,22 +482,22 @@ int Looper::removeFd(int fd) {
     return 1;
 }
 
-void Looper::sendMessage(const sp<MessageHandler>& handler, const Message& message) {
+void Looper::sendMessage(const sp<MessageHandler>& handler, const sp<Message>& message) {
     nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
     sendMessageAtTime(now, handler, message);
 }
 
 void Looper::sendMessageDelayed(nsecs_t uptimeDelay, const sp<MessageHandler>& handler,
-        const Message& message) {
+        const sp<Message>& message) {
     nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
     sendMessageAtTime(now + uptimeDelay, handler, message);
 }
 
 void Looper::sendMessageAtTime(nsecs_t uptime, const sp<MessageHandler>& handler,
-        const Message& message) {
+        const sp<Message>& message) {
 #if DEBUG_CALLBACKS
     ALOGD("%p ~ sendMessageAtTime - uptime=%lld, handler=%p, what=%d",
-            this, uptime, handler.get(), message.what);
+            this, uptime, handler.get(), message->what);
 #endif
 
     size_t i = 0;
@@ -519,6 +521,8 @@ void Looper::sendMessageAtTime(nsecs_t uptime, const sp<MessageHandler>& handler
         }
     } // release lock
 
+    //ALOGD("%p ~ sendMessageAtTime - uptime=%lld, handler=%p, what=%d i=%d",
+            //this, uptime, handler.get(), message->what, i);
     // Wake the poll loop only when we enqueue a new message at the head.
     if (i == 0) {
         wake();
@@ -553,7 +557,7 @@ void Looper::removeMessages(const sp<MessageHandler>& handler, int what) {
         for (size_t i = mMessageEnvelopes.size(); i != 0; ) {
             const MessageEnvelope& messageEnvelope = mMessageEnvelopes.itemAt(--i);
             if (messageEnvelope.handler == handler
-                    && messageEnvelope.message.what == what) {
+                    && messageEnvelope.message->what == what) {
                 mMessageEnvelopes.removeAt(i);
             }
         }

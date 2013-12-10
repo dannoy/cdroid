@@ -54,6 +54,7 @@ public:
     static sp<Looper> getMainLooper();
     static sp<Looper> myLooper();
     static void loop();
+    static void clear();
     int addFd(int fd, int events, const sp<LooperCallback>& callback, void* data);
 
 private:
@@ -64,7 +65,7 @@ private:
     Mutex mLock;
 };
 
-class Runnable {
+class Runnable : public RefBase{
 public:
     virtual int run() = 0;
 };
@@ -73,23 +74,24 @@ public:
 class Message : public android::Message {
 public:
     Message();
-    Message(int what);
+    Message(int what, sp<RefBase> o);
     Message(sp<Runnable> r);
-private:
-    sp<Runnable> r;
+
+    sp<Runnable> runnable;
+    sp<RefBase> obj;
 };
 
 class Handler : public android::MessageHandler {
 public:
     Handler();
     Handler(sp<Looper> l);
-    virtual void handleMessage(const android::Message& message);
-    virtual void handleMessage(const Message& message) = 0;
+    virtual void handleMessage(const sp<android::Message>& message);
+    virtual void handleMessage(const sp<Message>& message) = 0;
 
-    void sendMessage(const Message& message);
-    void sendMessageDelayed(nsecs_t uptimeDelay, const Message& message);
-    void sendMessageAtTime(nsecs_t uptime, const Message& message);
-    bool post(const Runnable& r);
+    void sendMessage(const sp<Message>& message);
+    void sendMessageDelayed(nsecs_t uptimeDelay, const sp<Message>& message);
+    void sendMessageAtTime(nsecs_t uptime, const sp<Message>& message);
+    bool post(sp<Runnable> r);
 
 private:
     sp<Looper> mLooper;

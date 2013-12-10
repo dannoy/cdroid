@@ -31,7 +31,13 @@ public:
     ApplicationLoader();
     int loadApplications(sp<ApplicationLoaderCallback> callback);
 private:
-    int handleFile(const char *filename, ApplicationManifest **am);
+};
+
+class ActivityLoader : public RefBase{
+public:
+    ActivityLoader();
+    static ActivityManifest* loadActivity(String8 filename, String8 activityName);
+private:
 };
 
 #define APPLICATION_INFO_SYM appinfo

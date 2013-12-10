@@ -62,10 +62,11 @@ void ActivityManagerService::attachApplication(sp<IBinder> appThread)
 void ActivityManagerService::attachApplicationLocked(sp<IBinder> appThread, int callingPid)
 {
     sp<ProcessRecord> app;
-    for(Vector<sp<ProcessRecord> >::iterator it = mProcessesPending.begin(); it != mProcesses.end(); ++it) {
+    for(Vector<sp<ProcessRecord> >::iterator it = mProcessesPending.begin(); it != mProcessesPending.end(); ++it) {
         if((*it)->pid == callingPid) {
             app = *it;
             mProcessesPending.erase(it);
+            break;
         }
     }
 
@@ -75,11 +76,16 @@ void ActivityManagerService::attachApplicationLocked(sp<IBinder> appThread, int 
         return;
     }
 
+    //ALOGI("Found attach request from pid %d app %s", callingPid, app->name.string());
+
     app->thread = interface_cast<IApplicationThread>(appThread);
+
+    //ALOGI("Found attach request from pid %d app %s %p", callingPid, app->name.string(), app->thread.get());
 
     if(app->thread != NULL) {
         app->thread->bindApplication(app->name);
     }
+    //ALOGI("Found attach request from pid %d app %s %p 222222222222", callingPid, app->name.string(), app->thread.get());
 
     mMainStack->realStartActivityLocked(NULL, app);
 }

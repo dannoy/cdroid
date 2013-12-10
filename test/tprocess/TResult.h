@@ -20,8 +20,8 @@ namespace com {
 
                     int describeContents();
                     void writeToParcel(Parcel *out, int flags);
-                    TResult *createFromParcel(Parcel& source);
-                    void readFromParcel(Parcel& source);
+                    TResult *createFromParcel(const Parcel& source);
+                    void readFromParcel(const Parcel& source);
                     std::vector<Parcelable *> newArray(int size);
 
                 public:

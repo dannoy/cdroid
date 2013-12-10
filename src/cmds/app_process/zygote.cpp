@@ -67,6 +67,7 @@ int Zygote::handleZygoteClient(int fd)
     pid = fork();
 
     if (pid == 0) {
+        Looper::clear();
         for(int i = 1; i < mArgc; ++i) {
             memset(mArgv[i], 0, strlen(mArgv[i]));
         }

@@ -10,8 +10,8 @@ public:
     ActivityInfo(String8 name, String8 filename);
     int describeContents();
     void writeToParcel(Parcel *out, int flags);
-    ActivityInfo *createFromParcel(Parcel& source);
-    void readFromParcel(Parcel& source);
+    ActivityInfo *createFromParcel(const Parcel& source);
+    void readFromParcel(const Parcel& source);
     std::vector<Parcelable *> newArray(int size);
 
     String8& getName() {

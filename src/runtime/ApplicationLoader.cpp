@@ -22,7 +22,7 @@ ApplicationLoader::ApplicationLoader()
 {
 }
 
-int ApplicationLoader::handleFile(const char *filename, ApplicationManifest **am)
+int handleFile(const char *filename, ApplicationManifest **am)
 {
     int status;
     void *handle;
@@ -100,6 +100,27 @@ int ApplicationLoader::loadApplications(sp<ApplicationLoaderCallback> callback)
     }
     closedir(dir);
     return 0;
+}
+
+ActivityLoader::ActivityLoader()
+{
+}
+
+ActivityManifest* ActivityLoader::loadActivity(String8 filename, String8 activityName)
+{
+    ApplicationManifest *app = NULL;
+    handleFile(filename, &app);
+
+    if(app) {
+        ActivityManifest *am = app->activity;
+        while(am) {
+            if(am->name == activityName){
+                return am;
+            }
+        }
+    }
+
+    return NULL;
 }
 
 };

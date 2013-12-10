@@ -15,8 +15,8 @@ public:
         : Handler(looper)
     {
     }
-    virtual void handleMessage(const Message& message) {
-        switch(message.what) {
+    virtual void handleMessage(const sp<Message>& message) {
+        switch(message->what) {
         }
     }
 };
@@ -109,12 +109,14 @@ int ActivityStack::startActivityLocked(sp<ActivityRecord> r, sp<ActivityRecord> 
 
     sp<ProcessRecord> app = mService->getProcessRecordLocked(r->mActivityInfo->mApplicationName);
 
+    // Add before start process
+    mHistory.push_back(r);
+
     if(app == NULL) {
         mService->startProcessLocked(r->mActivityInfo->mApplicationName);
         return 0;
     }
 
-    mHistory.push_back(r);
 
     return realStartActivityLocked(r, app);
 }
@@ -133,6 +135,7 @@ int ActivityStack::realStartActivityLocked(sp<ActivityRecord> r, sp<ProcessRecor
     if(r == NULL) {
         ALOGE("No activity request process pid %d", app->pid);
     }
+    //ALOGI("Activity %s request process pid %d started", r->mActivityInfo->mName.string(), app->pid);
 
     app->thread->scheduleLaunchActivity(r->mActivityInfo);
     return 0;

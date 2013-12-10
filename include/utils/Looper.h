@@ -37,7 +37,7 @@ namespace android {
 /**
  * A message that can be posted to a Looper.
  */
-struct Message {
+struct Message : public RefBase{
     Message() : what(0) { }
     Message(int what) : what(what) { }
 
@@ -62,7 +62,7 @@ public:
     /**
      * Handles a message.
      */
-    virtual void handleMessage(const Message& message) = 0;
+    virtual void handleMessage(const sp<Message>& message) = 0;
 };
 
 
@@ -75,7 +75,7 @@ protected:
 
 public:
     WeakMessageHandler(const wp<MessageHandler>& handler);
-    virtual void handleMessage(const Message& message);
+    virtual void handleMessage(const sp<Message>& message);
 
 private:
     wp<MessageHandler> mHandler;
@@ -256,7 +256,7 @@ public:
      * The handler must not be null.
      * This method can be called on any thread.
      */
-    void sendMessage(const sp<MessageHandler>& handler, const Message& message);
+    void sendMessage(const sp<MessageHandler>& handler, const sp<Message>& message);
 
     /**
      * Enqueues a message to be processed by the specified handler after all pending messages
@@ -267,7 +267,7 @@ public:
      * This method can be called on any thread.
      */
     void sendMessageDelayed(nsecs_t uptimeDelay, const sp<MessageHandler>& handler,
-            const Message& message);
+            const sp<Message>& message);
 
     /**
      * Enqueues a message to be processed by the specified handler after all pending messages
@@ -278,7 +278,7 @@ public:
      * This method can be called on any thread.
      */
     void sendMessageAtTime(nsecs_t uptime, const sp<MessageHandler>& handler,
-            const Message& message);
+            const sp<Message>& message);
 
     /**
      * Removes all messages for the specified handler from the queue.
@@ -336,12 +336,12 @@ private:
         MessageEnvelope() : uptime(0) { }
 
         MessageEnvelope(nsecs_t uptime, const sp<MessageHandler> handler,
-                const Message& message) : uptime(uptime), handler(handler), message(message) {
+                const sp<Message>& message) : uptime(uptime), handler(handler), message(message) {
         }
 
         nsecs_t uptime;
         sp<MessageHandler> handler;
-        Message message;
+        sp<Message> message;
     };
 
     const bool mAllowNonCallbacks; // immutable

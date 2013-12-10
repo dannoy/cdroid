@@ -21,7 +21,7 @@ namespace com {
                 return 0;
             }
 
-            TResult *TResult::createFromParcel(Parcel& source){
+            TResult *TResult::createFromParcel(const Parcel& source){
                 String8 err = source.readString8();
                 String8 ou = source.readString8();
                 int st = source.readInt32();
@@ -29,7 +29,7 @@ namespace com {
                 //return NULL;
             }
 
-            void TResult::readFromParcel(Parcel& source) {
+            void TResult::readFromParcel(const Parcel& source) {
                 this->mStderrStr =  source.readString8();
                 this->mStdoutStr =  source.readString8();
                 this->mStatus =  source.readInt32();

@@ -2,6 +2,7 @@
 #define _RUNTIME_APPLICATION_THREAD_H
 
 #include <runtime/common.h>
+#include <runtime/ActivityInfo.h>
 
 namespace cdroid{
 
@@ -10,6 +11,7 @@ public:
     DECLARE_META_INTERFACE(ApplicationThread);
     virtual void schedulePauseActivity(sp<IBinder> token) = 0;
     virtual void bindApplication(String8 appName) = 0;
+    virtual void scheduleLaunchActivity(sp<ActivityInfo> ai) = 0;
 };
 
 class BnApplicationThread : public BnInterface<IApplicationThread> {

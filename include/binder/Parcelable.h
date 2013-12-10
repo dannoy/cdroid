@@ -85,7 +85,7 @@ class Parcelable : public virtual RefBase{
      * @return Returns a new instance of the Parcelable class.
      */
     /*virtual Parcelable *createFromParcel(Parcel& source) = 0;*/
-    Parcelable *createFromParcel(Parcel& source);
+    Parcelable *createFromParcel(const Parcel& source);
     /**
      * Create a new instance of the Parcelable class, instantiating it
      * from the given Parcel whose data had previously been written by
@@ -96,7 +96,7 @@ class Parcelable : public virtual RefBase{
      * @return Returns a new instance of the Parcelable class.
      */
     /*virtual void readFromParcel(Parcel& source) = 0;*/
-    void readFromParcel(Parcel& source);
+    void readFromParcel(const Parcel& source);
 
     /**
      * Create a new array of the Parcelable class.

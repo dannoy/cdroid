@@ -18,7 +18,7 @@ int ActivityInfo::describeContents() {
     return 0;
 }
 
-ActivityInfo *ActivityInfo::createFromParcel(Parcel& source){
+ActivityInfo *ActivityInfo::createFromParcel(const Parcel& source){
     String8 name = source.readString8();
     String8 appname = source.readString8();
     String8 f = source.readString8();
@@ -28,7 +28,7 @@ ActivityInfo *ActivityInfo::createFromParcel(Parcel& source){
     return ai;
 }
 
-void ActivityInfo::readFromParcel(Parcel& source) {
+void ActivityInfo::readFromParcel(const Parcel& source) {
     this->mName =  source.readString8();
     this->mApplicationName =  source.readString8();
     this->mFilename =  source.readString8();

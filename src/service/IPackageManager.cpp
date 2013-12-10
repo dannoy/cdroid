@@ -64,6 +64,7 @@ int BnPackageManager::onTransact(uint32_t code, const Parcel& data, Parcel* repl
     switch(code) {
         case TRANSACTION_getActivityInfo:
             {
+                CHECK_INTERFACE(IPackageManager, data, reply);
                 String8 name = data.readString8();
                 sp<ActivityInfo> _result = getActivityInfo(name);
                 if(_result != NULL) {
@@ -77,6 +78,7 @@ int BnPackageManager::onTransact(uint32_t code, const Parcel& data, Parcel* repl
             break;
         case TRANSACTION_resolveActivityInfo:
             {
+                CHECK_INTERFACE(IPackageManager, data, reply);
                 String8 name = data.readString8();
                 sp<ActivityInfo> _result = resolveActivityInfo(name);
                 if(_result != NULL) {

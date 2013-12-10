@@ -14,6 +14,7 @@
 #include <binder/Parcel.h>
 #include <binder/Parcelable.h>
 #include <binder/IServiceManager.h>
+#include <binder/IPCThreadState.h>
 
 namespace cdroid {
     using android::sp;
@@ -25,6 +26,7 @@ namespace cdroid {
     using android::String16;
     using android::RefBase;
     using android::IInterface;
+    using android::IPCThreadState;
     using android::IBinder;
     using android::BnInterface;
     using android::BpInterface;

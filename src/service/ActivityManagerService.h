@@ -12,22 +12,26 @@ class ActivityManagerService : public ActivityManagerNative {
 public:
     ActivityManagerService();
     void systemReady();
-
-// IActivityManager interfaces
-public:
-    int attachApplication(sp<IApplicationThread> appThread);
     bool startHomeActivityLocked();
     sp<ProcessRecord> getRecordForAppLocked(sp<IApplicationThread> thread);
     sp<ProcessRecord> getProcessRecordLocked(String8 appName);
     sp<ProcessRecord> startProcessLocked(String8 appName);
 
-private:
+// IActivityManager interfaces
+public:
+    virtual void attachApplication(sp<IBinder> appThread);
 
+private:
+    void attachApplicationLocked(sp<IBinder> appThread, pid_t callingPid);
+
+private:
     pid_t MY_PID;
     sp<ActivityStack> mMainStack;
     String8 mTopAction;
     Vector<sp<ProcessRecord> > mProcesses;
     Vector<sp<ProcessRecord> > mProcessesPending;
+
+    Mutex mMutex;
 
 public:
     static int main();

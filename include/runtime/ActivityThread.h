@@ -23,6 +23,7 @@ private:
     class ApplicationThread : public BnApplicationThread {
     public:
         virtual void schedulePauseActivity(sp<IBinder> token);
+        virtual void bindApplication(String8 appName);
     };
 
     int attach(bool system);
@@ -30,7 +31,7 @@ private:
 private:
     sp<H> mH;
     bool mSystemThread;
-    sp<IApplicationThread> mAppThread;;
+    sp<ApplicationThread> mAppThread;;
 
 
 // Static

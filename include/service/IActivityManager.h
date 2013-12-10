@@ -8,7 +8,7 @@ namespace cdroid{
 class IActivityManager : public IInterface{
 public:
     DECLARE_META_INTERFACE(ActivityManager);
-    virtual int attachApplication(sp<IApplicationThread> appThread) = 0;
+    virtual void attachApplication(sp<IBinder> appThread) = 0;
 };
 
 class BnActivityManager : public BnInterface<IActivityManager> {

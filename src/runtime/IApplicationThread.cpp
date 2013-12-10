@@ -5,6 +5,7 @@
 namespace cdroid {
 enum {
     TRANSACTION_schedulePauseActivity = (android::IBinder::FIRST_CALL_TRANSACTION + 0),
+    TRANSACTION_bindApplication,
 };
 
 class BpApplicationThread : public BpInterface<IApplicationThread> {
@@ -28,6 +29,21 @@ public:
             // Something is wrong
         }
     }
+    void bindApplication(String8 appName)
+    {
+        Parcel _data;
+        Parcel _reply;
+
+        _data.writeInterfaceToken(this->getInterfaceDescriptor());
+        _data.writeString8(appName);
+        remote()->transact(TRANSACTION_bindApplication, _data, &_reply, 0);
+        _reply.readExceptionCode();
+        if ((0!=_reply.readInt32())) {
+        }
+        else {
+            // Something is wrong
+        }
+    }
 
 };
 
@@ -39,8 +55,18 @@ int BnApplicationThread::onTransact(uint32_t code, const Parcel& data, Parcel* r
     switch(code) {
         case TRANSACTION_schedulePauseActivity:
             {
+                CHECK_INTERFACE(IApplicationThread, data, reply);
                 sp<IBinder> _arg0 = data.readStrongBinder();
                 schedulePauseActivity(_arg0);
+                reply->writeInt32(1);
+                return true;
+            }
+            break;
+        case TRANSACTION_bindApplication:
+            {
+                CHECK_INTERFACE(IApplicationThread, data, reply);
+                String8 _arg0 = data.readString8();
+                bindApplication(_arg0);
                 reply->writeInt32(1);
                 return true;
             }

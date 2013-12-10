@@ -48,8 +48,40 @@ ActivityManagerService::ActivityManagerService()
     MY_PID = Process::myPid();
 }
 
-int ActivityManagerService::attachApplication(sp<IApplicationThread> appThread)
+void ActivityManagerService::attachApplication(sp<IBinder> appThread)
 {
+    AutoMutex _l(mMutex);
+
+    int pid = IPCThreadState::self()->getCallingPid();
+    ALOGI("attach request from pid %d %p", pid, appThread.get());
+    int64_t origId = IPCThreadState::self()->clearCallingIdentity(); 
+    attachApplicationLocked(appThread, pid);
+    IPCThreadState::self()->restoreCallingIdentity(origId); 
+}
+
+void ActivityManagerService::attachApplicationLocked(sp<IBinder> appThread, int callingPid)
+{
+    sp<ProcessRecord> app;
+    for(Vector<sp<ProcessRecord> >::iterator it = mProcessesPending.begin(); it != mProcesses.end(); ++it) {
+        if((*it)->pid == callingPid) {
+            app = *it;
+            mProcessesPending.erase(it);
+        }
+    }
+
+    if(app == NULL) {
+        ALOGE("Omit unknown attach request from pid %d, killing", callingPid);
+        Process::killProcessByPid(callingPid);
+        return;
+    }
+
+    app->thread = interface_cast<IApplicationThread>(appThread);
+
+    if(app->thread != NULL) {
+        app->thread->bindApplication(app->name);
+    }
+
+    mMainStack->realStartActivityLocked(NULL, app);
 }
 
 int ActivityManagerService::main()

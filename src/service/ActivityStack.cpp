@@ -114,11 +114,27 @@ int ActivityStack::startActivityLocked(sp<ActivityRecord> r, sp<ActivityRecord> 
         return 0;
     }
 
+    mHistory.push_back(r);
+
     return realStartActivityLocked(r, app);
 }
 
 int ActivityStack::realStartActivityLocked(sp<ActivityRecord> r, sp<ProcessRecord> app)
 {
+    if(r == NULL && app != NULL) {
+        for(Vector<sp<ActivityRecord> >::iterator it = mHistory.begin(); it != mHistory.end(); ++it) {
+            if((*it)->mActivityInfo->mApplicationName == app->name) {
+                r = *it;
+                break;
+            }
+        }
+    }
+
+    if(r == NULL) {
+        ALOGE("No activity request process pid %d", app->pid);
+    }
+
+    app->thread->scheduleLaunchActivity(r->mActivityInfo);
     return 0;
 }
 

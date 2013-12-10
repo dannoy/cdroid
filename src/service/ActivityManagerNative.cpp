@@ -5,6 +5,9 @@
 #include <service/IActivityManager.h>
 
 namespace cdroid {
+enum {
+    TRANSACTION_attachApplication = (android::IBinder::FIRST_CALL_TRANSACTION + 0),
+};
 
 class BpActivityManager: public BpInterface<IActivityManager>
 {
@@ -13,8 +16,20 @@ public:
         : BpInterface<IActivityManager>(impl)
     {
     }
-    virtual int attachApplication(sp<IApplicationThread> appThread)
+    virtual void attachApplication(sp<IBinder> appThread)
     {
+        Parcel _data;
+        Parcel _reply;
+
+        _data.writeInterfaceToken(this->getInterfaceDescriptor());
+        _data.writeStrongBinder(appThread);
+        remote()->transact(TRANSACTION_attachApplication, _data, &_reply, 0);
+        _reply.readExceptionCode();
+        if ((0!=_reply.readInt32())) {
+        }
+        else {
+            // ERROR
+        }
     }
 };
 
@@ -40,6 +55,15 @@ sp<IActivityManager> ActivityManagerNative::getDefault()
 int BnActivityManager::onTransact(uint32_t code, const Parcel& data, Parcel* reply,uint32_t flags)
 {
     switch(code) {
+        case TRANSACTION_attachApplication:
+            {
+                CHECK_INTERFACE(IActivityManager, data, reply);
+                sp<IBinder> _arg0 = data.readStrongBinder();
+                attachApplication(_arg0);
+                reply->writeInt32(1);
+                return true;
+            }
+            break;
     }
 
     return BBinder::onTransact(code, data, reply, flags);

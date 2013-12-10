@@ -9,6 +9,7 @@ class IApplicationThread : public IInterface{
 public:
     DECLARE_META_INTERFACE(ApplicationThread);
     virtual void schedulePauseActivity(sp<IBinder> token) = 0;
+    virtual void bindApplication(String8 appName) = 0;
 };
 
 class BnApplicationThread : public BnInterface<IApplicationThread> {

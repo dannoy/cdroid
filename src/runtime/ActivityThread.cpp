@@ -87,6 +87,10 @@ void ActivityThread::ApplicationThread::schedulePauseActivity(sp<IBinder> token)
 {
 }
 
+void ActivityThread::ApplicationThread::bindApplication(String8 appName)
+{
+}
+
 
 };
 

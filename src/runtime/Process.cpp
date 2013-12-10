@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <signal.h>
 
 namespace cdroid {
 
@@ -97,6 +98,11 @@ uid_t Process::myUid()
 uid_t Process::myEUid()
 {
     return geteuid();
+}
+
+void Process::killProcessByPid(pid_t pid)
+{
+    kill(pid, SIGKILL);
 }
 
 };

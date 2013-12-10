@@ -23,10 +23,10 @@ public:
     bool resumeTopActivityLocked(sp<ActivityRecord> prev);
     int startActivityLocked(sp<IApplicationThread> caller, sp<Intent> intent, sp<IBinder> resultTo, int callingPid, int callingUid, int request);
     int startActivityLocked(sp<ActivityRecord> r, sp<ActivityRecord> sourceRecord);
+    int realStartActivityLocked(sp<ActivityRecord> r, sp<ProcessRecord> app);
 private:
     sp<ActivityRecord> topRunningActivityLocked(sp<ActivityRecord> notTop);
     int indexOfTokenLocked(sp<IBinder> token);
-    int realStartActivityLocked(sp<ActivityRecord> r, sp<ProcessRecord> app);
 
     sp<ActivityManagerService>  mService;
     sp<Context>                 mContext;

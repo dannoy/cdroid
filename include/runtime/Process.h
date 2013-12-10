@@ -16,6 +16,8 @@ public:
     static uid_t myUid();
     static uid_t myEUid();
 
+    static void killProcessByPid(pid_t pid);
+
 private:
     static int startViaZygoteArgs(Vector<String8>& args, pid_t *pid);
 };

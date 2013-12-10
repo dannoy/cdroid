@@ -24,6 +24,7 @@ ActivityRecord::Token::Token(sp<ActivityRecord> r)
 
 int ActivityRecord::BnApplicationToken::onTransact(uint32_t code, const Parcel& data, Parcel* reply,uint32_t flags)
 {
+    //CHECK_INTERFACE(IApplicationToken, data, reply);
     switch(code) {
     }
 

@@ -63,6 +63,13 @@ void Activity::onKeyEvent(sp<KeyEvent> keyEvent)
     str[1] = '\0';
     sp<Text> txt = new Text(str);
 
+    if(str[0] == '\n') {
+        execInternalCommand();
+        mCmd.clear();
+    } else {
+        mCmd.append(str);
+    }
+
     WindowManager wm;
     wm.displayText(txt);
 }
@@ -75,6 +82,11 @@ Activity::ActivityWindow::ActivityWindow(sp<Activity> activity)
 void Activity::ActivityWindow::onKeyEvent(sp<KeyEvent> keyEvent)
 {
     mActivity->onKeyEvent(keyEvent);
+}
+
+int Activity::execInternalCommand()
+{
+    ALOGI("exec command: [%s]", mCmd.string());
 }
 
 };

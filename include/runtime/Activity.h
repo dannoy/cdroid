@@ -40,13 +40,16 @@ private:
     };
 
 private:
+    int execInternalCommand();
+
+
+private:
     sp<Intent> mIntent;
     sp<ActivityThread> mThread;
     sp<IBinder> mToken;
     sp<ActivityInfo> mActivityInfo;
     sp<ActivityWindow> mWindow;
-
-
+    String8 mCmd;
 
 };
 

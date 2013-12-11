@@ -24,7 +24,7 @@
 #include "ActivityManagerService.h"
 #include "PackageManagerService.h"
 #include "WindowManagerService.h"
-#include "DisplayManagerService.h"
+//#include "DisplayManagerService.h"
 
 
 namespace cdroid {
@@ -46,7 +46,7 @@ public:
 
         PackageManagerService::instantiate();
         WindowManagerService::instantiate();
-        DisplayManagerService::instantiate();
+        //DisplayManagerService::instantiate();
 
         ActivityManagerService::setSystemProcess();
 

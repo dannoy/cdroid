@@ -7,7 +7,7 @@
 #include <termios.h>
 
 #include "service/WindowManager.h"
-//#include "DisplayManagerService.h"
+#include "DisplayManagerService.h"
 
 
 namespace cdroid {
@@ -64,9 +64,9 @@ int input_init()
 
 int output_init()
 {
-    ALOGD("output_init");
-    //DisplayManagerService::instantiate();
-    ALOGD("output_init over");
+    // Wait servermanager startup
+    sleep(1);
+    DisplayManagerService::instantiate();
     return 0;
 }
 }

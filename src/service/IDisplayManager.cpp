@@ -41,11 +41,9 @@ int BnDisplayManager::onTransact(uint32_t code, const Parcel& data, Parcel* repl
     switch(code) {
         case TRANSACTION_displayText:
             {
-                ALOGI("been request display");
                 CHECK_INTERFACE(IDisplayManager, data, reply);
                 sp<Text> txt;
                 txt = txt->createFromParcel(data);
-                ALOGI("been request display %s", txt->getCharSequence());
                 int result = displayText(txt);
                 reply->writeInt32(1);
                 reply->writeInt32(result);

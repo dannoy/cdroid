@@ -85,7 +85,7 @@ void WindowManagerService::handleOnKeyEventLocked(sp<KeyEvent> keyEvent)
 
 void WindowManagerService::handleDisplayTextLocked(sp<Text> txt)
 {
-    ALOGI("handleDisplayText %s", txt->getCharSequence());
+    //ALOGI("handleDisplayText %s", txt->getCharSequence());
     DisplayManager disp;
     disp.displayText(txt);
 }

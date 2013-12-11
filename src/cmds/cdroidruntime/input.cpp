@@ -6,6 +6,10 @@
 #include <errno.h>
 #include <termios.h>
 
+#include "service/WindowManager.h"
+//#include "DisplayManagerService.h"
+
+
 namespace cdroid {
 
 #define TC_VTIME 1
@@ -44,13 +48,25 @@ int input_init()
 {
     _set_disp_mode();
     char buf[TC_MIN_CHAR];
+    WindowManager wm;
+    sp<KeyEvent> e = new KeyEvent(-1, -1);
     while(1) {
         int n = read(0, buf, sizeof(buf));
         for(int i = 0; i < n; ++i) {
-            ALOGD("char (%c:%x)", buf[i], buf[i]);
+            //ALOGD("char (%c:%x)", buf[i], buf[i]);
             //fprintf(stderr,"char (%c:%x)\n", buf[i], buf[i]);
-            printf("char (%c:%x)\n", buf[i], buf[i]);
+            //printf("char (%c:%x)\n", buf[i], buf[i]);
+            e->setCode(buf[i]);
+            wm.onKeyEvent(e);
         }
     };
+}
+
+int output_init()
+{
+    ALOGD("output_init");
+    //DisplayManagerService::instantiate();
+    ALOGD("output_init over");
+    return 0;
 }
 }

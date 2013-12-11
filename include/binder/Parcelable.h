@@ -37,7 +37,7 @@
  * }</pre>
  */
 namespace android{
-class Parcelable : public virtual RefBase{
+class Parcelable : public RefBase{
     public:
     /**
      * Flag for use with {@link #writeToParcel}: the object being written

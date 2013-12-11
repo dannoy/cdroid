@@ -14,6 +14,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <runtime/ActivityInfo.h>
+
 #include "runtime/Looper.h"
 
 namespace cdroid {
@@ -45,9 +47,10 @@ Handler::Handler(sp<Looper> l)
     mLooper = l;
 }
 
+
 void Handler::handleMessage(const sp<android::Message>& message)
 {
-    ALOGI("handleMessage");
+    //ALOGI("handleMessage");
     sp<Message> msg = reinterpret_cast<Message*>(message.get());
     handleMessage(msg);
 }

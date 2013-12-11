@@ -5,7 +5,10 @@
 
 
 class Launcher : public Activity {
-    virtual void onCreate(Bundle savedInstanceState);
+public:
+    Launcher(sp<Intent> intent);
+
+    virtual void onCreate(sp<Bundle> savedInstanceState);
     virtual void onStart();
     virtual void onResume();
     virtual void onPause();
@@ -13,33 +16,46 @@ class Launcher : public Activity {
     virtual void onDestroy();
 };
 
-void Launcher::onCreate(Bundle savedInstanceState)
+Launcher::Launcher(sp<Intent> intent)
+    : Activity(intent)
 {
+    ALOGI("constructor");
+}
+
+void Launcher::onCreate(sp<Bundle> savedInstanceState)
+{
+
+    Activity::onCreate(savedInstanceState);
 }
 
 void Launcher::onStart()
 {
+    Activity::onStart();
 }
 
 void Launcher::onResume()
 {
+    Activity::onResume();
 }
 
 void Launcher::onPause()
 {
+    Activity::onPause();
 }
 
 void Launcher::onStop()
 {
+    Activity::onStop();
 }
 
 void Launcher::onDestroy()
 {
+    Activity::onDestroy();
 }
 
-static Activity *createLauncherActivity()
+static Activity *createLauncherActivity(sp<Intent> intent)
 {
-    return new Launcher;
+    return new Launcher(intent);
 }
 
 static struct cdroid::ActivityManifest launcherManifest= {

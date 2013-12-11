@@ -28,7 +28,7 @@ private:
     String8 mName;
 };
 
-class Intent : public RefBase {
+class Intent : public Parcelable {
 public:
     static String8 ACTION_MAIN;
 
@@ -56,6 +56,12 @@ public:
     {
         return mComponent;
     }
+
+    int describeContents();
+    void writeToParcel(Parcel *out, int flags);
+    Intent *createFromParcel(const Parcel& source);
+    void readFromParcel(const Parcel& source);
+    std::vector<Parcelable *> newArray(int size);
 
 private:
     String8 mAction;

@@ -137,7 +137,7 @@ int ActivityStack::realStartActivityLocked(sp<ActivityRecord> r, sp<ProcessRecor
     }
     //ALOGI("Activity %s request process pid %d started", r->mActivityInfo->mName.string(), app->pid);
 
-    app->thread->scheduleLaunchActivity(r->mActivityInfo);
+    app->thread->scheduleLaunchActivity(r->mActivityInfo, r->mToken, r->mIntent);
     return 0;
 }
 

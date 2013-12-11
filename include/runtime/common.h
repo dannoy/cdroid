@@ -37,6 +37,7 @@ namespace cdroid {
     using android::IServiceManager;
     using android::interface_cast;
     using android::BasicHashtable;
+    using android::status_t;
 
 template <class T>
     class Singleton

@@ -45,13 +45,15 @@ public:
         }
     }
 
-    void scheduleLaunchActivity(sp<ActivityInfo> ai)
+    void scheduleLaunchActivity(sp<ActivityInfo> ai, sp<IBinder> token, sp<Intent> intent)
     {
         Parcel _data;
         Parcel _reply;
 
         _data.writeInterfaceToken(this->getInterfaceDescriptor());
         ai->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+        _data.writeStrongBinder(token);
+        intent->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
         remote()->transact(TRANSACTION_scheduleLaunchActivity, _data, &_reply, 0);
         _reply.readExceptionCode();
         if ((0!=_reply.readInt32())) {
@@ -91,8 +93,12 @@ int BnApplicationThread::onTransact(uint32_t code, const Parcel& data, Parcel* r
             {
                 CHECK_INTERFACE(IApplicationThread, data, reply);
                 sp<ActivityInfo> _arg0;
+                sp<IBinder> _arg1;
+                sp<Intent> _arg2;
                 _arg0 = _arg0->createFromParcel(data);
-                scheduleLaunchActivity(_arg0);
+                _arg1 = data.readStrongBinder();
+                _arg2 = _arg2->createFromParcel(data);
+                scheduleLaunchActivity(_arg0, _arg1, _arg2);
                 reply->writeInt32(1);
                 return true;
             }

@@ -11,7 +11,7 @@ struct ActivityManifest {
         String8               action;
         String8               category;
         ActivityManifest    *next;
-        Activity*           (*createActivity)();
+        Activity*           (*createActivity)(sp<Intent> intent);
 };
 
 struct ApplicationManifest {

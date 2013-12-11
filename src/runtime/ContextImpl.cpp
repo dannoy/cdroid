@@ -13,13 +13,20 @@ ContextImpl::ContextImpl()
 ContextImpl* ContextImpl::createSystemContext(ActivityThread *mainThread)
 {
     ContextImpl *context = new ContextImpl;
-    context->init(mainThread);
+    context->init(NULL, NULL,mainThread);
     return context;
 }
 
-void ContextImpl::init(ActivityThread *mainThread)
+void ContextImpl::init(ActivityManifest* amf, sp<IBinder> token, sp<ActivityThread> thread)
 {
-    mMainThread = mainThread;
+    mActivityMF = amf;
+    mToken = token;
+    mThread= thread;
+}
+
+void ContextImpl::setOuterContext(sp<Context> context)
+{
+    mOuterContext = context;
 }
 
 

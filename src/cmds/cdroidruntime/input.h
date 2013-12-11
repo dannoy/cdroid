@@ -3,6 +3,7 @@
 
 namespace cdroid {
 extern int input_init();
+extern int output_init();
 
 };
 #endif

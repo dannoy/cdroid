@@ -292,9 +292,7 @@ Done: ;
                 ALOGD("%p ~ pollOnce - sending message: handler=%p, what=%d",
                         this, handler.get(), message.what);
 #endif
-            ALOGI("handleMessage 00000000000000000000");
                 handler->handleMessage(message);
-            ALOGI("handleMessage 111111111111111111111");
             } // release handler
 
             mLock.lock();

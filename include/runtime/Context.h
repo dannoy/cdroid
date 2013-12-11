@@ -7,10 +7,15 @@ namespace cdroid {
 
 class Context : public RefBase {
 public:
+
 };
 
 class ContextWrapper : public Context {
 public:
+    int attachBaseContext(sp<Context> base);
+
+private:
+    sp<Context> mBase;
 };
 
 };

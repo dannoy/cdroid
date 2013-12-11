@@ -13,7 +13,6 @@ public:
 
 class BnActivityManager : public BnInterface<IActivityManager> {
 public:
-
     virtual int onTransact(uint32_t code, const Parcel& data, Parcel* reply,uint32_t flags);
 };
 

@@ -49,6 +49,8 @@ int BnWindow::onTransact(uint32_t code, const Parcel& data, Parcel* reply,uint32
             break;
 
     }
+
+    return BBinder::onTransact(code, data, reply, flags);
 }
 
 enum {
@@ -70,7 +72,6 @@ public:
         Parcel _data;
         Parcel _reply;
 
-    ALOGI("request onkeyevent");
         _data.writeInterfaceToken(this->getInterfaceDescriptor());
         keyEvent->writeToParcel(&_data, 0);
         remote()->transact(TRANSACTION_wmOnKeyEvent, _data, &_reply, 0);
@@ -105,7 +106,6 @@ public:
         Parcel _data;
         Parcel _reply;
         int _result = -1;
-    ALOGI("request displayText");
         _data.writeInterfaceToken(this->getInterfaceDescriptor());
         txt->writeToParcel(&_data, 0);
         remote()->transact(TRANSACTION_wmDisplayText, _data, &_reply, 0);
@@ -159,6 +159,7 @@ int BnWindowManager::onTransact(uint32_t code, const Parcel& data, Parcel* reply
             break;
 
     }
+    return BBinder::onTransact(code, data, reply, flags);
 }
 
 };

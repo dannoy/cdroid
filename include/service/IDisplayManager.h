@@ -9,7 +9,7 @@ namespace cdroid {
 class IDisplayManager : public IInterface {
 public:
     DECLARE_META_INTERFACE(DisplayManager);
-    /*virtual int displayText(sp<Text> txt) = 0;*/
+    virtual int displayText(sp<Text> txt) = 0;
 
 };
 

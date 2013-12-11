@@ -11,30 +11,30 @@ class DisplayManagerService : public BnDisplayManager {
 public:
     DisplayManagerService();
     static void instantiate();
-    /*void handleDisplayTextLocked(sp<Text> txt);*/
+    void handleDisplayTextLocked(sp<Text> txt);
 
     // interfaces
-    /*virtual int displayText(sp<Text> txt);*/
+    virtual int displayText(sp<Text> txt);
 
-    /*private:*/
-    /*class H : public Handler {*/
-    /*public:*/
-    /*H(sp<DisplayManagerService> disp, sp<Looper> looper)*/
-    /*: mDisp(disp),*/
-    /*Handler(looper)*/
-    /*{*/
-    /*}*/
-    /*enum {*/
-    /*DISPLAY_TEXT = 1,*/
-    /*};*/
-    /*virtual void handleMessage(const sp<Message>& message);*/
-    /*private:*/
-    /*sp<DisplayManagerService> mDisp;*/
-    /*};*/
+private:
+    class H : public Handler {
+        public:
+            H(sp<DisplayManagerService> disp, sp<Looper> looper)
+                : mDisp(disp),
+                Handler(looper)
+        {
+        }
+            enum {
+                DISPLAY_TEXT = 1,
+            };
+            virtual void handleMessage(const sp<Message>& message);
+        private:
+            sp<DisplayManagerService> mDisp;
+    };
 
-    /*private:*/
-    /*sp<Looper> mLooper;*/
-    /*sp<Handler> mH;*/
+private:
+    sp<Looper> mLooper;
+    sp<Handler> mH;
 };
 
 };

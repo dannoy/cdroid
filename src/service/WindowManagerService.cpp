@@ -1,8 +1,9 @@
 #define LOG_TAG "WindowManagerService"
 #include <cutils/log.h>
 
-//#include <service/DisplayManager.h>
+#include <service/DisplayManager.h>
 #include "WindowManagerService.h"
+#include "PackageManagerService.h"
 
 namespace cdroid {
 class WThread : public Thread {
@@ -85,8 +86,8 @@ void WindowManagerService::handleOnKeyEventLocked(sp<KeyEvent> keyEvent)
 void WindowManagerService::handleDisplayTextLocked(sp<Text> txt)
 {
     ALOGI("handleDisplayText %s", txt->getCharSequence());
-    //DisplayManager disp;
-    //disp.displayText(txt);
+    DisplayManager disp;
+    disp.displayText(txt);
 }
 
 void WindowManagerService::H::handleMessage(const sp<Message>& message)

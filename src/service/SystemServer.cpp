@@ -24,7 +24,7 @@
 #include "ActivityManagerService.h"
 #include "PackageManagerService.h"
 #include "WindowManagerService.h"
-//#include "DisplayManagerService.h"
+#include "DisplayManagerService.h"
 
 
 namespace cdroid {
@@ -44,16 +44,13 @@ public:
 
         ActivityManagerService::main();
 
-        //PackageManagerService::instantiate();
-        //WindowManagerService::instantiate();
-        //android::defaultServiceManager()->addService(android::String16("display"), new WindowManagerService());
-        //android::defaultServiceManager()->addService(android::String16("package"), new PackageManagerService());
-    android::defaultServiceManager()->addService(android::String16("package"), new WindowManagerService());
-        //DisplayManagerService::instantiate();
+        PackageManagerService::instantiate();
+        WindowManagerService::instantiate();
+        DisplayManagerService::instantiate();
 
         ActivityManagerService::setSystemProcess();
 
-        //ActivityManagerService::self()->systemReady();
+        ActivityManagerService::self()->systemReady();
 
         Looper::loop();
 

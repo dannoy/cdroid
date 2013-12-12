@@ -6,6 +6,7 @@ enum {
     TRANSACTION_schedulePauseActivity = (android::IBinder::FIRST_CALL_TRANSACTION + 0),
     TRANSACTION_bindApplication,
     TRANSACTION_scheduleLaunchActivity,
+    TRANSACTION_scheduleCreateService,
 };
 
 class BpApplicationThread : public BpInterface<IApplicationThread> {
@@ -63,6 +64,24 @@ public:
         }
     }
 
+    void scheduleCreateService(sp<ServiceInfo> si, sp<IBinder> token, sp<Intent> intent)
+    {
+        Parcel _data;
+        Parcel _reply;
+
+        _data.writeInterfaceToken(this->getInterfaceDescriptor());
+        si->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+        _data.writeStrongBinder(token);
+        intent->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+        remote()->transact(TRANSACTION_scheduleCreateService, _data, &_reply, 0);
+        _reply.readExceptionCode();
+        if ((0!=_reply.readInt32())) {
+        }
+        else {
+            // Something is wrong
+        }
+    }
+
 };
 
 
@@ -99,6 +118,20 @@ int BnApplicationThread::onTransact(uint32_t code, const Parcel& data, Parcel* r
                 _arg1 = data.readStrongBinder();
                 _arg2 = _arg2->createFromParcel(data);
                 scheduleLaunchActivity(_arg0, _arg1, _arg2);
+                reply->writeInt32(1);
+                return true;
+            }
+            break;
+        case TRANSACTION_scheduleCreateService:
+            {
+                CHECK_INTERFACE(IApplicationThread, data, reply);
+                sp<ServiceInfo> _arg0;
+                sp<IBinder> _arg1;
+                sp<Intent> _arg2;
+                _arg0 = _arg0->createFromParcel(data);
+                _arg1 = data.readStrongBinder();
+                _arg2 = _arg2->createFromParcel(data);
+                scheduleCreateService(_arg0, _arg1, _arg2);
                 reply->writeInt32(1);
                 return true;
             }

@@ -2,6 +2,7 @@
 #define _RUNTIME_APPLICATION_H
 
 #include <runtime/Activity.h>
+#include <runtime/Service.h>
 
 
 namespace cdroid {
@@ -14,11 +15,20 @@ struct ActivityManifest {
         Activity*           (*createActivity)(sp<Intent> intent);
 };
 
+struct ServiceManifest {
+        String8               name;
+        String8               action;
+        String8               category;
+        ServiceManifest    *next;
+        Service*           (*createService)(sp<Intent> intent);
+};
+
 struct ApplicationManifest {
     String8 name;
     // shared lib handle
     void *dso;
     ActivityManifest *activity;
+    ServiceManifest *service;
 };
 
 class ApplicationLoaderCallback : public RefBase{
@@ -37,7 +47,12 @@ class ActivityLoader : public RefBase{
 public:
     ActivityLoader();
     static ActivityManifest* loadActivity(String8 filename, String8 activityName);
-private:
+};
+
+class ServiceLoader : public RefBase{
+public:
+    ServiceLoader();
+    static ServiceManifest* loadService(String8 filename, String8 serviceName);
 };
 
 #define APPLICATION_INFO_SYM appinfo

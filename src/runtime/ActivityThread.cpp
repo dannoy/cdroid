@@ -143,6 +143,41 @@ int ActivityThread::callActivityOnDestroy(sp<Activity> act)
     return 0;
 }
 
+int ActivityThread::callServiceOnCreate(sp<Service> srv)
+{
+    srv->onCreate();
+    return 0;
+}
+
+int ActivityThread::callServiceOnStart(sp<Service> srv)
+{
+    srv->onStart();
+    return 0;
+}
+
+int ActivityThread::callServiceOnStartCommand(sp<Service> srv, sp<Intent> intent)
+{
+    srv->onStartCommand(intent);
+    return 0;
+}
+
+sp<IBinder> ActivityThread::callServiceOnBind(sp<Service> srv, sp<Intent> intent)
+{
+    return srv->onBind(intent);
+}
+
+int ActivityThread::callServiceOnUnBind(sp<Service> srv)
+{
+    srv->onUnBind();
+    return 0;
+}
+
+int ActivityThread::callServiceOnDestroy(sp<Service> srv)
+{
+    srv->onDestroy();
+    return 0;
+}
+
 
 sp<Handler> ActivityThread::getMainHandler()
 {
@@ -184,11 +219,24 @@ void ActivityThread::ApplicationThread::bindApplication(String8 appName)
 
 void ActivityThread::ApplicationThread::scheduleLaunchActivity(sp<ActivityInfo> ai, sp<IBinder> token, sp<Intent> intent)
 {
+    //ALOGI("scheduleLaunchActivity");
     sp<ActivityClientRecord> r = new ActivityClientRecord;
     r->mActivityInfo = ai;
     r->mToken = token;
     r->mIntent = intent;
     sp<Message> msg = new Message(H::LAUNCH_ACTIVITY, r);
+    mH->sendMessage(msg);
+    //ALOGI("scheduleLaunchActivity sent over");
+}
+
+void ActivityThread::ApplicationThread::scheduleCreateService(sp<ServiceInfo> ai, sp<IBinder> token, sp<Intent> intent)
+{
+    //ALOGI("scheduleCreateService");
+    sp<ServiceClientRecord> r = new ServiceClientRecord;
+    r->mServiceInfo = ai;
+    r->mToken = token;
+    r->mIntent = intent;
+    sp<Message> msg = new Message(H::CREATE_SERVICE, r);
     mH->sendMessage(msg);
 }
 
@@ -246,8 +294,44 @@ void ActivityThread::schedulePauseActivity(sp<IBinder> token)
     }
 }
 
+void ActivityThread::scheduleCreateService(sp<ServiceClientRecord> r)
+{
+    sp<ServiceInfo> si = r->mServiceInfo;
+    //ALOGI("scheduleCreateService phase II %s %p",si->mName.string(), si.get());
+
+    ServiceManifest* sMF = ServiceLoader::loadService(si->mFilename, si->mName);
+    if(!sMF) {
+        ALOGI("cannot found activity: %s",si->mName.string());
+        return;
+    }
+    ALOGI("scheduleCreateServcie %s found",sMF->name.string());
+    sp<Service> service = sMF->createService(r->mIntent);
+
+    if(service == NULL) {
+        ALOGI("scheduleLaunchActivity create %s failed!!",sMF->name.string());
+        return;
+    }
+
+    r->mService = service;
+
+    sp<ContextImpl> appContext = new ContextImpl();
+
+    appContext->init(sMF, r->mToken, this);
+    appContext->setOuterContext(service);
+
+    service->attach(appContext, this, r->mToken, r->mServiceInfo);
+
+
+    mServices.push_back(r);
+
+    callServiceOnCreate(service);
+    callServiceOnStart(service);
+    callServiceOnStartCommand(service, r->mIntent);
+}
+
 void ActivityThread::H::handleMessage(const sp<Message>& message)
 {
+    //ALOGI("handlemessage");
     switch(message->what) {
         case LAUNCH_ACTIVITY:
             {
@@ -260,6 +344,12 @@ void ActivityThread::H::handleMessage(const sp<Message>& message)
                 sp<IBinderMessageObject> obj = reinterpret_cast<IBinderMessageObject*>(message->obj.get());
                 sp<IBinder> token = obj->mBinder;
                 mThread->schedulePauseActivity(token);
+            }
+            break;
+        case CREATE_SERVICE:
+            {
+                sp<ServiceClientRecord> obj = reinterpret_cast<ServiceClientRecord*>(message->obj.get());
+                mThread->scheduleCreateService(obj);
             }
             break;
     }

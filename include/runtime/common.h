@@ -28,6 +28,7 @@ namespace cdroid {
     using android::IInterface;
     using android::IPCThreadState;
     using android::IBinder;
+    using android::BBinder;
     using android::BnInterface;
     using android::BpInterface;
     using android::Parcel;

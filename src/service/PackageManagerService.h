@@ -20,6 +20,8 @@ public:
 private:
     Vector<sp<ActivityInfo> > mActivities;
     Vector<ActivityManifest* > mActivityMF;
+    Vector<sp<ServiceInfo> > mServices;
+    Vector<ServiceManifest* > mServiceMF;
     // TODO: use map to map item in mApplicationMF to 
     // item in mApplicationMF_file
     Vector<ApplicationManifest* > mApplicationMF;
@@ -29,6 +31,7 @@ private:
 public:
     virtual sp<ActivityInfo> getActivityInfo(String8 name); 
     virtual sp<ActivityInfo> resolveActivityInfo(String8 action); 
+    virtual sp<ServiceInfo> resolveServiceInfo(String8 action);
 
 };
 

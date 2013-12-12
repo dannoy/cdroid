@@ -87,7 +87,17 @@ void ActivityManagerService::attachApplicationLocked(sp<IBinder> appThread, int 
     }
     //ALOGI("Found attach request from pid %d app %s %p 222222222222", callingPid, app->name.string(), app->thread.get());
 
-    mMainStack->realStartActivityLocked(NULL, app);
+    //ALOGI("Found attach request from pid %d app %s", callingPid, app->name.string());
+    int res0 = 0;
+    int res1 = 0;
+    res0 = mMainStack->attachApplicationLocked(app);
+    //ALOGI("Found attach request from pid %d app %s: after mainstack attach", callingPid, app->name.string());
+
+    res1 = mServices->attachApplicationLocked(app);
+    //ALOGI("Found attach request from pid %d app %s: after service attach", callingPid, app->name.string());
+    if(res0 == -1 && res1 == -1) {
+        Process::killProcessByPid(app->pid);
+    }
 }
 
 int ActivityManagerService::startActivity(sp<IBinder> caller, sp<IBinder> resultTo, sp<Intent> intent, int code)
@@ -111,7 +121,20 @@ int ActivityManagerService::startActivityLocked(sp<IApplicationThread> caller, s
 
 int ActivityManagerService::startService(sp<IBinder> caller, sp<Intent> intent)
 {
+    //ALOGI("startService %s", intent->getAction().string());
+    int pid = IPCThreadState::self()->getCallingPid();
+    int uid = IPCThreadState::self()->getCallingUid();
+    sp<IApplicationThread> appThread = interface_cast<IApplicationThread>(caller);
+    int64_t origId = IPCThreadState::self()->clearCallingIdentity(); 
+    startServiceLocked(appThread, intent, pid, uid);
+    IPCThreadState::self()->restoreCallingIdentity(origId); 
+}
+
+int ActivityManagerService::startServiceLocked(sp<IApplicationThread> caller, sp<Intent> intent, int pid, int uid)
+{
+    AutoMutex _l(mMutex);
     ALOGI("startService %s", intent->getAction().string());
+    mServices->startServiceLocked(caller, intent, pid, uid);
 }
 
 int ActivityManagerService::main()
@@ -127,6 +150,8 @@ int ActivityManagerService::main()
         cond->wait(mutex);
     };
     mSelf->mMainStack = new ActivityStack(mSelf, context, true, thr->mLooper);
+
+    mSelf->mServices = new ActiveServices(mSelf);
 
     mSelf->mTopAction = Intent::ACTION_MAIN;
 }

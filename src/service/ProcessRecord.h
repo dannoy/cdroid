@@ -3,6 +3,7 @@
 
 #include <runtime/common.h>
 #include <runtime/Process.h>
+#include <runtime/IApplicationThread.h>
 
 namespace cdroid {
 

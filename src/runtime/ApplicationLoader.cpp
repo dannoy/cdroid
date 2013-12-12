@@ -123,4 +123,26 @@ ActivityManifest* ActivityLoader::loadActivity(String8 filename, String8 activit
     return NULL;
 }
 
+
+ServiceLoader::ServiceLoader()
+{
+}
+
+ServiceManifest* ServiceLoader::loadService(String8 filename, String8 serviceName)
+{
+    ApplicationManifest *app = NULL;
+    handleFile(filename, &app);
+
+    if(app) {
+        ServiceManifest *sm = app->service;
+        while(sm) {
+            if(sm->name == serviceName){
+                return sm;
+            }
+        }
+    }
+
+    return NULL;
+}
+
 };

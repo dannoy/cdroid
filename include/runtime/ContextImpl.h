@@ -13,6 +13,7 @@ public:
     ContextImpl();
     static ContextImpl* createSystemContext(ActivityThread *mainThread);
     void init(ActivityManifest* amf, sp<IBinder> token, sp<ActivityThread> thread, sp<Looper> cmdLooper);
+    void init(ServiceManifest* smf, sp<IBinder> token, sp<ActivityThread> thread);
     void setOuterContext(sp<Context> context);
 
     // Context interfaces
@@ -43,6 +44,7 @@ private:
 private:
 
     ActivityManifest* mActivityMF;
+    ServiceManifest* mServiceMF;
     sp<IBinder> mToken;
     sp<ActivityThread> mThread;
     sp<Context> mOuterContext;

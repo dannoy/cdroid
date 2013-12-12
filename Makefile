@@ -29,6 +29,7 @@ $(eval $(call includeSubDir,src/cmds/app_process))
 $(eval $(call includeSubDir,src/app/Launcher))
 $(eval $(call includeSubDir,src/app/AppOne))
 $(eval $(call includeSubDir,src/app/AppTwo))
+$(eval $(call includeSubDir,src/app/AppThree))
 
 $(eval $(call includeSubDir,test/tprocess))
 #$(eval $(call includeSubDir,test/handle))

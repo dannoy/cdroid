@@ -17,6 +17,14 @@ public:
     sp<Activity> mActivity;
 };
 
+class ServiceClientRecord : public RefBase {
+public:
+    sp<ServiceInfo> mServiceInfo;
+    sp<IBinder> mToken;
+    sp<Intent> mIntent;
+    sp<Service> mService;
+};
+
 
 class ActivityThread : public virtual RefBase{
 public:
@@ -26,6 +34,7 @@ public:
     sp<IBinder> getApplicationThread();
     void scheduleLaunchActivity(sp<ActivityClientRecord> r);
     void schedulePauseActivity(sp<IBinder> token);
+    void scheduleCreateService(sp<ServiceClientRecord> r);
 
 private:
     class H : public Handler {
@@ -38,6 +47,7 @@ private:
         enum {
             LAUNCH_ACTIVITY = 1,
             PAUSE_ACTIVITY,
+            CREATE_SERVICE,
         };
         virtual void handleMessage(const sp<Message>& message);
     private:
@@ -53,6 +63,7 @@ private:
         virtual void schedulePauseActivity(sp<IBinder> token);
         virtual void bindApplication(String8 appName);
         virtual void scheduleLaunchActivity(sp<ActivityInfo> ai, sp<IBinder> token, sp<Intent> intent);
+        virtual void scheduleCreateService(sp<ServiceInfo> ai, sp<IBinder> token, sp<Intent> intent);
     private:
         String8 mAppName;
         sp<Handler> mH;
@@ -67,12 +78,19 @@ private:
     int callActivityOnStop(sp<Activity> act);
     int callActivityOnDestroy(sp<Activity> act);
 
+    int callServiceOnCreate(sp<Service> srv);
+    int callServiceOnStart(sp<Service> srv);
+    int callServiceOnStartCommand(sp<Service> srv, sp<Intent> intent);
+    sp<IBinder> callServiceOnBind(sp<Service> srv, sp<Intent> intent);
+    int callServiceOnUnBind(sp<Service> srv);
+    int callServiceOnDestroy(sp<Service> srv);
 
 private:
     sp<H> mH;
     bool mSystemThread;
     sp<ApplicationThread> mAppThread;;
     Vector<sp<ActivityClientRecord> > mActivities;
+    Vector<sp<ServiceClientRecord> > mServices;
 
     sp<Looper> mCmdLooper;
 

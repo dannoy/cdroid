@@ -38,5 +38,10 @@ sp<ActivityInfo> PackageManager::resolveActivityInfo(String8 action)
     return getDefault()->resolveActivityInfo(action);
 }
 
+sp<ServiceInfo> PackageManager::resolveServiceInfo(String8 action)
+{
+    return getDefault()->resolveServiceInfo(action);
+}
+
 
 };

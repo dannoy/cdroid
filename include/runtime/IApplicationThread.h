@@ -3,6 +3,7 @@
 
 #include <runtime/common.h>
 #include <runtime/ActivityInfo.h>
+#include <runtime/ServiceInfo.h>
 #include <runtime/Intent.h>
 
 namespace cdroid{
@@ -13,6 +14,7 @@ public:
     virtual void schedulePauseActivity(sp<IBinder> token) = 0;
     virtual void bindApplication(String8 appName) = 0;
     virtual void scheduleLaunchActivity(sp<ActivityInfo> ai, sp<IBinder> token, sp<Intent> intent) = 0;
+    virtual void scheduleCreateService(sp<ServiceInfo> ai, sp<IBinder> token, sp<Intent> intent) = 0;
 };
 
 class BnApplicationThread : public BnInterface<IApplicationThread> {

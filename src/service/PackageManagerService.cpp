@@ -59,6 +59,19 @@ void PackageManagerService::addApplicationManifest(struct ApplicationManifest *a
         amf = amf->next;
     }
 
+    struct ServiceManifest *smf = appM->service;
+    while(smf) {
+        mServiceMF.push_back(smf);
+        sp<ServiceInfo> si = new ServiceInfo(smf->name, filename);
+        si->mAction = smf->action;
+        si->mCategory = smf->category;
+        si->mApplicationName = appM->name;
+
+        mServices.push_back(si);
+
+        smf = smf->next;
+    }
+
 }
 
 void PackageManagerService::instantiate()
@@ -79,6 +92,18 @@ sp<ActivityInfo> PackageManagerService::getActivityInfo(String8 name)
 sp<ActivityInfo> PackageManagerService::resolveActivityInfo(String8 action)
 {
     for(Vector<sp<ActivityInfo> >::iterator it = mActivities.begin(); it != mActivities.end(); ++it) {
+        //ALOGI("Looking ActivityManifest action %s", (*it)->mAction.string());
+        if((*it)->mAction == action) {
+            return *it;
+        }
+    }
+
+    return NULL;
+}
+
+sp<ServiceInfo> PackageManagerService::resolveServiceInfo(String8 action) 
+{
+    for(Vector<sp<ServiceInfo> >::iterator it = mServices.begin(); it != mServices.end(); ++it) {
         //ALOGI("Looking ActivityManifest action %s", (*it)->mAction.string());
         if((*it)->mAction == action) {
             return *it;

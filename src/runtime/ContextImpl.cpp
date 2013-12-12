@@ -28,6 +28,13 @@ void ContextImpl::init(ActivityManifest* amf, sp<IBinder> token, sp<ActivityThre
     mCmdLooper = cmdLooper;
 }
 
+void ContextImpl::init(ServiceManifest* smf, sp<IBinder> token, sp<ActivityThread> thread)
+{
+    mServiceMF = smf;
+    mToken = token;
+    mThread= thread;
+}
+
 void ContextImpl::setOuterContext(sp<Context> context)
 {
     mOuterContext = context;

@@ -7,6 +7,7 @@ namespace cdroid {
 enum {
     TRANSACTION_getActivityInfo = (android::IBinder::FIRST_CALL_TRANSACTION + 0),
     TRANSACTION_resolveActivityInfo,
+    TRANSACTION_resolveServiceInfo,
 };
 
 class BpPackageManager: public BpInterface<IPackageManager>
@@ -55,6 +56,26 @@ public:
 
         return _result;
     }
+
+    virtual sp<ServiceInfo> resolveServiceInfo(String8 action)
+    {
+        Parcel _data;
+        Parcel _reply;
+        sp<ServiceInfo> _result;
+
+        _data.writeInterfaceToken(this->getInterfaceDescriptor());
+        _data.writeString8(action);
+        remote()->transact(TRANSACTION_resolveServiceInfo, _data, &_reply, 0);
+        _reply.readExceptionCode();
+        if ((0!=_reply.readInt32())) {
+            _result = _result->createFromParcel(_reply);
+        }
+        else {
+            _result = NULL;
+        }
+
+        return _result;
+    }
 };
 
 IMPLEMENT_META_INTERFACE(PackageManager, "com::cdroid::service::IPackageManager");
@@ -81,6 +102,20 @@ int BnPackageManager::onTransact(uint32_t code, const Parcel& data, Parcel* repl
                 CHECK_INTERFACE(IPackageManager, data, reply);
                 String8 name = data.readString8();
                 sp<ActivityInfo> _result = resolveActivityInfo(name);
+                if(_result != NULL) {
+                    reply->writeInt32(1);
+                    _result->writeToParcel(reply, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+                } else {
+                    reply->writeInt32(0);
+                }
+                return true;
+            }
+            break;
+        case TRANSACTION_resolveServiceInfo:
+            {
+                CHECK_INTERFACE(IPackageManager, data, reply);
+                String8 name = data.readString8();
+                sp<ServiceInfo> _result = resolveServiceInfo(name);
                 if(_result != NULL) {
                     reply->writeInt32(1);
                     _result->writeToParcel(reply, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);

@@ -121,9 +121,11 @@ int ActivityStack::startActivityLocked(sp<ActivityRecord> r, sp<ActivityRecord> 
     return realStartActivityLocked(r, app);
 }
 
-int ActivityStack::realStartActivityLocked(sp<ActivityRecord> r, sp<ProcessRecord> app)
+int ActivityStack::attachApplicationLocked(sp<ProcessRecord> app)
 {
-    if(r == NULL && app != NULL) {
+    sp<ActivityRecord> r;
+
+    if(app != NULL) {
         for(Vector<sp<ActivityRecord> >::iterator it = mHistory.begin(); it != mHistory.end(); ++it) {
             if((*it)->mActivityInfo->mApplicationName == app->name) {
                 r = *it;
@@ -134,12 +136,17 @@ int ActivityStack::realStartActivityLocked(sp<ActivityRecord> r, sp<ProcessRecor
 
     if(r == NULL) {
         ALOGE("No activity request process pid %d", app->pid);
-        Process::killProcessByPid(app->pid);
         return -1;
     }
 
+    return realStartActivityLocked(r, app);
+}
+
+int ActivityStack::realStartActivityLocked(sp<ActivityRecord> r, sp<ProcessRecord> app)
+{
+
     r->mApp = app;
-    //ALOGI("Activity %s request process pid %d started", r->mActivityInfo->mName.string(), app->pid);
+    //ALOGI("Activity %s request process pid %d started: realstart", r->mActivityInfo->mName.string(), app->pid);
 
     app->thread->scheduleLaunchActivity(r->mActivityInfo, r->mToken, r->mIntent);
     return 0;

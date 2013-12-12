@@ -1,0 +1,8 @@
+shared_libs := appOne
+appOne_src = $(wildcard $(current_dir)/*.cpp) $(wildcard $(current_dir)/*.c)
+appOne_dep = lib/libcutils.so lib/libutils.so
+local_cflags = -I$(topdir)/include
+local_ldflags = -lcdroid_server -lcdroid_runtime
+
+
+include $(RULESMK)

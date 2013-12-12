@@ -7,6 +7,8 @@
 namespace cdroid {
 enum {
     TRANSACTION_attachApplication = (android::IBinder::FIRST_CALL_TRANSACTION + 0),
+    TRANSACTION_startActivity,
+    TRANSACTION_startService,
 };
 
 class BpActivityManager: public BpInterface<IActivityManager>
@@ -30,6 +32,48 @@ public:
         else {
             // ERROR
         }
+    }
+
+    virtual int startActivity(sp<IBinder> caller, sp<IBinder> resultTo, sp<Intent> intent, int requestCode)
+    {
+        Parcel _data;
+        Parcel _reply;
+        int    _result = -1;
+
+        _data.writeInterfaceToken(this->getInterfaceDescriptor());
+        _data.writeStrongBinder(caller);
+        _data.writeStrongBinder(resultTo);
+        intent->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+        _data.writeInt32(requestCode);
+        remote()->transact(TRANSACTION_startActivity, _data, &_reply, 0);
+        _reply.readExceptionCode();
+        if ((0!=_reply.readInt32())) {
+            _result = _reply.readInt32();
+        }
+        else {
+            _result = -1;
+        }
+        return _result;
+    }
+
+    virtual int startService(sp<IBinder> caller, sp<Intent> intent)
+    {
+        Parcel _data;
+        Parcel _reply;
+        int    _result = -1;
+
+        _data.writeInterfaceToken(this->getInterfaceDescriptor());
+        _data.writeStrongBinder(caller);
+        intent->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+        remote()->transact(TRANSACTION_startService, _data, &_reply, 0);
+        _reply.readExceptionCode();
+        if ((0!=_reply.readInt32())) {
+            _result = _reply.readInt32();
+        }
+        else {
+            _result = -1;
+        }
+        return _result;
     }
 };
 
@@ -64,6 +108,34 @@ int BnActivityManager::onTransact(uint32_t code, const Parcel& data, Parcel* rep
                 return true;
             }
             break;
+        case TRANSACTION_startActivity:
+            {
+                CHECK_INTERFACE(IActivityManager, data, reply);
+                sp<IBinder> _arg0;
+                sp<IBinder> _arg1;
+                sp<Intent> _arg2;
+                int       _arg3;
+                _arg0 = data.readStrongBinder();
+                _arg1 = data.readStrongBinder();
+                _arg2 = _arg2->createFromParcel(data);
+                _arg3 = data.readInt32();
+                int _result = startActivity(_arg0, _arg1, _arg2, _arg3);
+                reply->writeInt32(1);
+                reply->writeInt32(_result);
+                return true;
+            }
+        case TRANSACTION_startService:
+            {
+                CHECK_INTERFACE(IActivityManager, data, reply);
+                sp<IBinder> _arg0;
+                sp<Intent> _arg1;
+                _arg0 = data.readStrongBinder();
+                _arg1 = _arg1->createFromParcel(data);
+                int _result = startService(_arg0, _arg1);
+                reply->writeInt32(1);
+                reply->writeInt32(_result);
+                return true;
+            }
     }
 
     return BBinder::onTransact(code, data, reply, flags);

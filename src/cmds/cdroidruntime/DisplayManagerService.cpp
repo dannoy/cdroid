@@ -63,7 +63,8 @@ int DisplayManagerService::displayText(sp<Text> txt)
 void DisplayManagerService::handleDisplayTextLocked(sp<Text> txt)
 {
     //ALOGI("handleDisplayText %s", txt->getCharSequence());
-    fprintf(stderr,"[%s]", txt->getCharSequence());
+    //fprintf(stderr,"[%s]", txt->getCharSequence());
+    fprintf(stderr,"%s", txt->getCharSequence());
 }
 
 void DisplayManagerService::H::handleMessage(const sp<Message>& message)

@@ -9,6 +9,8 @@ class IActivityManager : public IInterface{
 public:
     DECLARE_META_INTERFACE(ActivityManager);
     virtual void attachApplication(sp<IBinder> appThread) = 0;
+    virtual int startActivity(sp<IBinder> caller, sp<IBinder> resultTo, sp<Intent> intent, int requestCode) = 0;
+    virtual int startService(sp<IBinder> caller, sp<Intent> intent) = 0;
 };
 
 class BnActivityManager : public BnInterface<IActivityManager> {

@@ -23,17 +23,21 @@ public:
     ActivityThread();
     sp<Handler> getHandler();
     sp<ContextImpl> getSystemContext();
+    sp<IBinder> getApplicationThread();
     void scheduleLaunchActivity(sp<ActivityClientRecord> r);
+    void schedulePauseActivity(sp<IBinder> token);
 
 private:
     class H : public Handler {
     public:
         H(sp<ActivityThread> at)
-            : mThread(at)
+            : mThread(at),
+            Handler()
         {
         }
         enum {
             LAUNCH_ACTIVITY = 1,
+            PAUSE_ACTIVITY,
         };
         virtual void handleMessage(const sp<Message>& message);
     private:
@@ -69,6 +73,8 @@ private:
     bool mSystemThread;
     sp<ApplicationThread> mAppThread;;
     Vector<sp<ActivityClientRecord> > mActivities;
+
+    sp<Looper> mCmdLooper;
 
 
 // Static

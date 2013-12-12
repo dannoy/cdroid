@@ -39,8 +39,6 @@ private:
         sp<Activity> mActivity;
     };
 
-private:
-    int execInternalCommand();
 
 
 private:

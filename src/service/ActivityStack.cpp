@@ -50,7 +50,7 @@ sp<ActivityRecord> ActivityStack::topRunningActivityLocked(sp<ActivityRecord> no
 
 int ActivityStack::indexOfTokenLocked(sp<IBinder> token)
 {
-    sp<ActivityRecord::Token> t = reinterpret_cast<ActivityRecord::Token *>(token == NULL ? interface_cast<IApplicationToken>(token).get() : NULL);
+    sp<ActivityRecord::Token> t = reinterpret_cast<ActivityRecord::Token *>(token != NULL ? interface_cast<IApplicationToken>(token).get() : NULL);
     if(t != NULL) {
         sp<ActivityRecord> r = t->mActivity;
         for(Vector<sp<ActivityRecord> >::iterator it = mHistory.begin(); it != mHistory.end(); ++it) {
@@ -134,7 +134,11 @@ int ActivityStack::realStartActivityLocked(sp<ActivityRecord> r, sp<ProcessRecor
 
     if(r == NULL) {
         ALOGE("No activity request process pid %d", app->pid);
+        Process::killProcessByPid(app->pid);
+        return -1;
     }
+
+    r->mApp = app;
     //ALOGI("Activity %s request process pid %d started", r->mActivityInfo->mName.string(), app->pid);
 
     app->thread->scheduleLaunchActivity(r->mActivityInfo, r->mToken, r->mIntent);

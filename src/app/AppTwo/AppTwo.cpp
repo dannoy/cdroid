@@ -1,12 +1,12 @@
-#define LOG_TAG "Launcher"
+#define LOG_TAG "AppTwo"
 #include <cutils/log.h>
 
 #include <runtime/AppCommon.h>
 
 
-class Launcher : public Activity {
+class AppTwo : public Activity {
 public:
-    Launcher(sp<Intent> intent);
+    AppTwo(sp<Intent> intent);
 
     virtual void onCreate(sp<Bundle> savedInstanceState);
     virtual void onStart();
@@ -16,61 +16,60 @@ public:
     virtual void onDestroy();
 };
 
-Launcher::Launcher(sp<Intent> intent)
+AppTwo::AppTwo(sp<Intent> intent)
     : Activity(intent)
 {
     ALOGI("constructor");
 }
 
-void Launcher::onCreate(sp<Bundle> savedInstanceState)
+void AppTwo::onCreate(sp<Bundle> savedInstanceState)
 {
 
     Activity::onCreate(savedInstanceState);
 }
 
-void Launcher::onStart()
+void AppTwo::onStart()
 {
     Activity::onStart();
 }
 
-void Launcher::onResume()
+void AppTwo::onResume()
 {
     Activity::onResume();
 }
 
-void Launcher::onPause()
+void AppTwo::onPause()
 {
     Activity::onPause();
 }
 
-void Launcher::onStop()
+void AppTwo::onStop()
 {
     Activity::onStop();
 }
 
-void Launcher::onDestroy()
+void AppTwo::onDestroy()
 {
     Activity::onDestroy();
 }
 
-static Activity *createLauncherActivity(sp<Intent> intent)
+static Activity *createAppTwoActivity(sp<Intent> intent)
 {
-    return new Launcher(intent);
+    return new AppTwo(intent);
 }
 
-static struct cdroid::ActivityManifest launcherManifest= {
-    String8("LauncherActivity"),
-    Intent::ACTION_MAIN,
+static struct cdroid::ActivityManifest AppTwoManifest= {
+    String8("AppTwoActivity"),
+    String8("com.cdroid.app.apptwo"),
     Intent::CATEGORY_DEFAULT,
     NULL,
-    createLauncherActivity
+    createAppTwoActivity
 };
 
 extern "C" {
 cdroid::ApplicationManifest APPLICATION_INFO_SYM = {
-    //String8("LauncherApplication"),
-    String8("AppMasterApplication"),
+    String8("AppTwoApplication"),
     NULL,
-    &launcherManifest
+    &AppTwoManifest
 };
 };

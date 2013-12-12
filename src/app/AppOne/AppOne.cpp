@@ -1,12 +1,12 @@
-#define LOG_TAG "Launcher"
+#define LOG_TAG "AppOne"
 #include <cutils/log.h>
 
 #include <runtime/AppCommon.h>
 
 
-class Launcher : public Activity {
+class AppOne : public Activity {
 public:
-    Launcher(sp<Intent> intent);
+    AppOne(sp<Intent> intent);
 
     virtual void onCreate(sp<Bundle> savedInstanceState);
     virtual void onStart();
@@ -16,61 +16,60 @@ public:
     virtual void onDestroy();
 };
 
-Launcher::Launcher(sp<Intent> intent)
+AppOne::AppOne(sp<Intent> intent)
     : Activity(intent)
 {
     ALOGI("constructor");
 }
 
-void Launcher::onCreate(sp<Bundle> savedInstanceState)
+void AppOne::onCreate(sp<Bundle> savedInstanceState)
 {
 
     Activity::onCreate(savedInstanceState);
 }
 
-void Launcher::onStart()
+void AppOne::onStart()
 {
     Activity::onStart();
 }
 
-void Launcher::onResume()
+void AppOne::onResume()
 {
     Activity::onResume();
 }
 
-void Launcher::onPause()
+void AppOne::onPause()
 {
     Activity::onPause();
 }
 
-void Launcher::onStop()
+void AppOne::onStop()
 {
     Activity::onStop();
 }
 
-void Launcher::onDestroy()
+void AppOne::onDestroy()
 {
     Activity::onDestroy();
 }
 
-static Activity *createLauncherActivity(sp<Intent> intent)
+static Activity *createAppOneActivity(sp<Intent> intent)
 {
-    return new Launcher(intent);
+    return new AppOne(intent);
 }
 
-static struct cdroid::ActivityManifest launcherManifest= {
-    String8("LauncherActivity"),
-    Intent::ACTION_MAIN,
+static struct cdroid::ActivityManifest AppOneManifest= {
+    String8("AppOneActivity"),
+    String8("com.cdroid.app.appone"),
     Intent::CATEGORY_DEFAULT,
     NULL,
-    createLauncherActivity
+    createAppOneActivity
 };
 
 extern "C" {
 cdroid::ApplicationManifest APPLICATION_INFO_SYM = {
-    //String8("LauncherApplication"),
-    String8("AppMasterApplication"),
+    String8("AppOneApplication"),
     NULL,
-    &launcherManifest
+    &AppOneManifest
 };
 };

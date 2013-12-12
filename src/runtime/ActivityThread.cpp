@@ -8,12 +8,60 @@
 
 namespace cdroid {
 
+class IBinderMessageObject : public RefBase {
+public:
+    IBinderMessageObject(sp<IBinder> binder)
+        : mBinder(binder)
+    {
+    }
+
+    sp<IBinder> mBinder;
+};
+
+class CMDThread : public Thread {
+public:
+    sp<Looper> mLooper;
+    Condition *mCond;
+    CMDThread(Condition* cond)
+        :Thread(false)
+    {
+        mCond = cond;
+    }
+    virtual ~CMDThread()
+    {
+    }
+
+    virtual bool threadLoop(){
+        Looper::prepare();
+
+        mLooper = Looper::myLooper();
+        //ALOGE("Activity threadloop %d %p", Process::myPid(), mLooper.get());
+        mCond->signal();
+
+        Looper::loop();
+
+        return true;
+    }
+};
+
 sp<Handler> ActivityThread::sMainThreadHandler;
 sp<ActivityThread> ActivityThread::sCurrentActivityThread;
 sp<ContextImpl> ActivityThread::sSystemContext;
 
 ActivityThread::ActivityThread()
 {
+
+    Condition* cond = new Condition;
+    Mutex mutex;
+    CMDThread* thr = new CMDThread(cond);
+    thr->run();
+
+    while(thr->mLooper.get() == NULL) {
+        cond->wait(mutex);
+    };
+
+    mCmdLooper = thr->mLooper;
+
     mH = new H(this);
     mAppThread = new ApplicationThread(mH);
 }
@@ -115,10 +163,17 @@ sp<ContextImpl> ActivityThread::getSystemContext()
     }
     return sSystemContext;
 }
+sp<IBinder> ActivityThread::getApplicationThread()
+{
+    return mAppThread;
+}
 
 
 void ActivityThread::ApplicationThread::schedulePauseActivity(sp<IBinder> token)
 {
+    sp<IBinderMessageObject> obj = new IBinderMessageObject(token);
+    sp<Message> msg = new Message(H::PAUSE_ACTIVITY, obj);
+    mH->sendMessage(msg);
 }
 
 void ActivityThread::ApplicationThread::bindApplication(String8 appName)
@@ -159,7 +214,7 @@ void ActivityThread::scheduleLaunchActivity(sp<ActivityClientRecord> r)
 
     sp<ContextImpl> appContext = new ContextImpl();
 
-    appContext->init(am, r->mToken, this);
+    appContext->init(am, r->mToken, this, mCmdLooper);
     appContext->setOuterContext(activity);
 
     activity->attach(appContext, this, r->mToken, r->mActivityInfo);
@@ -172,6 +227,25 @@ void ActivityThread::scheduleLaunchActivity(sp<ActivityClientRecord> r)
     callActivityOnResume(activity);
 }
 
+void ActivityThread::schedulePauseActivity(sp<IBinder> token)
+{
+    sp<ActivityClientRecord> r;
+    if(token != NULL) {
+        for(Vector<sp<ActivityClientRecord> >::iterator it = mActivities.begin(); it != mActivities.end(); ++it) {
+            if((*it)->mToken == token) {
+                r = *it;
+            }
+        }
+    }
+    if(r!=NULL) {
+        ALOGI("schedulePauseActivity %s", r->mActivityInfo->getName().string());
+        callActivityOnPause(r->mActivity);
+    }
+    else {
+        ALOGI("schedulePauseActivity %p not found ", token.get());
+    }
+}
+
 void ActivityThread::H::handleMessage(const sp<Message>& message)
 {
     switch(message->what) {
@@ -179,6 +253,13 @@ void ActivityThread::H::handleMessage(const sp<Message>& message)
             {
                 sp<ActivityClientRecord> r = reinterpret_cast<ActivityClientRecord*>(message->obj.get());
                 mThread->scheduleLaunchActivity(r);
+            }
+            break;
+        case PAUSE_ACTIVITY:
+            {
+                sp<IBinderMessageObject> obj = reinterpret_cast<IBinderMessageObject*>(message->obj.get());
+                sp<IBinder> token = obj->mBinder;
+                mThread->schedulePauseActivity(token);
             }
             break;
     }

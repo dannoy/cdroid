@@ -7,6 +7,7 @@
 
 namespace cdroid {
 
+
 Activity::Activity(sp<Intent> intent)
 {
     mIntent = intent;
@@ -64,7 +65,7 @@ void Activity::onKeyEvent(sp<KeyEvent> keyEvent)
     sp<Text> txt = new Text(str);
 
     if(str[0] == '\n') {
-        execInternalCommand();
+        execInternalCommand(mCmd);
         mCmd.clear();
     } else {
         mCmd.append(str);
@@ -82,11 +83,6 @@ Activity::ActivityWindow::ActivityWindow(sp<Activity> activity)
 void Activity::ActivityWindow::onKeyEvent(sp<KeyEvent> keyEvent)
 {
     mActivity->onKeyEvent(keyEvent);
-}
-
-int Activity::execInternalCommand()
-{
-    ALOGI("exec command: [%s]", mCmd.string());
 }
 
 };

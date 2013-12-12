@@ -37,6 +37,7 @@ PackageManagerService::PackageManagerService()
     sp<ApplicationLoader> appLoader = new ApplicationLoader;
     sp<PMS_ApplicationLoaderCallback> cb = new PMS_ApplicationLoaderCallback(self);
     appLoader->loadApplications(cb);
+    ALOGI("After looking for ");
 }
 
 void PackageManagerService::addApplicationManifest(struct ApplicationManifest *appM, String8 filename)

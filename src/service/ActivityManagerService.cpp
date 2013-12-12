@@ -90,6 +90,30 @@ void ActivityManagerService::attachApplicationLocked(sp<IBinder> appThread, int 
     mMainStack->realStartActivityLocked(NULL, app);
 }
 
+int ActivityManagerService::startActivity(sp<IBinder> caller, sp<IBinder> resultTo, sp<Intent> intent, int code)
+{
+    //ALOGI("startActivity %s", intent->getAction().string());
+    int pid = IPCThreadState::self()->getCallingPid();
+    int uid = IPCThreadState::self()->getCallingUid();
+    sp<IApplicationThread> appThread = interface_cast<IApplicationThread>(caller);
+    //ALOGI("startActivity %s request from pid %d %p", intent->getAction().string(), pid, caller.get());
+    int64_t origId = IPCThreadState::self()->clearCallingIdentity(); 
+    startActivityLocked(appThread, resultTo, intent, pid, uid, code);
+    IPCThreadState::self()->restoreCallingIdentity(origId); 
+}
+
+int ActivityManagerService::startActivityLocked(sp<IApplicationThread> caller, sp<IBinder> resultTo, sp<Intent> intent, int pid, int uid, int requestCode)
+{
+    AutoMutex _l(mMutex);
+    ALOGI("startActivity %s", intent->getAction().string());
+    mMainStack->startActivityLocked(caller, intent, resultTo, pid, uid, requestCode);
+}
+
+int ActivityManagerService::startService(sp<IBinder> caller, sp<Intent> intent)
+{
+    ALOGI("startService %s", intent->getAction().string());
+}
+
 int ActivityManagerService::main()
 {
     Condition* cond = new Condition;

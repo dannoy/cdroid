@@ -23,7 +23,7 @@ public:
         Looper::prepare();
 
         mLooper = Looper::myLooper();
-        //ALOGE("ActivityManagerService threadloop %d %p", Process::myPid(), mLooper.get());
+        //ALOGE("WindowManagerService threadloop %d %p", Process::myPid(), mLooper.get());
         mCond->signal();
 
         Looper::loop();

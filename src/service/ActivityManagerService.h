@@ -16,10 +16,13 @@ public:
     sp<ProcessRecord> getRecordForAppLocked(sp<IApplicationThread> thread);
     sp<ProcessRecord> getProcessRecordLocked(String8 appName);
     sp<ProcessRecord> startProcessLocked(String8 appName);
+    int startActivityLocked(sp<IApplicationThread> caller, sp<IBinder> resultTo, sp<Intent> intent, int pid, int uid, int requestCode);
 
 // IActivityManager interfaces
 public:
     virtual void attachApplication(sp<IBinder> appThread);
+    virtual int startActivity(sp<IBinder> caller, sp<IBinder> resultTo, sp<Intent> intent, int requestCode);
+    virtual int startService(sp<IBinder> caller, sp<Intent> intent) ;
 
 private:
     void attachApplicationLocked(sp<IBinder> appThread, pid_t callingPid);

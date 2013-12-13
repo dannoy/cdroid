@@ -7,6 +7,7 @@ enum {
     TRANSACTION_bindApplication,
     TRANSACTION_scheduleLaunchActivity,
     TRANSACTION_scheduleCreateService,
+    TRANSACTION_scheduleBindService,
 };
 
 class BpApplicationThread : public BpInterface<IApplicationThread> {
@@ -15,7 +16,7 @@ public:
         : BpInterface<IApplicationThread>(impl)
     {
     }
-    void schedulePauseActivity(sp<IBinder> token)
+    virtual void schedulePauseActivity(sp<IBinder> token)
     {
         Parcel _data;
         Parcel _reply;
@@ -30,7 +31,7 @@ public:
             // Something is wrong
         }
     }
-    void bindApplication(String8 appName)
+    virtual void bindApplication(String8 appName)
     {
         Parcel _data;
         Parcel _reply;
@@ -46,7 +47,7 @@ public:
         }
     }
 
-    void scheduleLaunchActivity(sp<ActivityInfo> ai, sp<IBinder> token, sp<Intent> intent)
+    virtual void scheduleLaunchActivity(sp<ActivityInfo> ai, sp<IBinder> token, sp<Intent> intent)
     {
         Parcel _data;
         Parcel _reply;
@@ -64,7 +65,7 @@ public:
         }
     }
 
-    void scheduleCreateService(sp<ServiceInfo> si, sp<IBinder> token, sp<Intent> intent)
+    virtual void scheduleCreateService(sp<ServiceInfo> si, sp<IBinder> token, sp<Intent> intent)
     {
         Parcel _data;
         Parcel _reply;
@@ -74,6 +75,29 @@ public:
         _data.writeStrongBinder(token);
         intent->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
         remote()->transact(TRANSACTION_scheduleCreateService, _data, &_reply, 0);
+        _reply.readExceptionCode();
+        if ((0!=_reply.readInt32())) {
+        }
+        else {
+            // Something is wrong
+        }
+    }
+
+    virtual void scheduleBindService(sp<Binder> token, sp<Intent> intent, bool rebind)
+    {
+        Parcel _data;
+        Parcel _reply;
+
+        _data.writeInterfaceToken(this->getInterfaceDescriptor());
+        _data.writeStrongBinder(token);
+        intent->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+        if(rebind) {
+            _data.writeInt32(1);
+        } else {
+            _data.writeInt32(0);
+        }
+
+        remote()->transact(TRANSACTION_scheduleBindService, _data, &_reply, 0);
         _reply.readExceptionCode();
         if ((0!=_reply.readInt32())) {
         }
@@ -132,6 +156,24 @@ int BnApplicationThread::onTransact(uint32_t code, const Parcel& data, Parcel* r
                 _arg1 = data.readStrongBinder();
                 _arg2 = _arg2->createFromParcel(data);
                 scheduleCreateService(_arg0, _arg1, _arg2);
+                reply->writeInt32(1);
+                return true;
+            }
+            break;
+        case TRANSACTION_scheduleBindService:
+            {
+                CHECK_INTERFACE(IApplicationThread, data, reply);
+                sp<IBinder> _arg0;
+                sp<Intent> _arg1;
+                bool _arg2;
+                _arg0 = data.readStrongBinder();
+                _arg1 = _arg2->createFromParcel(data);
+                if(data.readInt32() == 1) {
+                    _arg2 = true;
+                } else {
+                    _arg2 = false;
+                }
+                scheduleBindService(_arg0, _arg1, _arg2);
                 reply->writeInt32(1);
                 return true;
             }

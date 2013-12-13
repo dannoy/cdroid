@@ -13,6 +13,7 @@ public:
     virtual int startActivity(sp<IBinder> caller, sp<IBinder> resultTo, sp<Intent> intent, int requestCode) = 0;
     virtual int startService(sp<IBinder> caller, sp<Intent> intent) = 0;
     virtual int bindService(sp<IBinder> caller, sp<IBinder> token, sp<Intent> intent, sp<IBinder> connection, int flags) = 0;
+    virtual int publishService(sp<IBinder> token, sp<Intent> intent, sp<IBinder> service) = 0;
 };
 
 class BnActivityManager : public BnInterface<IActivityManager> {

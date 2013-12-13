@@ -167,7 +167,7 @@ ServiceDispatcher::InnerServiceConnection::InnerServiceConnection(sp<ServiceConn
 {
 }
 
-void ServiceDispatcher::InnerServiceConnection::connection(sp<ComponentName> name, sp<IBinder> service)
+void ServiceDispatcher::InnerServiceConnection::connected(sp<ComponentName> name, sp<IBinder> service)
 {
     ALOGI("TODO post connection");
 }

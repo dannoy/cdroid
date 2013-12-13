@@ -6,7 +6,7 @@
 
 namespace cdroid {
 enum {
-    TRANSACTION_connection = (android::IBinder::FIRST_CALL_TRANSACTION + 0),
+    TRANSACTION_connected = (android::IBinder::FIRST_CALL_TRANSACTION + 0),
 };
 
 class BpServiceConnection: public BpInterface<IServiceConnection>
@@ -17,7 +17,7 @@ public:
     {
     }
 
-    virtual void connection(sp<ComponentName> name, sp<IBinder> service)
+    virtual void connected(sp<ComponentName> name, sp<IBinder> service)
     {
         Parcel _data;
         Parcel _reply;
@@ -25,7 +25,7 @@ public:
         _data.writeInterfaceToken(this->getInterfaceDescriptor());
         name->writeToParcel(&_data, 0);
         _data.writeStrongBinder(service);
-        remote()->transact(TRANSACTION_connection, _data, &_reply, 0);
+        remote()->transact(TRANSACTION_connected, _data, &_reply, 0);
         _reply.readExceptionCode();
         if ((0!=_reply.readInt32())) {
         }
@@ -40,13 +40,13 @@ IMPLEMENT_META_INTERFACE(ServiceConnection, "com::cdroid::service::internal::ser
 int BnServiceConnection::onTransact(uint32_t code, const Parcel& data, Parcel* reply,uint32_t flags)
 {
     switch(code) {
-        case TRANSACTION_connection:
+        case TRANSACTION_connected:
             {
                 CHECK_INTERFACE(IServiceConnection, data, reply);
                 sp<ComponentName> _arg0;
                 _arg0 = _arg0->createFromParcel(data);
                 sp<IBinder> _arg1 = data.readStrongBinder();
-                connection(_arg0, _arg1);
+                connected(_arg0, _arg1);
                 reply->writeInt32(1);
                 return true;
             }

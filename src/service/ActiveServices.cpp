@@ -46,7 +46,7 @@ int ActiveServices::startServiceLocked(sp<IApplicationThread> caller, sp<Intent>
 
     sp<ServiceRecord> r = retrieveServiceLocked(intent);
 
-    if(r != NULL) 
+    if(r != NULL)
     {
         if(r->mApp != NULL) {
             ALOGI("Found service %s:%s running in process %s", si->mApplicationName.string(),
@@ -107,6 +107,32 @@ int ActiveServices::attachApplicationLocked(sp<ProcessRecord> app)
     return realStartServiceLocked(r, app);
 }
 
+int ActiveServices::requestServiceBindingsLocked(sp<ServiceRecord> r)
+{
+    map<String8, sp<IntentBindRecord> >::iterator it = r->mBindings.begin();
+
+    for(; it != r->mBindings.end(); ++it) {
+        if(requestServiceBindingsLocked(r, *it, false) < 0) {
+            break;
+        }
+    }
+}
+
+int ActiveServices::requestServiceBindingsLocked(sp<ServiceRecord> r, sp<IntentBindRecord> i, bool rebind)
+{
+    if(r->mApp == NULL || r->mApp->thread == NULL) {
+        return -1;
+    }
+
+    if((!i->requested || rebind) && i->apps.size() > 0) {
+       r->mApp->thread->scheduleBindService(r, i->mIntent, rebind);
+       if(!rebind) {
+            i->requested = true;
+       }
+       i->hasBound = true;
+    }
+
+}
 
 int ActiveServices::realStartServiceLocked(sp<ServiceRecord> r, sp<ProcessRecord> app)
 {
@@ -115,6 +141,8 @@ int ActiveServices::realStartServiceLocked(sp<ServiceRecord> r, sp<ProcessRecord
     //ALOGI("Activity %s request process pid %d started", r->mActivityInfo->mName.string(), app->pid);
 
     app->thread->scheduleCreateService(r->mServiceInfo, r, r->mIntent);
+
+    requestServiceBindingsLocked(r);
     return 0;
 }
 
@@ -150,21 +178,53 @@ int ActiveServices::bindServiceLocked(sp<IApplicationThread> caller, sp<IBinder>
     sp<AppBindRecord> b = r->retrieveAppBindingLocked(intent, callerApp);
     sp<ConnectionRecord> c = new ConnectionRecord(b, activity, conn, flags);
 
-    sp<IBinder> b->asBinder();
-    map<sp<IBinder>, sp<IntentBindRecord> >::iterator it = r->;
+    sp<IBinder> binder = conn->asBinder();
+    map<sp<IBinder>, Vector<sp<ConnectionRecord> >* >::iterator it = r->mConnections.find(b);
+    Vector<sp<ConnectionRecord> > *clist = NULL;
 
-    if(r->mApp != NULL) {
-        ALOGI("Found service %s:%s running in process %s", si->mApplicationName.string(),
-                                                    si->mName.string(),
-                                                    r->mApp->name.string());
-    }
-    else {
-        ALOGI("Found service %s:%s is starting", si->mApplicationName.string(),
-                                                    si->mName.string());
+    if(it == r->mConnections.end()) {
+        clist = new Vector<ConnectionRecord>();
+        r.mConnections.insert(pair<sp<IBinder>, Vector<ConnectionRecord>* >(binder, clist));
     }
 
-    return startServiceLocked(r);
+    clist->push_back(c);
+
+    startServiceLocked(r);
+
+    if(r->mApp != NULL && b->mIntentBindRecord->received) {
+        c->conn->connected(r->mName, b->mIntentBindRecord->binder);
+    }
 }
 
+int ActiveServices::publishService(sp<IBinder> token, sp<Intent> intent, sp<IBinder> service)
+{
+    sp<ServiceRecord> r = reinterpret_cast<ServiceRecord*>(token.get());
+    if(r == NULL) {
+        ALOGE("ERROR: r == NULL");
+        return -1;
+    }
+
+    map<String8, sp<IntentBindRecord> >::iterator it = r->mBindings.find(intent->getAction());
+    if(it == r->mBindings.end()) {
+        ALOGE("ERROR: cannot find record when processing publishService");
+        return -1;
+    }
+
+    sp<IntentBindRecord> i = it->second;
+    i->binder = service;
+    i->received = true;
+
+    map<sp<IBinder>, Vector<sp<ConnectionRecord> >* >::iterator it2 = mConnections.begin();
+
+    for(; it2 != mConnections.end(); ++it2) {
+        Vector<sp<ConnectionRecord> > *clist = it2->second;
+        for(Vector<sp<ConnectionRecord> >::iterator it3 = clist->begin(); it3 != clist->end; ++it3) {
+            sp<ConnectionRecord> c = *it3;
+            c->mConnection->connected(r->mName, i->binder);
+        }
+    }
+
+    return 0;
+}
 
 };

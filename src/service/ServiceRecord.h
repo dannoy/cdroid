@@ -32,7 +32,10 @@ class IntentBindRecord : public RefBase {
 public:
     IntentBindRecord(sp<ServiceRecord> r, sp<Intent> intent)
         : mRecord(r),
-        mIntent(intent)
+        mIntent(intent),
+        requested(false),
+        received(false),
+        hasBound(false)
     {
     }
 
@@ -41,6 +44,12 @@ public:
     sp<Intent>       mIntent;
 
     map<sp<ProcessRecord>, sp<AppBindRecord> > apps;
+
+    bool requested;
+    bool received;
+    bool hasBound;
+
+    sp<IBinder> binder;
 };
 
 class ConnectionRecord : public RefBase {
@@ -77,7 +86,7 @@ public:
     sp<ServiceInfo> mServiceInfo;
 
     map<String8, sp<IntentBindRecord> > mBindings;
-    map<sp<IBinder>, sp<IntentBindRecord> > mConnections;
+    map<sp<IBinder>, Vector<sp<ConnectionRecord> >* > mConnections;
 };
 
 

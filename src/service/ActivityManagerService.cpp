@@ -154,6 +154,11 @@ int ActivityManagerService::bindServiceLocked(sp<IApplicationThread> caller, sp<
     mServices->bindServiceLocked(caller, token, intent, connection, pid, uid, flags);
 }
 
+int ActivityManagerService::publishService(sp<IBinder> token, sp<Intent> intent, sp<IBinder> service)
+{
+    mService->publishServiceLocked(token, intent, service);
+}
+
 int ActivityManagerService::main()
 {
     Condition* cond = new Condition;

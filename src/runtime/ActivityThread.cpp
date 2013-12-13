@@ -240,8 +240,17 @@ void ActivityThread::ApplicationThread::scheduleCreateService(sp<ServiceInfo> ai
     mH->sendMessage(msg);
 }
 
+void ActivityThread::ApplicationThread::scheduleBindService(sp<IBinder> token, sp<Intent> intent, bool rebind)
+{
+    //ALOGI("scheduleBindService");
+    sp<BindServiceData> r = new BindServiceData(token, intent, rebind);
+    sp<Message> msg = new Message(H::BIND_SERVICE, r);
+    mH->sendMessage(msg);
+}
+
 void ActivityThread::scheduleLaunchActivity(sp<ActivityClientRecord> r)
 {
+    AutoMutex _l(mMutex);
     sp<ActivityInfo> ai = r->mActivityInfo;
     //ALOGI("scheduleLaunchActivity phase II %s %p",ai->mName.string(), ai.get());
 
@@ -277,6 +286,7 @@ void ActivityThread::scheduleLaunchActivity(sp<ActivityClientRecord> r)
 
 void ActivityThread::schedulePauseActivity(sp<IBinder> token)
 {
+    AutoMutex _l(mMutex);
     sp<ActivityClientRecord> r;
     if(token != NULL) {
         for(Vector<sp<ActivityClientRecord> >::iterator it = mActivities.begin(); it != mActivities.end(); ++it) {
@@ -296,6 +306,8 @@ void ActivityThread::schedulePauseActivity(sp<IBinder> token)
 
 void ActivityThread::scheduleCreateService(sp<ServiceClientRecord> r)
 {
+    AutoMutex _l(mMutex);
+
     sp<ServiceInfo> si = r->mServiceInfo;
     //ALOGI("scheduleCreateService phase II %s %p",si->mName.string(), si.get());
 
@@ -329,6 +341,31 @@ void ActivityThread::scheduleCreateService(sp<ServiceClientRecord> r)
     callServiceOnStartCommand(service, r->mIntent);
 }
 
+sp<ServiceClientRecord> ActivityThread::getServiceRecordByToken(sp<IBinder> token)
+{
+    Vector<sp<ServiceClientRecord> >::iterator it = mService.begin();
+
+    for(; it != mService.end(); ++it) {
+        if((*it)->mToken == token) {
+            return *it;
+        }
+    }
+
+    return NULL;
+}
+
+void ActivityThread::scheduleBindService(sp<BindServiceData> d)
+{
+    AutoMutex _l(mMutex);
+    sp<ServiceClientRecord> r = getServiceRecordByToken(d->mToken);
+    if(r == NULL) {
+        ALOGE("ERROR:r == NULL while bindservice");
+        return;
+    }
+    sp<IBinder> binder = r->mService->onBind(d->mIntent);
+    ActivityManagerNative::getDefault()->publishService(d->token, d->intent, binder);
+}
+
 void ActivityThread::H::handleMessage(const sp<Message>& message)
 {
     //ALOGI("handlemessage");
@@ -350,6 +387,12 @@ void ActivityThread::H::handleMessage(const sp<Message>& message)
             {
                 sp<ServiceClientRecord> obj = reinterpret_cast<ServiceClientRecord*>(message->obj.get());
                 mThread->scheduleCreateService(obj);
+            }
+            break;
+        case BIND_SERVICE:
+            {
+                sp<ServiceBindData> obj = reinterpret_cast<ServiceBindData*>(message->obj.get());
+                mThread->scheduleBindService(obj);
             }
             break;
     }

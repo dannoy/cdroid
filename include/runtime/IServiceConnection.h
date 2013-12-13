@@ -7,7 +7,7 @@ namespace cdroid {
 class IServiceConnection : public IInterface {
 public:
     DECLARE_META_INTERFACE(ServiceConnection);
-    virtual void connection(sp<ComponentName> name, sp<IBinder> service) = 0;
+    virtual void connected(sp<ComponentName> name, sp<IBinder> service) = 0;
 };
 
 class BnServiceConnection : public BnInterface<IServiceConnection> {

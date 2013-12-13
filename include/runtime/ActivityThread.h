@@ -25,6 +25,19 @@ public:
     sp<Service> mService;
 };
 
+class BindServiceData : public RefBase {
+public:
+    BindServiceData(sp<IBinder> token, sp<Intent> intent, bool rebind)
+        : mToken(token),
+        mIntent(intent),
+        mRebind(rebind)
+    {
+    }
+    sp<IBinder> mToken;
+    sp<Intent> mIntent;
+    bool      mRebind;
+};
+
 
 class ActivityThread : public virtual RefBase{
 public:
@@ -35,6 +48,7 @@ public:
     void scheduleLaunchActivity(sp<ActivityClientRecord> r);
     void schedulePauseActivity(sp<IBinder> token);
     void scheduleCreateService(sp<ServiceClientRecord> r);
+    void scheduleBindService(sp<BindServiceData> d);
 
 private:
     class H : public Handler {
@@ -48,6 +62,7 @@ private:
             LAUNCH_ACTIVITY = 1,
             PAUSE_ACTIVITY,
             CREATE_SERVICE,
+            BIND_SERVICE,
         };
         virtual void handleMessage(const sp<Message>& message);
     private:
@@ -64,6 +79,7 @@ private:
         virtual void bindApplication(String8 appName);
         virtual void scheduleLaunchActivity(sp<ActivityInfo> ai, sp<IBinder> token, sp<Intent> intent);
         virtual void scheduleCreateService(sp<ServiceInfo> ai, sp<IBinder> token, sp<Intent> intent);
+        virtual void scheduleBindService(sp<Binder> token, sp<Intent> intent, bool rebind);
     private:
         String8 mAppName;
         sp<Handler> mH;
@@ -85,6 +101,7 @@ private:
     int callServiceOnUnBind(sp<Service> srv);
     int callServiceOnDestroy(sp<Service> srv);
 
+    sp<ServiceClientRecord> getServiceRecordByToken(sp<IBinder> token);
 private:
     sp<H> mH;
     bool mSystemThread;
@@ -93,6 +110,8 @@ private:
     Vector<sp<ServiceClientRecord> > mServices;
 
     sp<Looper> mCmdLooper;
+
+    Mutex mMutex;
 
 
 // Static
@@ -105,6 +124,7 @@ public:
     static sp<Handler> sMainThreadHandler;
     static sp<ActivityThread> sCurrentActivityThread;
     static sp<ContextImpl> sSystemContext;
+
 };
 
 };

@@ -18,7 +18,7 @@ private:
     class InnerServiceConnection : public BnServiceConnection {
     public:
         InnerServiceConnection(sp<ServiceConnection> conn, sp<Handler> handler);
-        virtual void connection(sp<ComponentName> name, sp<IBinder> service);
+        virtual void connected(sp<ComponentName> name, sp<IBinder> service);
     private:
         sp<Handler> mMainThreadHandler;
         sp<ServiceConnection> mConnection;

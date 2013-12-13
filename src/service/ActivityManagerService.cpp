@@ -136,6 +136,23 @@ int ActivityManagerService::startServiceLocked(sp<IApplicationThread> caller, sp
     ALOGI("startService %s", intent->getAction().string());
     mServices->startServiceLocked(caller, intent, pid, uid);
 }
+int ActivityManagerService::bindService(sp<IBinder> caller, sp<IBinder> token, sp<Intent> intent, sp<IBinder> connection, int flags)
+{
+    int pid = IPCThreadState::self()->getCallingPid();
+    int uid = IPCThreadState::self()->getCallingUid();
+    sp<IApplicationThread> appThread = interface_cast<IApplicationThread>(caller);
+    sp<IServiceConnection> conn = interface_cast<IServiceConnection>(connection);
+    int64_t origId = IPCThreadState::self()->clearCallingIdentity(); 
+    bindServiceLocked(appThread, token, intent, conn, pid, uid, flags);
+    IPCThreadState::self()->restoreCallingIdentity(origId); 
+}
+
+int ActivityManagerService::bindServiceLocked(sp<IApplicationThread> caller, sp<IBinder> token, sp<Intent> intent, sp<IServiceConnection> connection, int pid, int uid, int flags)
+{
+    AutoMutex _l(mMutex);
+    ALOGI("bindService %s", intent->getAction().string());
+    mServices->bindServiceLocked(caller, token, intent, connection, pid, uid, flags);
+}
 
 int ActivityManagerService::main()
 {

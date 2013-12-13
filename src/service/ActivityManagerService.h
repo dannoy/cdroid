@@ -19,12 +19,14 @@ public:
     sp<ProcessRecord> startProcessLocked(String8 appName);
     int startActivityLocked(sp<IApplicationThread> caller, sp<IBinder> resultTo, sp<Intent> intent, int pid, int uid, int requestCode);
     int startServiceLocked(sp<IApplicationThread> caller, sp<Intent> intent, int pid, int uid);
+    int bindServiceLocked(sp<IApplicationThread> caller, sp<IBinder> token, sp<Intent> intent, sp<IServiceConnection> connection, int pid, int uid, int flags);
 
 // IActivityManager interfaces
 public:
     virtual void attachApplication(sp<IBinder> appThread);
     virtual int startActivity(sp<IBinder> caller, sp<IBinder> resultTo, sp<Intent> intent, int requestCode);
     virtual int startService(sp<IBinder> caller, sp<Intent> intent) ;
+    virtual int bindService(sp<IBinder> caller, sp<IBinder> token, sp<Intent> intent, sp<IBinder> connection, int flags);
 
 private:
     void attachApplicationLocked(sp<IBinder> appThread, pid_t callingPid);

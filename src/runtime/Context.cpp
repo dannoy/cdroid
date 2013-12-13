@@ -29,5 +29,11 @@ int ContextWrapper::startService(sp<Intent> intent)
     return mBase->startService(intent);
 }
 
+int ContextWrapper::bindService(sp<Intent> intent, sp<ServiceConnection> conn)
+{
+    assert(mBase != NULL);
+    return mBase->bindService(intent, conn);
+}
+
 
 };

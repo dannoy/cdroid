@@ -2,6 +2,7 @@
 #define _SERVICE_IACTIVITY_MANAGER_H
 #include <runtime/common.h>
 #include <runtime/IApplicationThread.h>
+#include <runtime/IServiceConnection.h>
 
 namespace cdroid{
 
@@ -11,6 +12,7 @@ public:
     virtual void attachApplication(sp<IBinder> appThread) = 0;
     virtual int startActivity(sp<IBinder> caller, sp<IBinder> resultTo, sp<Intent> intent, int requestCode) = 0;
     virtual int startService(sp<IBinder> caller, sp<Intent> intent) = 0;
+    virtual int bindService(sp<IBinder> caller, sp<IBinder> token, sp<Intent> intent, sp<IBinder> connection, int flags) = 0;
 };
 
 class BnActivityManager : public BnInterface<IActivityManager> {

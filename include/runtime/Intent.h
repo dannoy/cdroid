@@ -4,12 +4,13 @@
 #include <runtime/common.h>
 namespace cdroid {
 
-class ComponentName : public RefBase {
+class ComponentName : public Parcelable {
 public:
     ComponentName(String8 name)
         :mName(name)
     {
     }
+
     ComponentName(ComponentName& comp)
         :mName(comp.mName)
     {
@@ -24,6 +25,12 @@ public:
         mName = name;
         return true;
     }
+
+    int describeContents();
+    void writeToParcel(Parcel *out, int flags);
+    ComponentName *createFromParcel(const Parcel& source);
+    void readFromParcel(const Parcel& source);
+    std::vector<Parcelable *> newArray(int size);
 private:
     String8 mName;
 };

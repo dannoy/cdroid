@@ -16,6 +16,8 @@
 #include <binder/IServiceManager.h>
 #include <binder/IPCThreadState.h>
 
+#include <map>
+
 namespace cdroid {
     using android::sp;
     using android::wp;
@@ -39,6 +41,9 @@ namespace cdroid {
     using android::interface_cast;
     using android::BasicHashtable;
     using android::status_t;
+
+    using std::map;
+    using std::pair;
 
 template <class T>
     class Singleton

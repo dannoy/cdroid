@@ -63,6 +63,17 @@ int ActivityStack::indexOfTokenLocked(sp<IBinder> token)
     return -1;
 }
 
+sp<ActivityRecord> ActivityStack::getActivityRecordByToken(sp<IBinder> token)
+{
+    int index = indexOfTokenLocked(resultTo);
+
+    if(index >= 0) {
+        return = mHistory[index];
+    }
+
+    return NULL;
+}
+
 
 int ActivityStack::startActivityLocked(sp<IApplicationThread> caller, sp<Intent> intent, sp<IBinder> resultTo, int callingPid, int callingUid, int requestCode)
 {

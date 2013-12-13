@@ -3,10 +3,46 @@
 
 #include <runtime/Context.h>
 #include <runtime/ApplicationLoader.h>
+#include <runtime/IServiceConnection.h>
 
 namespace cdroid {
 
 class ActivityThread;
+
+class ServiceDispatcher : public RefBase {
+public:
+    ServiceDispatcher(sp<ServiceConnection> conn, sp<Context> context, sp<Handler> mainHandler);
+    sp<IServiceConnection> getIServiceConnection();
+
+private:
+    class InnerServiceConnection : public BnServiceConnection {
+    public:
+        InnerServiceConnection(sp<ServiceConnection> conn, sp<Handler> handler);
+        virtual void connection(sp<ComponentName> name, sp<IBinder> service);
+    private:
+        sp<Handler> mMainThreadHandler;
+        sp<ServiceConnection> mConnection;
+    };
+
+private:
+    sp<InnerServiceConnection> mIServiceConnection;
+    sp<Handler> mMainThreadHandler;
+    sp<Context> mContext;
+    sp<ServiceConnection> mConnection;
+};
+
+class ServiceConnectionManager : public RefBase {
+private:
+public:
+    ServiceConnectionManager();
+    sp<IServiceConnection> getServiceDispatcher(sp<ServiceConnection> conn, sp<Context> context, sp<Handler> handler, int flags);
+
+private:
+    Mutex mMutex;
+    map<sp<Context>, map<sp<ServiceConnection>, sp<ServiceDispatcher> >*  > mServices;
+};
+
+
 class ContextImpl : public Context {
 public:
     // init methos
@@ -15,11 +51,13 @@ public:
     void init(ActivityManifest* amf, sp<IBinder> token, sp<ActivityThread> thread, sp<Looper> cmdLooper);
     void init(ServiceManifest* smf, sp<IBinder> token, sp<ActivityThread> thread);
     void setOuterContext(sp<Context> context);
+    sp<Context> getOuterContext();
 
     // Context interfaces
     virtual int execInternalCommand(String8 cmd);
     virtual int startActivity(sp<Intent> intent);
     virtual int startService(sp<Intent> intent);
+    virtual int bindService(sp<Intent> intent, sp<ServiceConnection> conn);
 
 
 private:
@@ -51,6 +89,9 @@ private:
 
     sp<Looper> mCmdLooper;
     sp<Handler> mCmdHandler;
+    sp<ServiceConnectionManager> mServiceConnectionMgr;
+
+
     Mutex mCmdMutex;
 };
 

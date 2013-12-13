@@ -72,4 +72,31 @@ std::vector<Parcelable *> Intent::newArray(int size) {
     return v;
 }
 
+int ComponentName::describeContents() {
+    return 0;
+}
+
+void ComponentName::writeToParcel(Parcel *out, int flags) {
+    out->writeString8(mName);
+}
+
+ComponentName *ComponentName::createFromParcel(const Parcel& source){
+    ComponentName *cn = new ComponentName(source.readString8());
+
+    return cn;
+}
+
+void ComponentName::readFromParcel(const Parcel& source) {
+    this->mName =  source.readString8();
+}
+
+std::vector<Parcelable *> ComponentName::newArray(int size) {
+    std::vector<Parcelable *> v;
+    for (int i = 0; i < size; ++i) {
+        v.push_back(new ComponentName(String8("")));
+    }
+
+    return v;
+}
+
 };

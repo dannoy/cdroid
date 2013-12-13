@@ -2,6 +2,7 @@
 #define _SERVICE_ACTIVESERVICES_H
 
 #include <runtime/Intent.h>
+#include <runtime/IServiceConnection.h>
 #include "ServiceRecord.h"
 #include "ProcessRecord.h"
 
@@ -16,6 +17,7 @@ public:
 
     int attachApplicationLocked(sp<ProcessRecord> app);
     int startServiceLocked(sp<IApplicationThread> caller, sp<Intent> intent, int pid, int uid);
+    int bindServiceLocked(sp<IApplicationThread> caller, sp<IBinder> token, sp<Intent> intent, sp<IServiceConnection> connection, int pid, int uid, int flags);
 
 protected:
 

@@ -6,6 +6,7 @@
 #include <runtime/ServiceInfo.h>
 
 #include "ProcessRecord.h"
+#include "ActivityRecord.h"
 
 
 namespace cdroid {
@@ -54,7 +55,7 @@ public:
 
 class ConnectionRecord : public RefBase {
 public:
-    ConnectionRecord( sp<AppBindRecord> appBindRecord, sp<ActivityInfo> activity, sp<IServiceConnection> c, int f)
+    ConnectionRecord( sp<AppBindRecord> appBindRecord, sp<ActivityRecord> activity, sp<IServiceConnection> c, int f)
         : mAppBindRecord(appBindRecord),
         mActivity(activity),
         mConnection(c),
@@ -62,7 +63,7 @@ public:
     {
     }
     sp<AppBindRecord> mAppBindRecord;
-    sp<ActivityInfo> mActivity;
+    sp<ActivityRecord> mActivity;
     sp<IServiceConnection> mConnection;
     int mFlags;
 };

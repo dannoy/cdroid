@@ -7,3 +7,6 @@
 7.oneway interface, not oneway method support
 8.readFromParcel generate self from parcel  vs  createFromParcel create and return
    readFromParcel is used for INOUT/OUT where createFromParcel is used for return value
+9.
+9.1 startservice then bindservice on the same service
+9.1 bindservice then startservice on the same service

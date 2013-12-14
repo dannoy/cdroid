@@ -25,7 +25,7 @@ sp<AppBindRecord> ServiceRecord::retrieveAppBindingLocked(sp<Intent> intent, sp<
 
     if(i == NULL) {
         i = new IntentBindRecord(this, intent);
-        mBindings.insert(pair<intent->getAction(), i>);
+        mBindings.insert(pair<String8, sp<IntentBindRecord> >(intent->getAction(), i));
     }
 
     map<sp<ProcessRecord>, sp<AppBindRecord> >::iterator it2 = i->apps.find(app);

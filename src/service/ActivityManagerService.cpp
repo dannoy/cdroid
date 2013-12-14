@@ -156,7 +156,7 @@ int ActivityManagerService::bindServiceLocked(sp<IApplicationThread> caller, sp<
 
 int ActivityManagerService::publishService(sp<IBinder> token, sp<Intent> intent, sp<IBinder> service)
 {
-    mService->publishServiceLocked(token, intent, service);
+    mServices->publishServiceLocked(token, intent, service);
 }
 
 int ActivityManagerService::main()

@@ -15,7 +15,7 @@ public:
     virtual void bindApplication(String8 appName) = 0;
     virtual void scheduleLaunchActivity(sp<ActivityInfo> ai, sp<IBinder> token, sp<Intent> intent) = 0;
     virtual void scheduleCreateService(sp<ServiceInfo> ai, sp<IBinder> token, sp<Intent> intent) = 0;
-    virtual void scheduleBindService(sp<Binder> token, sp<Intent> intent, bool rebind) = 0;
+    virtual void scheduleBindService(sp<IBinder> token, sp<Intent> intent, bool rebind) = 0;
 };
 
 class BnApplicationThread : public BnInterface<IApplicationThread> {

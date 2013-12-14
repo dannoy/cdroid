@@ -32,6 +32,8 @@ void Service::onStartCommand(sp<Intent> intent)
 sp<IBinder> Service::onBind(sp<Intent> intent)
 {
     ALOGI("onBind");
+
+    return NULL;
 }
 
 void Service::onUnBind()

@@ -343,9 +343,9 @@ void ActivityThread::scheduleCreateService(sp<ServiceClientRecord> r)
 
 sp<ServiceClientRecord> ActivityThread::getServiceRecordByToken(sp<IBinder> token)
 {
-    Vector<sp<ServiceClientRecord> >::iterator it = mService.begin();
+    Vector<sp<ServiceClientRecord> >::iterator it = mServices.begin();
 
-    for(; it != mService.end(); ++it) {
+    for(; it != mServices.end(); ++it) {
         if((*it)->mToken == token) {
             return *it;
         }
@@ -357,13 +357,14 @@ sp<ServiceClientRecord> ActivityThread::getServiceRecordByToken(sp<IBinder> toke
 void ActivityThread::scheduleBindService(sp<BindServiceData> d)
 {
     AutoMutex _l(mMutex);
+    ALOGE("bindservice ");
     sp<ServiceClientRecord> r = getServiceRecordByToken(d->mToken);
     if(r == NULL) {
         ALOGE("ERROR:r == NULL while bindservice");
         return;
     }
     sp<IBinder> binder = r->mService->onBind(d->mIntent);
-    ActivityManagerNative::getDefault()->publishService(d->token, d->intent, binder);
+    ActivityManagerNative::getDefault()->publishService(d->mToken, d->mIntent, binder);
 }
 
 void ActivityThread::H::handleMessage(const sp<Message>& message)
@@ -391,7 +392,7 @@ void ActivityThread::H::handleMessage(const sp<Message>& message)
             break;
         case BIND_SERVICE:
             {
-                sp<ServiceBindData> obj = reinterpret_cast<ServiceBindData*>(message->obj.get());
+                sp<BindServiceData> obj = reinterpret_cast<BindServiceData*>(message->obj.get());
                 mThread->scheduleBindService(obj);
             }
             break;

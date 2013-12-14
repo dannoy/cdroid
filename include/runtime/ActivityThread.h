@@ -79,7 +79,7 @@ private:
         virtual void bindApplication(String8 appName);
         virtual void scheduleLaunchActivity(sp<ActivityInfo> ai, sp<IBinder> token, sp<Intent> intent);
         virtual void scheduleCreateService(sp<ServiceInfo> ai, sp<IBinder> token, sp<Intent> intent);
-        virtual void scheduleBindService(sp<Binder> token, sp<Intent> intent, bool rebind);
+        virtual void scheduleBindService(sp<IBinder> token, sp<Intent> intent, bool rebind);
     private:
         String8 mAppName;
         sp<Handler> mH;

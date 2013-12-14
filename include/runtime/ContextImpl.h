@@ -15,6 +15,27 @@ public:
     sp<IServiceConnection> getIServiceConnection();
 
 private:
+    class RunConnection : public Runnable {
+    public:
+        RunConnection(sp<ServiceConnection> conn, sp<ComponentName> comp, sp<IBinder> service, int what)
+            : mComp(comp),
+            mConnection(conn),
+            mService(service),
+            mWhat(what)
+        {
+        }
+
+        virtual int run()
+        {
+            /*ALOGI("TODO post run connection");*/
+            mConnection->onServiceConnected(mComp, mService);
+        }
+
+        sp<ComponentName> mComp;
+        sp<IBinder> mService;
+        sp<ServiceConnection> mConnection;
+        int mWhat;
+    };
     class InnerServiceConnection : public BnServiceConnection {
     public:
         InnerServiceConnection(sp<ServiceConnection> conn, sp<Handler> handler);

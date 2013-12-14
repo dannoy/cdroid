@@ -167,9 +167,10 @@ ServiceDispatcher::InnerServiceConnection::InnerServiceConnection(sp<ServiceConn
 {
 }
 
+
 void ServiceDispatcher::InnerServiceConnection::connected(sp<ComponentName> name, sp<IBinder> service)
 {
-    ALOGI("TODO post connection");
+    mMainThreadHandler->post(new RunConnection(mConnection, name, service, 0));
 }
 
 ServiceConnectionManager::ServiceConnectionManager()

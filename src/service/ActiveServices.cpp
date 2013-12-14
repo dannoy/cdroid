@@ -43,7 +43,6 @@ int ActiveServices::startServiceLocked(sp<IApplicationThread> caller, sp<Intent>
                                                     intent->getAction().string());
 
 
-
     sp<ServiceRecord> r = retrieveServiceLocked(intent);
 
     if(r != NULL)
@@ -78,9 +77,9 @@ int ActiveServices::startServiceLocked(sp<ServiceRecord> r)
     if(app == NULL) {
         mAMS->startProcessLocked(r->mServiceInfo->mApplicationName);
         return 0;
-    } else if(r->mApp != NULL && r->mApp->thread != NULL) { // already started
+    }/* else if(r->mApp != NULL && r->mApp->thread != NULL) { // already started
         return 0;
-    }
+    } */
 
 
 
@@ -112,7 +111,7 @@ int ActiveServices::requestServiceBindingsLocked(sp<ServiceRecord> r)
     map<String8, sp<IntentBindRecord> >::iterator it = r->mBindings.begin();
 
     for(; it != r->mBindings.end(); ++it) {
-        if(requestServiceBindingsLocked(r, *it, false) < 0) {
+        if(requestServiceBindingsLocked(r, it->second, false) < 0) {
             break;
         }
     }
@@ -137,10 +136,12 @@ int ActiveServices::requestServiceBindingsLocked(sp<ServiceRecord> r, sp<IntentB
 int ActiveServices::realStartServiceLocked(sp<ServiceRecord> r, sp<ProcessRecord> app)
 {
 
-    r->mApp = app;
-    //ALOGI("Activity %s request process pid %d started", r->mActivityInfo->mName.string(), app->pid);
+    if(r->mApp == NULL || r->mApp->thread == NULL) { // already started
+        r->mApp = app;
+        //ALOGI("Activity %s request process pid %d started", r->mActivityInfo->mName.string(), app->pid);
 
-    app->thread->scheduleCreateService(r->mServiceInfo, r, r->mIntent);
+        app->thread->scheduleCreateService(r->mServiceInfo, r, r->mIntent);
+    }
 
     requestServiceBindingsLocked(r);
     return 0;
@@ -148,6 +149,7 @@ int ActiveServices::realStartServiceLocked(sp<ServiceRecord> r, sp<ProcessRecord
 
 int ActiveServices::bindServiceLocked(sp<IApplicationThread> caller, sp<IBinder> token, sp<Intent> intent, sp<IServiceConnection> connection, int pid, int uid, int flags)
 {
+    ALOGE("bindservice ");
     sp<ProcessRecord> callerApp;
     if(caller != NULL) {
         callerApp = mAMS->getRecordForAppLocked(caller);
@@ -176,15 +178,15 @@ int ActiveServices::bindServiceLocked(sp<IApplicationThread> caller, sp<IBinder>
     }
 
     sp<AppBindRecord> b = r->retrieveAppBindingLocked(intent, callerApp);
-    sp<ConnectionRecord> c = new ConnectionRecord(b, activity, conn, flags);
+    sp<ConnectionRecord> c = new ConnectionRecord(b, activity, connection, flags);
 
-    sp<IBinder> binder = conn->asBinder();
-    map<sp<IBinder>, Vector<sp<ConnectionRecord> >* >::iterator it = r->mConnections.find(b);
+    sp<IBinder> binder = connection->asBinder();
+    map<sp<IBinder>, Vector<sp<ConnectionRecord> >* >::iterator it = r->mConnections.find(binder);
     Vector<sp<ConnectionRecord> > *clist = NULL;
 
     if(it == r->mConnections.end()) {
-        clist = new Vector<ConnectionRecord>();
-        r.mConnections.insert(pair<sp<IBinder>, Vector<ConnectionRecord>* >(binder, clist));
+        clist = new Vector<sp<ConnectionRecord> >();
+        r->mConnections.insert(pair<sp<IBinder>, Vector<sp<ConnectionRecord> >* >(binder, clist));
     }
 
     clist->push_back(c);
@@ -192,11 +194,13 @@ int ActiveServices::bindServiceLocked(sp<IApplicationThread> caller, sp<IBinder>
     startServiceLocked(r);
 
     if(r->mApp != NULL && b->mIntentBindRecord->received) {
-        c->conn->connected(r->mName, b->mIntentBindRecord->binder);
+        sp<ComponentName> cm = new ComponentName(r->mServiceInfo->getName());
+        
+        c->mConnection->connected(cm, b->mIntentBindRecord->binder);
     }
 }
 
-int ActiveServices::publishService(sp<IBinder> token, sp<Intent> intent, sp<IBinder> service)
+int ActiveServices::publishServiceLocked(sp<IBinder> token, sp<Intent> intent, sp<IBinder> service)
 {
     sp<ServiceRecord> r = reinterpret_cast<ServiceRecord*>(token.get());
     if(r == NULL) {
@@ -214,13 +218,14 @@ int ActiveServices::publishService(sp<IBinder> token, sp<Intent> intent, sp<IBin
     i->binder = service;
     i->received = true;
 
-    map<sp<IBinder>, Vector<sp<ConnectionRecord> >* >::iterator it2 = mConnections.begin();
+    map<sp<IBinder>, Vector<sp<ConnectionRecord> >* >::iterator it2 = r->mConnections.begin();
 
-    for(; it2 != mConnections.end(); ++it2) {
+    for(; it2 != r->mConnections.end(); ++it2) {
         Vector<sp<ConnectionRecord> > *clist = it2->second;
-        for(Vector<sp<ConnectionRecord> >::iterator it3 = clist->begin(); it3 != clist->end; ++it3) {
+        for(Vector<sp<ConnectionRecord> >::iterator it3 = clist->begin(); it3 != clist->end(); ++it3) {
             sp<ConnectionRecord> c = *it3;
-            c->mConnection->connected(r->mName, i->binder);
+            sp<ComponentName> cm = new ComponentName(r->mServiceInfo->getName());
+            c->mConnection->connected(cm, i->binder);
         }
     }
 

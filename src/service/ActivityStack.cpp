@@ -65,10 +65,10 @@ int ActivityStack::indexOfTokenLocked(sp<IBinder> token)
 
 sp<ActivityRecord> ActivityStack::getActivityRecordByToken(sp<IBinder> token)
 {
-    int index = indexOfTokenLocked(resultTo);
+    int index = indexOfTokenLocked(token);
 
     if(index >= 0) {
-        return = mHistory[index];
+        return mHistory[index];
     }
 
     return NULL;

@@ -83,7 +83,7 @@ public:
         }
     }
 
-    virtual void scheduleBindService(sp<Binder> token, sp<Intent> intent, bool rebind)
+    virtual void scheduleBindService(sp<IBinder> token, sp<Intent> intent, bool rebind)
     {
         Parcel _data;
         Parcel _reply;
@@ -167,7 +167,7 @@ int BnApplicationThread::onTransact(uint32_t code, const Parcel& data, Parcel* r
                 sp<Intent> _arg1;
                 bool _arg2;
                 _arg0 = data.readStrongBinder();
-                _arg1 = _arg2->createFromParcel(data);
+                _arg1 = _arg1->createFromParcel(data);
                 if(data.readInt32() == 1) {
                     _arg2 = true;
                 } else {

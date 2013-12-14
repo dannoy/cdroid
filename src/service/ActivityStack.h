@@ -25,6 +25,9 @@ public:
     int startActivityLocked(sp<ActivityRecord> r, sp<ActivityRecord> sourceRecord);
     int attachApplicationLocked(sp<ProcessRecord> app);
     int realStartActivityLocked(sp<ActivityRecord> r, sp<ProcessRecord> app);
+
+public:
+    sp<ActivityRecord> getActivityRecordByToken(sp<IBinder> token);
 private:
     sp<ActivityRecord> topRunningActivityLocked(sp<ActivityRecord> notTop);
     int indexOfTokenLocked(sp<IBinder> token);

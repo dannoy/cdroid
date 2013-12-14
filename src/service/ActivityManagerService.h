@@ -27,13 +27,15 @@ public:
     virtual int startActivity(sp<IBinder> caller, sp<IBinder> resultTo, sp<Intent> intent, int requestCode);
     virtual int startService(sp<IBinder> caller, sp<Intent> intent) ;
     virtual int bindService(sp<IBinder> caller, sp<IBinder> token, sp<Intent> intent, sp<IBinder> connection, int flags);
+    virtual int publishService(sp<IBinder> token, sp<Intent> intent, sp<IBinder> service);
 
 private:
     void attachApplicationLocked(sp<IBinder> appThread, pid_t callingPid);
 
+public:
+    sp<ActivityStack> mMainStack;
 private:
     pid_t MY_PID;
-    sp<ActivityStack> mMainStack;
     sp<ActiveServices> mServices;
     String8 mTopAction;
     Vector<sp<ProcessRecord> > mProcesses;

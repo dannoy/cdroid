@@ -52,7 +52,11 @@ void Handler::handleMessage(const sp<android::Message>& message)
 {
     //ALOGI("handleMessage");
     sp<Message> msg = reinterpret_cast<Message*>(message.get());
-    handleMessage(msg);
+    if(msg->runnable != NULL) {
+        msg->runnable->run();
+    } else {
+        handleMessage(msg);
+    }
 }
 
 void Handler::sendMessage(const sp<Message>& message)

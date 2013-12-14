@@ -1,17 +1,17 @@
 #define LOG_TAG "ITest"
 #include <cutils/log.h>
 
-#include "ITestService.h"
+#include "ITestBindedService.h"
 
 enum {
     TRANSACTION_sayHello = (android::IBinder::FIRST_CALL_TRANSACTION + 0),
 };
 
-class BpTest: public BpInterface<ITest>
+class BpTestBind: public BpInterface<ITestBind>
 {
 public:
-    BpTest(const sp<IBinder>& impl)
-        : BpInterface<ITest>(impl)
+    BpTestBind(const sp<IBinder>& impl)
+        : BpInterface<ITestBind>(impl)
     {
     }
     virtual void sayHello()
@@ -30,14 +30,14 @@ public:
     }
 };
 
-IMPLEMENT_META_INTERFACE(Test, "com::cdroid::app::service::ITest");
+IMPLEMENT_META_INTERFACE(TestBind, "com::cdroid::app::service::ITestBind");
 
-int BnTest::onTransact(uint32_t code, const Parcel& data, Parcel* reply,uint32_t flags)
+int BnTestBind::onTransact(uint32_t code, const Parcel& data, Parcel* reply,uint32_t flags)
 {
     switch(code) {
         case TRANSACTION_sayHello:
             {
-                CHECK_INTERFACE(ITest, data, reply);
+                CHECK_INTERFACE(ITestBind, data, reply);
                 sayHello();
                 reply->writeInt32(1);
                 return true;

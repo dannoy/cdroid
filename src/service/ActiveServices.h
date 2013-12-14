@@ -18,10 +18,13 @@ public:
     int attachApplicationLocked(sp<ProcessRecord> app);
     int startServiceLocked(sp<IApplicationThread> caller, sp<Intent> intent, int pid, int uid);
     int bindServiceLocked(sp<IApplicationThread> caller, sp<IBinder> token, sp<Intent> intent, sp<IServiceConnection> connection, int pid, int uid, int flags);
+    int publishServiceLocked(sp<IBinder> token, sp<Intent> intent, sp<IBinder> service);
 
 protected:
 
     sp<ServiceRecord> retrieveServiceLocked(sp<Intent> intent);
+    int requestServiceBindingsLocked(sp<ServiceRecord> r);
+    int requestServiceBindingsLocked(sp<ServiceRecord> r, sp<IntentBindRecord> i, bool rebind);
 
 private:
     int startServiceLocked(sp<ServiceRecord> r);

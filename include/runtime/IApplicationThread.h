@@ -5,6 +5,7 @@
 #include <runtime/ActivityInfo.h>
 #include <runtime/ServiceInfo.h>
 #include <runtime/Intent.h>
+#include <runtime/Bundle.h>
 
 namespace cdroid{
 
@@ -16,6 +17,7 @@ public:
     virtual void scheduleLaunchActivity(sp<ActivityInfo> ai, sp<IBinder> token, sp<Intent> intent) = 0;
     virtual void scheduleCreateService(sp<ServiceInfo> ai, sp<IBinder> token, sp<Intent> intent) = 0;
     virtual void scheduleBindService(sp<IBinder> token, sp<Intent> intent, bool rebind) = 0;
+    virtual void scheduleReceiver(sp<Intent> intent, sp<Bundle> bundle, bool ordered, bool sticky) = 0;
 };
 
 class BnApplicationThread : public BnInterface<IApplicationThread> {

@@ -1,6 +1,7 @@
 #ifndef _SERVICE_IACTIVITY_MANAGER_H
 #define _SERVICE_IACTIVITY_MANAGER_H
 #include <runtime/common.h>
+#include <runtime/Bundle.h>
 #include <runtime/IApplicationThread.h>
 #include <runtime/IServiceConnection.h>
 
@@ -14,6 +15,9 @@ public:
     virtual int startService(sp<IBinder> caller, sp<Intent> intent) = 0;
     virtual int bindService(sp<IBinder> caller, sp<IBinder> token, sp<Intent> intent, sp<IBinder> connection, int flags) = 0;
     virtual int publishService(sp<IBinder> token, sp<Intent> intent, sp<IBinder> service) = 0;
+    virtual int registerReceiver(sp<IBinder> caller, sp<IBinder> receiver, sp<IntentFilter> filter) = 0;
+    // resultTo -> IIntentReceiver
+    virtual int broadcastIntent(sp<IBinder> caller, sp<Intent> intent, sp<IBinder> resultTo, sp<Bundle> map, bool serialized, bool sticky) = 0;
 };
 
 class BnActivityManager : public BnInterface<IActivityManager> {

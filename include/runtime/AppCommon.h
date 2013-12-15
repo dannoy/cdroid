@@ -20,5 +20,7 @@ using cdroid::IInterface;
 using cdroid::BnInterface;
 using cdroid::BpInterface;
 using cdroid::Parcel;
+using cdroid::BroadcastReceiver;
+using cdroid::Context;
 
 #endif

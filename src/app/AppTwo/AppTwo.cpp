@@ -58,6 +58,39 @@ static Activity *createAppTwoActivity(sp<Intent> intent)
     return new AppTwo(intent);
 }
 
+class AppTwoBroadcastReceiver : public BroadcastReceiver {
+public:
+    virtual void onReceive(sp<Context> context, sp<Intent> intent)
+    {
+        ALOGI("receive broadcast %s",intent->getAction().string());
+    }
+};
+
+static BroadcastReceiver*  createBroadcastReceiver(sp<Intent> intent)
+{
+    return new AppTwoBroadcastReceiver();
+}
+
+struct cdroid::IntentFilter_ManifestItem inf1= {
+    String8("com.cdroid.broadcast.apptwo2"),
+    String8("com.cdroid.broadcast.category.apptwo"),
+    NULL,
+};
+
+
+struct cdroid::IntentFilter_ManifestItem inf2 = {
+    String8("com.cdroid.broadcast.apptwo"),
+    String8("com.cdroid.broadcast.category.apptwo"),
+    &inf1
+};
+
+
+struct cdroid::ReceiverManifest AppTwoReceiverManifest = {
+    String8("AppTwoReceiver"),
+    &inf2,
+    NULL
+};
+
 static struct cdroid::ActivityManifest AppTwoManifest= {
     String8("AppTwoActivity"),
     String8("com.cdroid.app.apptwo"),

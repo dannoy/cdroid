@@ -22,6 +22,8 @@ private:
     Vector<ActivityManifest* > mActivityMF;
     Vector<sp<ServiceInfo> > mServices;
     Vector<ServiceManifest* > mServiceMF;
+    Vector<sp<ReceiverInfo> > mReceivers;
+    Vector<ReceiverManifest* > mReceiverMF;
     // TODO: use map to map item in mApplicationMF to 
     // item in mApplicationMF_file
     Vector<ApplicationManifest* > mApplicationMF;
@@ -32,6 +34,7 @@ public:
     virtual sp<ActivityInfo> getActivityInfo(String8 name); 
     virtual sp<ActivityInfo> resolveActivityInfo(String8 action); 
     virtual sp<ServiceInfo> resolveServiceInfo(String8 action);
+    virtual Vector<sp<ReceiverInfo> >* resolveIntentReceivers(sp<Intent> intent);
 
 };
 

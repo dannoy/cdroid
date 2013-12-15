@@ -8,6 +8,7 @@ enum {
     TRANSACTION_getActivityInfo = (android::IBinder::FIRST_CALL_TRANSACTION + 0),
     TRANSACTION_resolveActivityInfo,
     TRANSACTION_resolveServiceInfo,
+    TRANSACTION_resolveIntentReceivers,
 };
 
 class BpPackageManager: public BpInterface<IPackageManager>
@@ -76,6 +77,31 @@ public:
 
         return _result;
     }
+
+    virtual Vector<sp<ReceiverInfo> >* resolveIntentReceivers(sp<Intent> intent)
+    {
+        Parcel _data;
+        Parcel _reply;
+        Vector<sp<ReceiverInfo> >* _result = new Vector<sp<ReceiverInfo> >();
+
+        _data.writeInterfaceToken(this->getInterfaceDescriptor());
+        intent->writeToParcel(&_data, 0);
+        remote()->transact(TRANSACTION_resolveIntentReceivers, _data, &_reply, 0);
+        _reply.readExceptionCode();
+        if ((0!=_reply.readInt32())) {
+            int N = _reply.readInt32();
+            while(N--) {
+                sp<ReceiverInfo> rf;
+                rf = rf->createFromParcel(_reply);
+                _result->push_back(rf);
+            }
+        }
+        else {
+            _result = NULL;
+        }
+
+        return _result;
+    }
 };
 
 IMPLEMENT_META_INTERFACE(PackageManager, "com::cdroid::service::IPackageManager");
@@ -119,6 +145,25 @@ int BnPackageManager::onTransact(uint32_t code, const Parcel& data, Parcel* repl
                 if(_result != NULL) {
                     reply->writeInt32(1);
                     _result->writeToParcel(reply, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+                } else {
+                    reply->writeInt32(0);
+                }
+                return true;
+            }
+            break;
+        case TRANSACTION_resolveIntentReceivers:
+            {
+                CHECK_INTERFACE(IPackageManager, data, reply);
+                sp<Intent> _arg0;
+                _arg0 = _arg0->createFromParcel(data);
+                Vector<sp<ReceiverInfo> >* _result = resolveIntentReceivers(_arg0);
+                if(_result != NULL) {
+                    reply->writeInt32(1);
+                    int N = _result->size();
+                    reply->writeInt32(N);
+                    while(N--) {
+                        (*_result)[N]->writeToParcel(reply, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+                    }
                 } else {
                     reply->writeInt32(0);
                 }

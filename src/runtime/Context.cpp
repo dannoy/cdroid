@@ -35,5 +35,16 @@ int ContextWrapper::bindService(sp<Intent> intent, sp<ServiceConnection> conn)
     return mBase->bindService(intent, conn);
 }
 
+int ContextWrapper::registerReceiver(sp<BroadcastReceiver> receiver, sp<IntentFilter> filter)
+{
+    assert(mBase != NULL);
+    return mBase->registerReceiver(receiver, filter);
+}
+
+int ContextWrapper::sendBroadcast(sp<Intent> intent)
+{
+    assert(mBase != NULL);
+    return mBase->sendBroadcast(intent);
+}
 
 };

@@ -11,6 +11,7 @@ namespace cdroid {
 ContextImpl::ContextImpl()
 {
     mServiceConnectionMgr = new ServiceConnectionManager();
+    mReceiverMgr = new ReceiverManager();
 }
 
 ContextImpl* ContextImpl::createSystemContext(ActivityThread *mainThread)
@@ -102,6 +103,27 @@ public:
     }
 };
 
+int ContextImpl::registerReceiver(sp<BroadcastReceiver> receiver, sp<IntentFilter> filter)
+{
+    sp<Handler> mainHandler = mThread->getHandler();
+    sp<IIntentReceiver> rd = mReceiverMgr->getReceiverDispatcher(receiver, getOuterContext(), mThread->getHandler());
+    ActivityManagerNative::getDefault()->registerReceiver(mThread->getApplicationThread(), rd->asBinder(), filter);
+
+}
+
+int ContextImpl::sendBroadcast(sp<Intent> intent)
+{
+    ActivityManagerNative::getDefault()->broadcastIntent(mThread->getApplicationThread(), intent, NULL, NULL, false, false);
+
+}
+
+class ContextTestBroadcastReceiver : public BroadcastReceiver {
+public:
+    virtual void onReceive(sp<Context> context, sp<Intent> intent) {
+        ALOGI("ContextTestBroadcastReceiver onReceive %s", intent->getAction().string());
+    }
+};
+
 int ContextImpl::handleInternalCommand(String8 cmd)
 {
     //ALOGI("handleInternalcommand %s", cmd.string());
@@ -109,6 +131,13 @@ int ContextImpl::handleInternalCommand(String8 cmd)
     int pos = cmd.find(space);
     //ALOGI("handleInternalcommand pos %d", pos);
     switch(pos) {
+        case 16:
+            {
+                sp<IntentFilter> inf = new IntentFilter(String8(cmd.string() + pos + 1));
+                sp<ContextTestBroadcastReceiver> r = new ContextTestBroadcastReceiver();
+                return registerReceiver(r, inf);
+            }
+            break;
         case 13:
             {
                 sp<Intent> intent = new Intent(String8(cmd.string() + pos + 1));
@@ -127,6 +156,12 @@ int ContextImpl::handleInternalCommand(String8 cmd)
 
                 sp<Intent> intent = new Intent(String8(cmd.string() + pos + 1));
                 return bindService(intent, testconn);
+            }
+            break;
+        case 9:
+            {
+                sp<Intent> intent = new Intent(String8(cmd.string() + pos + 1));
+                return sendBroadcast(intent);
             }
             break;
     }
@@ -205,6 +240,64 @@ sp<IServiceConnection> ServiceConnectionManager::getServiceDispatcher(sp<Service
     }
 
     return sd->getIServiceConnection();
+}
+
+ReceiverDispatcher::ReceiverDispatcher(sp<BroadcastReceiver> receiver, sp<Context> context, sp<Handler> mainHandler)
+    : mReceiver(receiver),
+    mContext(context),
+    mMainHandler(mainHandler)
+{
+    mIntentReceiver = new InnerIntentReceiver(receiver, context, mainHandler);
+}
+
+sp<IIntentReceiver> ReceiverDispatcher::getIIntentReceiver()
+{
+    return mIntentReceiver;
+}
+
+ReceiverDispatcher::InnerIntentReceiver::InnerIntentReceiver(sp<BroadcastReceiver> receiver, sp<Context> context, sp<Handler> mainHandler)
+    : mReceiver(receiver),
+    mContext(context),
+    mMainThreadHandler(mainHandler)
+{
+}
+
+void ReceiverDispatcher::InnerIntentReceiver::performReceive(sp<Intent> intent, sp<Bundle> extra, bool ordered, bool sticky)
+{
+    ALOGI("TODO post Receive");
+}
+
+ReceiverManager::ReceiverManager()
+{
+}
+
+sp<IIntentReceiver> ReceiverManager::getReceiverDispatcher(sp<BroadcastReceiver> receiver, sp<Context> context, sp<Handler> handler)
+{
+    AutoMutex _l(mMutex);
+    map<sp<Context>, map<sp<BroadcastReceiver>, sp<ReceiverDispatcher> >* >::iterator it = mReceivers.find(context);
+    map<sp<BroadcastReceiver>, sp<ReceiverDispatcher> >* rdmap = NULL;
+
+    map<sp<BroadcastReceiver>, sp<ReceiverDispatcher> >::iterator it2;
+    sp<ReceiverDispatcher> rd;
+
+    if(it != mReceivers.end()) {
+        rdmap = it->second;
+        it2 = rdmap->find(receiver);
+        rd = it2->second;
+    }
+
+    if(rd == NULL) {
+        rd = new ReceiverDispatcher(receiver, context, handler);
+        if(rdmap == NULL) {
+            rdmap = new map<sp<BroadcastReceiver>, sp<ReceiverDispatcher> >();
+            mReceivers.insert(pair<sp<Context>,map<sp<BroadcastReceiver>,sp<ReceiverDispatcher> >* >(context, rdmap));
+        }
+        rdmap->insert(pair<sp<BroadcastReceiver>,sp<ReceiverDispatcher> >(receiver, rd));
+    }
+    else {
+    }
+
+    return rd->getIIntentReceiver();
 }
 
 };

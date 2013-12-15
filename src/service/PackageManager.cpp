@@ -5,6 +5,8 @@
 #include <service/PackageManager.h>
 
 
+
+
 namespace cdroid {
 sp<IPackageManager> PackageManager::sProxy;
 Mutex PackageManager::mSingletonMutex;
@@ -43,5 +45,9 @@ sp<ServiceInfo> PackageManager::resolveServiceInfo(String8 action)
     return getDefault()->resolveServiceInfo(action);
 }
 
+Vector<sp<ReceiverInfo> >* PackageManager::resolveIntentReceivers(sp<Intent> intent)
+{
+    return getDefault()->resolveIntentReceivers(intent);
+}
 
 };

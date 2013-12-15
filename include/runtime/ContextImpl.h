@@ -4,6 +4,7 @@
 #include <runtime/Context.h>
 #include <runtime/ApplicationLoader.h>
 #include <runtime/IServiceConnection.h>
+#include <runtime/IIntentReceiver.h>
 
 namespace cdroid {
 
@@ -53,7 +54,6 @@ private:
 };
 
 class ServiceConnectionManager : public RefBase {
-private:
 public:
     ServiceConnectionManager();
     sp<IServiceConnection> getServiceDispatcher(sp<ServiceConnection> conn, sp<Context> context, sp<Handler> handler, int flags);
@@ -61,6 +61,39 @@ public:
 private:
     Mutex mMutex;
     map<sp<Context>, map<sp<ServiceConnection>, sp<ServiceDispatcher> >*  > mServices;
+};
+
+class ReceiverDispatcher : public RefBase {
+public:
+    ReceiverDispatcher(sp<BroadcastReceiver> receiver, sp<Context> context, sp<Handler> mainHandler);
+    sp<IIntentReceiver> getIIntentReceiver();
+
+private:
+    class InnerIntentReceiver: public BnIntentReceiver {
+    public:
+        InnerIntentReceiver(sp<BroadcastReceiver> receiver, sp<Context> context, sp<Handler> mainHandler);
+        virtual void performReceive(sp<Intent> intent, sp<Bundle> extra, bool ordered, bool sticky);
+    private:
+        sp<Handler> mMainThreadHandler;
+        sp<BroadcastReceiver> mReceiver;
+        sp<Context> mContext;
+    };
+
+private:
+    sp<BroadcastReceiver> mReceiver;
+    sp<Context> mContext;
+    sp<Handler> mMainHandler;
+    sp<InnerIntentReceiver> mIntentReceiver;
+};
+
+class ReceiverManager : public RefBase {
+public:
+    ReceiverManager();
+    sp<IIntentReceiver> getReceiverDispatcher(sp<BroadcastReceiver> receiver, sp<Context> context, sp<Handler> handler);
+
+private:
+    Mutex mMutex;
+    map<sp<Context>, map<sp<BroadcastReceiver>, sp<ReceiverDispatcher> >*  > mReceivers;
 };
 
 
@@ -79,6 +112,8 @@ public:
     virtual int startActivity(sp<Intent> intent);
     virtual int startService(sp<Intent> intent);
     virtual int bindService(sp<Intent> intent, sp<ServiceConnection> conn);
+    virtual int registerReceiver(sp<BroadcastReceiver> receiver, sp<IntentFilter> filter);
+    virtual int sendBroadcast(sp<Intent> intent);
 
 
 private:
@@ -111,6 +146,7 @@ private:
     sp<Looper> mCmdLooper;
     sp<Handler> mCmdHandler;
     sp<ServiceConnectionManager> mServiceConnectionMgr;
+    sp<ReceiverManager> mReceiverMgr;
 
 
     Mutex mCmdMutex;

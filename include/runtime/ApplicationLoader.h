@@ -23,12 +23,27 @@ struct ServiceManifest {
         Service*           (*createService)(sp<Intent> intent);
 };
 
+struct IntentFilter_ManifestItem {
+        String8               action;
+        String8               category;
+
+        struct IntentFilter_ManifestItem *next;
+};
+
+struct ReceiverManifest {
+        String8               name;
+        struct IntentFilter_ManifestItem *inf;
+        ReceiverManifest    *next;
+        BroadcastReceiver*           (*createBroadcastReceiver)(sp<Intent> intent);
+};
+
 struct ApplicationManifest {
     String8 name;
     // shared lib handle
     void *dso;
     ActivityManifest *activity;
     ServiceManifest *service;
+    ReceiverManifest *receiver;
 };
 
 class ApplicationLoaderCallback : public RefBase{

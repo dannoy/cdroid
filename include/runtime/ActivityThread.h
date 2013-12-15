@@ -38,6 +38,20 @@ public:
     bool      mRebind;
 };
 
+class ScheduleReceiverData : public RefBase {
+public:
+    ScheduleReceiverData(sp<Intent> intent, sp<Bundle> bundle, bool ordered, bool sticky)
+        : mIntent(intent),
+        mBundle(bundle),
+        mOrdered(ordered),
+        mSticky(sticky)
+    {
+    }
+    sp<Intent> mIntent;
+    sp<Bundle> mBundle;
+    bool mOrdered;
+    bool mSticky;
+};
 
 class ActivityThread : public virtual RefBase{
 public:
@@ -49,6 +63,7 @@ public:
     void schedulePauseActivity(sp<IBinder> token);
     void scheduleCreateService(sp<ServiceClientRecord> r);
     void scheduleBindService(sp<BindServiceData> d);
+    void scheduleReceiver(sp<ScheduleReceiverData> d);
 
 private:
     class H : public Handler {
@@ -63,6 +78,7 @@ private:
             PAUSE_ACTIVITY,
             CREATE_SERVICE,
             BIND_SERVICE,
+            SCHEDULE_RECEIVER,
         };
         virtual void handleMessage(const sp<Message>& message);
     private:
@@ -80,6 +96,7 @@ private:
         virtual void scheduleLaunchActivity(sp<ActivityInfo> ai, sp<IBinder> token, sp<Intent> intent);
         virtual void scheduleCreateService(sp<ServiceInfo> ai, sp<IBinder> token, sp<Intent> intent);
         virtual void scheduleBindService(sp<IBinder> token, sp<Intent> intent, bool rebind);
+        virtual void scheduleReceiver(sp<Intent> intent, sp<Bundle> bundle, bool ordered, bool sticky);
     private:
         String8 mAppName;
         sp<Handler> mH;

@@ -248,6 +248,14 @@ void ActivityThread::ApplicationThread::scheduleBindService(sp<IBinder> token, s
     mH->sendMessage(msg);
 }
 
+void ActivityThread::ApplicationThread::scheduleReceiver(sp<Intent> intent, sp<Bundle> bundle, bool ordered, bool sticky)
+{
+    //ALOGI("scheduleReceiver");
+    sp<ScheduleReceiverData> data = new ScheduleReceiverData(intent, bundle, ordered, sticky);
+    sp<Message> msg = new Message(H::SCHEDULE_RECEIVER, data);
+    mH->sendMessage(msg);
+}
+
 void ActivityThread::scheduleLaunchActivity(sp<ActivityClientRecord> r)
 {
     AutoMutex _l(mMutex);
@@ -367,6 +375,12 @@ void ActivityThread::scheduleBindService(sp<BindServiceData> d)
     ActivityManagerNative::getDefault()->publishService(d->mToken, d->mIntent, binder);
 }
 
+void ActivityThread::scheduleReceiver(sp<ScheduleReceiverData> d)
+{
+    AutoMutex _l(mMutex);
+    ALOGE("scheduleReceiver ");
+}
+
 void ActivityThread::H::handleMessage(const sp<Message>& message)
 {
     //ALOGI("handlemessage");
@@ -394,6 +408,12 @@ void ActivityThread::H::handleMessage(const sp<Message>& message)
             {
                 sp<BindServiceData> obj = reinterpret_cast<BindServiceData*>(message->obj.get());
                 mThread->scheduleBindService(obj);
+            }
+            break;
+        case SCHEDULE_RECEIVER:
+            {
+                sp<ScheduleReceiverData> obj = reinterpret_cast<ScheduleReceiverData*>(message->obj.get());
+                mThread->scheduleReceiver(obj);
             }
             break;
     }

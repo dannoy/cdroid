@@ -102,6 +102,7 @@ uid_t Process::myEUid()
 
 void Process::killProcessByPid(pid_t pid)
 {
+    ALOGI("Killing process with pid %d", pid);
     kill(pid, SIGKILL);
 }
 

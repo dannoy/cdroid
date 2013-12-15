@@ -4,6 +4,7 @@
 #include <runtime/common.h>
 #include <runtime/ActivityInfo.h>
 #include <runtime/ServiceInfo.h>
+#include <runtime/ReceiverInfo.h>
 
 namespace cdroid {
 
@@ -14,6 +15,7 @@ public:
     virtual sp<ActivityInfo> getActivityInfo(String8 name) = 0; 
     virtual sp<ActivityInfo> resolveActivityInfo(String8 action) = 0; 
     virtual sp<ServiceInfo> resolveServiceInfo(String8 action) = 0; 
+    virtual Vector<sp<ReceiverInfo> >* resolveIntentReceivers(sp<Intent> intent) = 0; 
 };
 
 class BnPackageManager : public BnInterface<IPackageManager> {

@@ -88,14 +88,15 @@ void ActivityManagerService::attachApplicationLocked(sp<IBinder> appThread, int 
     //ALOGI("Found attach request from pid %d app %s %p 222222222222", callingPid, app->name.string(), app->thread.get());
 
     //ALOGI("Found attach request from pid %d app %s", callingPid, app->name.string());
-    int res0 = 0;
-    int res1 = 0;
-    res0 = mMainStack->attachApplicationLocked(app);
+    int res1 = 0, res2 = 0, res3 = 0;
+    res1 = mMainStack->attachApplicationLocked(app);
     //ALOGI("Found attach request from pid %d app %s: after mainstack attach", callingPid, app->name.string());
 
-    res1 = mServices->attachApplicationLocked(app);
+    res2 = mServices->attachApplicationLocked(app);
     //ALOGI("Found attach request from pid %d app %s: after service attach", callingPid, app->name.string());
-    if(res0 == -1 && res1 == -1) {
+
+    res3 = mReceiverHub->attachApplicationLocked(app);
+    if(res1 == -1 && res2 == -1 && res3 == -1) {
         Process::killProcessByPid(app->pid);
     }
 }
@@ -159,6 +160,41 @@ int ActivityManagerService::publishService(sp<IBinder> token, sp<Intent> intent,
     mServices->publishServiceLocked(token, intent, service);
 }
 
+int ActivityManagerService::registerReceiver(sp<IBinder> caller, sp<IBinder> receiver, sp<IntentFilter> filter)
+{
+    int pid = IPCThreadState::self()->getCallingPid();
+    int uid = IPCThreadState::self()->getCallingUid();
+    sp<IApplicationThread> appThread = interface_cast<IApplicationThread>(caller);
+    sp<IIntentReceiver> r = interface_cast<IIntentReceiver>(receiver);
+    int64_t origId = IPCThreadState::self()->clearCallingIdentity(); 
+    registerReceiverLocked(appThread, r, filter, pid, uid);
+    IPCThreadState::self()->restoreCallingIdentity(origId); 
+
+}
+
+int ActivityManagerService::registerReceiverLocked(sp<IApplicationThread> caller, sp<IIntentReceiver> receiver, sp<IntentFilter> filter, int pid, int uid)
+{
+    ALOGI("registerReceiverLocked ");
+    return mReceiverHub->registerReceiverLocked(caller, receiver, filter, pid, uid);
+}
+
+int ActivityManagerService::broadcastIntent(sp<IBinder> caller, sp<Intent> intent, sp<IBinder> resultTo, sp<Bundle> map, bool serialized, bool sticky)
+{
+    int pid = IPCThreadState::self()->getCallingPid();
+    int uid = IPCThreadState::self()->getCallingUid();
+    sp<IApplicationThread> appThread = interface_cast<IApplicationThread>(caller);
+    sp<IIntentReceiver> r = interface_cast<IIntentReceiver>(resultTo);
+    int64_t origId = IPCThreadState::self()->clearCallingIdentity(); 
+    broadcastIntentLocked(appThread, intent, r, map, serialized, sticky, pid, uid);
+    IPCThreadState::self()->restoreCallingIdentity(origId); 
+}
+
+int ActivityManagerService::broadcastIntentLocked(sp<IApplicationThread> caller, sp<Intent> intent, sp<IIntentReceiver> resultTo, sp<Bundle> map, bool serialized, bool sticky, int pid, int uid)
+{
+    ALOGI("broadcastIntentLocked ");
+    return mReceiverHub->broadcastIntentLocked(caller, intent, resultTo, map, serialized, sticky, pid, uid);
+}
+
 int ActivityManagerService::main()
 {
     Condition* cond = new Condition;
@@ -174,6 +210,7 @@ int ActivityManagerService::main()
     mSelf->mMainStack = new ActivityStack(mSelf, context, true, thr->mLooper);
 
     mSelf->mServices = new ActiveServices(mSelf);
+    mSelf->mReceiverHub = new ReceiverHub(mSelf);
 
     mSelf->mTopAction = Intent::ACTION_MAIN;
 }
@@ -214,6 +251,17 @@ sp<ProcessRecord> ActivityManagerService::getRecordForAppLocked(sp<IApplicationT
     return NULL;
 }
 
+sp<ProcessRecord> ActivityManagerService::getProcessRecordLocked(sp<IApplicationThread> thread)
+{
+    for(Vector<sp<ProcessRecord> >::iterator it = mProcesses.begin(); it != mProcesses.end(); ++it) {
+        if((*it)->thread->asBinder() == thread->asBinder()) {
+            return *it;
+        }
+    }
+
+    return NULL;
+}
+
 sp<ProcessRecord> ActivityManagerService::getProcessRecordLocked(String8 appName)
 {
     for(Vector<sp<ProcessRecord> >::iterator it = mProcesses.begin(); it != mProcesses.end(); ++it) {
@@ -243,7 +291,7 @@ sp<ProcessRecord> ActivityManagerService::startProcessLocked(String8 appName)
         }
     }
 
-    return NULL;
+    return app;
 }
 
 };

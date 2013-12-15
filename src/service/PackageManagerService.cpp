@@ -72,6 +72,25 @@ void PackageManagerService::addApplicationManifest(struct ApplicationManifest *a
         smf = smf->next;
     }
 
+    struct ReceiverManifest *rmf = appM->receiver;
+    while(smf) {
+        mReceiverMF.push_back(rmf);
+        sp<ReceiverInfo> ri = new ReceiverInfo(rmf->name, filename);
+        sp<IntentFilter> inf = new IntentFilter();
+        struct IntentFilter_ManifestItem *it = rmf->inf;
+        while(it) {
+            inf->addAction(it->action);
+            inf->addCategory(it->category);
+        }
+
+        ri->mApplicationName = appM->name;
+        ri->mINF = inf;
+
+        mReceivers.push_back(ri);
+
+        rmf = rmf->next;
+    }
+
 }
 
 void PackageManagerService::instantiate()
@@ -113,5 +132,18 @@ sp<ServiceInfo> PackageManagerService::resolveServiceInfo(String8 action)
     return NULL;
 }
 
+Vector<sp<ReceiverInfo> >* PackageManagerService::resolveIntentReceivers(sp<Intent> intent)
+{
+    Vector<sp<ReceiverInfo> >* result = new Vector<sp<ReceiverInfo> >();
+
+    for(Vector<sp<ReceiverInfo> >::iterator it = mReceivers.begin(); it != mReceivers.end(); ++it) {
+        //ALOGI("Looking ActivityManifest action %s", (*it)->mAction.string());
+        if((*it)->mINF->matchIntent(intent)) {
+            result->push_back(*it);
+        }
+    }
+
+    return result;
+}
 
 };

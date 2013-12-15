@@ -5,9 +5,14 @@
 
 namespace cdroid {
 
-class Bundle : public RefBase {
+class Bundle : public Parcelable {
 public:
     Bundle();
+    int describeContents();
+    void writeToParcel(Parcel *out, int flags);
+    Bundle *createFromParcel(const Parcel& source);
+    void readFromParcel(const Parcel& source);
+    std::vector<Parcelable *> newArray(int size);
 };
 
 

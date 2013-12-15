@@ -8,6 +8,7 @@ enum {
     TRANSACTION_scheduleLaunchActivity,
     TRANSACTION_scheduleCreateService,
     TRANSACTION_scheduleBindService,
+    TRANSACTION_scheduleReceiver,
 };
 
 class BpApplicationThread : public BpInterface<IApplicationThread> {
@@ -105,6 +106,34 @@ public:
             // Something is wrong
         }
     }
+    virtual void scheduleReceiver(sp<Intent> intent, sp<Bundle> bundle, bool ordered, bool sticky)
+    {
+        Parcel _data;
+        Parcel _reply;
+
+        _data.writeInterfaceToken(this->getInterfaceDescriptor());
+        intent->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+        bundle->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+        if(ordered) {
+            _data.writeInt32(1);
+        } else {
+            _data.writeInt32(0);
+        }
+
+        if(sticky) {
+            _data.writeInt32(1);
+        } else {
+            _data.writeInt32(0);
+        }
+
+        remote()->transact(TRANSACTION_scheduleBindService, _data, &_reply, 0);
+        _reply.readExceptionCode();
+        if ((0!=_reply.readInt32())) {
+        }
+        else {
+            // Something is wrong
+        }
+    }
 
 };
 
@@ -174,6 +203,30 @@ int BnApplicationThread::onTransact(uint32_t code, const Parcel& data, Parcel* r
                     _arg2 = false;
                 }
                 scheduleBindService(_arg0, _arg1, _arg2);
+                reply->writeInt32(1);
+                return true;
+            }
+            break;
+        case TRANSACTION_scheduleReceiver:
+            {
+                CHECK_INTERFACE(IApplicationThread, data, reply);
+                sp<Intent> _arg0;
+                sp<Bundle> _arg1;
+                bool _arg2;
+                bool _arg3;
+                _arg0 = _arg0->createFromParcel(data);
+                _arg1 = _arg1->createFromParcel(data);
+                if(data.readInt32() == 1) {
+                    _arg2 = true;
+                } else {
+                    _arg2 = false;
+                }
+                if(data.readInt32() == 1) {
+                    _arg3 = true;
+                } else {
+                    _arg3 = false;
+                }
+                scheduleReceiver(_arg0, _arg1, _arg2, _arg3);
                 reply->writeInt32(1);
                 return true;
             }

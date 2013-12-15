@@ -11,6 +11,8 @@ enum {
     TRANSACTION_startService,
     TRANSACTION_bindService,
     TRANSACTION_publishService,
+    TRANSACTION_registerReceiver,
+    TRANSACTION_broadcastIntent,
 };
 
 class BpActivityManager: public BpInterface<IActivityManager>
@@ -119,6 +121,58 @@ public:
         }
         return _result;
     }
+
+    virtual int registerReceiver(sp<IBinder> caller, sp<IBinder> receiver, sp<IntentFilter> filter)
+    {
+        Parcel _data;
+        Parcel _reply;
+        int    _result = -1;
+
+        _data.writeInterfaceToken(this->getInterfaceDescriptor());
+        _data.writeStrongBinder(caller);
+        _data.writeStrongBinder(receiver);
+        filter->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+        remote()->transact(TRANSACTION_registerReceiver, _data, &_reply, 0);
+        _reply.readExceptionCode();
+        if ((0!=_reply.readInt32())) {
+            _result = _reply.readInt32();
+        }
+        else {
+            _result = -1;
+        }
+        return _result;
+    }
+    virtual int broadcastIntent(sp<IBinder> caller, sp<Intent> intent, sp<IBinder> resultTo, sp<Bundle> map, bool serialized, bool sticky)
+    {
+        Parcel _data;
+        Parcel _reply;
+        int    _result = -1;
+
+        _data.writeInterfaceToken(this->getInterfaceDescriptor());
+        _data.writeStrongBinder(caller);
+        intent->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+        _data.writeStrongBinder(resultTo);
+        map->writeToParcel(&_data, android::Parcelable::PARCELABLE_WRITE_RETURN_VALUE);
+        if(serialized) {
+            _data.writeInt32(1);
+        } else {
+            _data.writeInt32(0);
+        }
+        if(sticky) {
+            _data.writeInt32(1);
+        } else {
+            _data.writeInt32(0);
+        }
+        remote()->transact(TRANSACTION_broadcastIntent, _data, &_reply, 0);
+        _reply.readExceptionCode();
+        if ((0!=_reply.readInt32())) {
+            _result = _reply.readInt32();
+        }
+        else {
+            _result = -1;
+        }
+        return _result;
+    }
 };
 
 IMPLEMENT_META_INTERFACE(ActivityManager, "com::cdroid::service::IActivityManager");
@@ -208,6 +262,49 @@ int BnActivityManager::onTransact(uint32_t code, const Parcel& data, Parcel* rep
                 _arg1 = _arg1->createFromParcel(data);
                 _arg2 = data.readStrongBinder();
                 int _result = publishService(_arg0, _arg1, _arg2);
+                reply->writeInt32(1);
+                reply->writeInt32(_result);
+                return true;
+            }
+        case TRANSACTION_registerReceiver:
+            {
+                CHECK_INTERFACE(IActivityManager, data, reply);
+                sp<IBinder> _arg0;
+                sp<IBinder> _arg1;
+                sp<IntentFilter> _arg2;
+                _arg0 = data.readStrongBinder();
+                _arg1 = data.readStrongBinder();
+                _arg2 = _arg2->createFromParcel(data);
+                int _result = registerReceiver(_arg0, _arg1, _arg2);
+                reply->writeInt32(1);
+                reply->writeInt32(_result);
+                return true;
+            }
+        case TRANSACTION_broadcastIntent:
+            {
+                CHECK_INTERFACE(IActivityManager, data, reply);
+                sp<IBinder> _arg0;
+                sp<Intent> _arg1;
+                sp<IBinder> _arg2;
+                sp<Bundle> _arg3;
+                bool _arg4;
+                bool _arg5;
+                _arg0 = data.readStrongBinder();
+                _arg1 = _arg1->createFromParcel(data);
+                _arg2 = data.readStrongBinder();
+                _arg3 = _arg3->createFromParcel(data);
+                if(1 == data.readInt32()) {
+                    _arg4 = true;
+                } else {
+                    _arg4 = true;
+                }
+
+                if(1 == data.readInt32()) {
+                    _arg5 = true;
+                } else {
+                    _arg5 = true;
+                }
+                int _result = broadcastIntent(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5);
                 reply->writeInt32(1);
                 reply->writeInt32(_result);
                 return true;

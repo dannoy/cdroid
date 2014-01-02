@@ -34,4 +34,5 @@ $(eval $(call includeSubDir,src/app/AppFour))
 
 $(eval $(call includeSubDir,test/tprocess))
 #$(eval $(call includeSubDir,test/handle))
+$(eval $(call includeSubDir,test/benchmarks))
 

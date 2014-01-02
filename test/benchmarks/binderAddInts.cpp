@@ -59,6 +59,10 @@
 using namespace android;
 using namespace std;
 
+extern int test_pipe_latency(unsigned int iterations, float iterDelay);
+extern int test_unix_latency(unsigned int iterations, float iterDelay);
+extern int test_tcp_latency(unsigned int iterations, float iterDelay);
+
 const int unbound = -1; // Indicator for a thread not bound to a specific CPU
 
 String16 serviceName("test.binderAddInts");
@@ -72,7 +76,8 @@ struct options {
     unbound, // Server CPU
     unbound, // Client CPU
     1000,    // Iterations
-    1e-3,    // End of iteration delay
+    0,    // End of iteration delay
+    //1e-3,    // End of iteration delay
 };
 
 class AddIntsService : public BBinder
@@ -215,11 +220,17 @@ int main(int argc, char *argv[])
                 exit(8);
             }
         } while (1);
-        return 0;
+        //return 0;
+        break;
 
     case -1: // Error
         exit(9);
     }
+
+    test_pipe_latency(options.iterations, options.iterDelay);
+    //cout << getpid() <<endl;
+    test_unix_latency(options.iterations, options.iterDelay);
+    test_tcp_latency(options.iterations, options.iterDelay);
 
     return 0;
 }
@@ -306,6 +317,7 @@ static void client(void)
     cout << "Time per iteration min: " << min
         << " avg: " << (total / options.iterations)
         << " max: " << max
+        << " total: " << total
         << endl;
 }
 

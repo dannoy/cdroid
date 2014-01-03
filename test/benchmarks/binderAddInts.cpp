@@ -62,6 +62,7 @@ using namespace std;
 extern int test_pipe_latency(unsigned int iterations, float iterDelay);
 extern int test_unix_latency(unsigned int iterations, float iterDelay);
 extern int test_tcp_latency(unsigned int iterations, float iterDelay);
+extern int test_msg_latency(unsigned int iterations, float iterDelay);
 
 const int unbound = -1; // Indicator for a thread not bound to a specific CPU
 
@@ -230,7 +231,8 @@ int main(int argc, char *argv[])
     test_pipe_latency(options.iterations, options.iterDelay);
     //cout << getpid() <<endl;
     test_unix_latency(options.iterations, options.iterDelay);
-    test_tcp_latency(options.iterations, options.iterDelay);
+    //test_tcp_latency(options.iterations, options.iterDelay);
+    test_msg_latency(options.iterations, options.iterDelay);
 
     return 0;
 }

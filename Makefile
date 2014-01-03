@@ -32,7 +32,7 @@ $(eval $(call includeSubDir,src/app/AppTwo))
 $(eval $(call includeSubDir,src/app/AppThree))
 $(eval $(call includeSubDir,src/app/AppFour))
 
-$(eval $(call includeSubDir,test/tprocess))
 #$(eval $(call includeSubDir,test/handle))
 $(eval $(call includeSubDir,test/benchmarks))
+$(eval $(call includeSubDir,test/tprocess))
 
